@@ -46,7 +46,7 @@
         <i class="fa-solid fa-layer-group"></i> Flashcards
       </button>
 
-      <!-- NÚT TÀI KHOẢN -->
+      <!-- TÀI KHOẢN -->
       <div id="authArea">
         <button onclick="openAuthModal()" id="loginBtn" class="bg-white/10 hover:bg-white/20 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 border border-white/20">
           <i class="fa-solid fa-user"></i> <span id="userBtnText">Đăng nhập</span>
@@ -184,12 +184,12 @@
     </div>
   </div>
 
-  <!-- MODAL THÊM FLASHCARD MỚI -->
+  <!-- MODAL THÊM FLASHCARD CÁ NHÂN MỚI -->
   <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-plus text-indigo-600"></i> Thêm Từ Vựng Mới
+          <i class="fa-solid fa-plus text-indigo-600"></i> Tạo Thẻ Từ Vựng Cá Nhân
         </h3>
         <button onclick="closeAddFlashcardModal()" class="text-slate-400 hover:text-slate-600">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -207,7 +207,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeAddFlashcardModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-lg">Hủy</button>
-        <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow">Thêm thẻ</button>
+        <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow">Lưu thẻ</button>
       </div>
     </div>
   </div>
@@ -290,15 +290,17 @@
     </div>
   </div>
 
-  <!-- Flashcard Modal -->
+  <!-- FLASHCARD MODAL (ĐÃ NÂNG CẤP PHÂN CHIA TAB VÀ TỰ TẠO) -->
   <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-4 relative">
-      <div class="flex justify-between items-center border-b pb-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-3 relative">
+      
+      <!-- Header Flashcards -->
+      <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Ôn Từ Vựng
+          <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Từ Vựng
         </h3>
         <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+          <label class="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
             <input type="checkbox" id="autoSpeechToggle" class="rounded text-indigo-600 focus:ring-0">
             <span>Tự đọc 🔊</span>
           </label>
@@ -307,11 +309,30 @@
           </button>
         </div>
       </div>
-      <div id="flashcardContainer" class="py-2"></div>
-      <div class="flex justify-between items-center pt-2 border-t">
-        <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-medium">+ Thêm từ mới</button>
-        <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">Thẻ tiếp theo <i class="fa-solid fa-arrow-right ml-1"></i></button>
+
+      <!-- Tab Chuyển Đổi: Từ Vựng Có Sẵn vs Từ Vựng Cá Nhân -->
+      <div class="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-medium">
+        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-1.5 rounded-lg transition bg-white text-indigo-600 shadow-sm font-semibold">
+          📌 Từ vựng có sẵn
+        </button>
+        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-800">
+          👤 Từ vựng cá nhân (<span id="customCardCount">0</span>)
+        </button>
       </div>
+
+      <!-- Thân thẻ Flashcard -->
+      <div id="flashcardContainer" class="py-1"></div>
+
+      <!-- Footer Flashcards -->
+      <div class="flex justify-between items-center pt-2 border-t">
+        <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+          <i class="fa-solid fa-plus-circle"></i> + Tạo từ mới
+        </button>
+        <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -327,12 +348,28 @@
     let selectedTag = null;
     let folders = [];
     let cloudFiles = [];
-    let flashcards = JSON.parse(localStorage.getItem('app_flashcards')) || [];
+
+    // --- BỘ TỪ VỰNG CÓ SẴN (SYSTEM FLASHCARDS) ---
+    const systemFlashcards = [
+      { id: 's1', word: 'Metaphor', meaning: 'Phép ẩn dụ (so sánh ngầm)' },
+      { id: 's2', word: 'Curiosity', meaning: 'Sự tò mò, ham học hỏi' },
+      { id: 's3', word: 'Fluency', meaning: 'Sự lưu lưu khoát, trôi chảy' },
+      { id: 's4', word: 'Vocabulary', meaning: 'Vốn từ vựng' },
+      { id: 's5', word: 'Pronunciation', meaning: 'Sự phát âm' },
+      { id: 's6', word: 'Comprehension', meaning: 'Khả năng hiểu, sự lĩnh hội' }
+    ];
+
+    // --- BỘ TỪ VỰNG CÁ NHÂN (CUSTOM FLASHCARDS - LƯU LOCALSTORAGE) ---
+    let customFlashcards = JSON.parse(localStorage.getItem('app_custom_flashcards')) || [
+      { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ, ngôn ngữ chuyên ngành' }
+    ];
+
+    let currentFlashcardTab = 'system'; // 'system' hoặc 'custom'
+    let currentCardIndex = 0;
 
     let currentPreviewRecord = null;
     let audioLoopA = null;
     let audioLoopB = null;
-    let currentCardIndex = 0;
 
     async function initApp() {
       checkUserSession();
@@ -342,7 +379,7 @@
       updateStreakUI();
     }
 
-    // --- HỆ THỐNG AUTHENTICATION (ĐĂNG NHẬP / ĐĂNG KÝ) ---
+    // --- HỆ THỐNG AUTHENTICATION ---
     async function checkUserSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
@@ -367,9 +404,7 @@
       }
     }
 
-    function closeAuthModal() {
-      document.getElementById('authModal').classList.add('hidden');
-    }
+    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
 
     async function handleLogin() {
       const email = document.getElementById('authEmail').value.trim();
@@ -400,7 +435,114 @@
       }
     }
 
-    // --- TÍNH NĂNG ĐỌC GIỌNG MẪU (TEXT-TO-SPEECH) ---
+    // --- QUẢN LÝ FLASHCARDS & PHÁT ÂM ---
+    function switchFlashcardTab(tab) {
+      currentFlashcardTab = tab;
+      currentCardIndex = 0;
+
+      const tabSys = document.getElementById('tabSystemBtn');
+      const tabCus = document.getElementById('tabCustomBtn');
+
+      if (tab === 'system') {
+        tabSys.className = "flex-1 py-1.5 rounded-lg transition bg-white text-indigo-600 shadow-sm font-semibold";
+        tabCus.className = "flex-1 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-800";
+      } else {
+        tabCus.className = "flex-1 py-1.5 rounded-lg transition bg-white text-indigo-600 shadow-sm font-semibold";
+        tabSys.className = "flex-1 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-800";
+      }
+
+      renderFlashcard();
+    }
+
+    function renderFlashcard() {
+      const container = document.getElementById('flashcardContainer');
+      document.getElementById('customCardCount').textContent = customFlashcards.length;
+
+      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
+
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="h-48 flex flex-col items-center justify-center text-slate-400 text-xs">
+            <i class="fa-regular fa-folder-open text-3xl mb-2"></i>
+            <p>Chưa có từ vựng cá nhân nào.</p>
+            <button onclick="openAddFlashcardModal()" class="mt-2 text-indigo-600 underline font-semibold">+ Thêm từ mới ngay</button>
+          </div>
+        `;
+        return;
+      }
+
+      const card = activeList[currentCardIndex];
+
+      container.innerHTML = `
+        <div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center">
+            
+            <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4">
+              <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider mb-2">
+                ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Cá nhân'} (${currentCardIndex + 1}/${activeList.length})
+              </span>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-slate-800">${card.word}</h2>
+                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-indigo-600 hover:text-indigo-800 p-1 text-base" title="Nghe phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl relative">
+              ${currentFlashcardTab === 'custom' ? `
+                <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-3 right-3 text-indigo-200 hover:text-red-300 text-xs" title="Xóa từ này">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              ` : ''}
+              <span class="text-[10px] font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span>
+              <p class="text-sm font-medium leading-relaxed">${card.meaning}</p>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      if (document.getElementById('autoSpeechToggle').checked) {
+        speakText(card.word);
+      }
+    }
+
+    function nextCard() {
+      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
+      if (activeList.length > 0) {
+        currentCardIndex = (currentCardIndex + 1) % activeList.length;
+        renderFlashcard();
+      }
+    }
+
+    function openAddFlashcardModal() {
+      document.getElementById('wordInput').value = '';
+      document.getElementById('meaningInput').value = '';
+      document.getElementById('addFlashcardModal').classList.remove('hidden');
+    }
+    function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
+
+    function submitAddFlashcard() {
+      const word = document.getElementById('wordInput').value.trim();
+      const meaning = document.getElementById('meaningInput').value.trim();
+      if (word && meaning) {
+        customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
+        localStorage.setItem('app_custom_flashcards', JSON.stringify(customFlashcards));
+        switchFlashcardTab('custom');
+        closeAddFlashcardModal();
+      }
+    }
+
+    function deleteCustomCard(id) {
+      if (confirm('Xóa từ vựng cá nhân này?')) {
+        customFlashcards = customFlashcards.filter(c => c.id !== id);
+        localStorage.setItem('app_custom_flashcards', JSON.stringify(customFlashcards));
+        if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
+        renderFlashcard();
+      }
+    }
+
     function speakText(text) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -411,7 +553,7 @@
       }
     }
 
-    // --- TÍNH NĂNG STREAK & HUY HIỆU ---
+    // --- STREAK & HUY HIỆU ---
     function getStreakData() {
       return JSON.parse(localStorage.getItem('app_streak_data')) || { count: 0, lastCheckIn: null };
     }
@@ -459,13 +601,13 @@
     function openBadgesModal() {
       const streakData = getStreakData();
       const fileCount = cloudFiles.length;
-      const flashcardCount = flashcards.length;
+      const flashcardCount = customFlashcards.length;
 
       const badges = [
         { title: "Tân Binh Học Tập", desc: "Đạt Streak 3 ngày", icon: "🏅", unlocked: streakData.count >= 3 },
         { title: "Chiến Binh Chuyên Cần", desc: "Đạt Streak 7 ngày", icon: "🚀", unlocked: streakData.count >= 7 },
         { title: "Thủ Thư Đám Mây", desc: "Tải lên 5 tài liệu", icon: "📚", unlocked: fileCount >= 5 },
-        { title: "Bậc Thầy Từ Vựng", desc: "Tạo 10 thẻ Flashcard", icon: "⚡", unlocked: flashcardCount >= 10 }
+        { title: "Bậc Thầy Từ Vựng", desc: "Tạo 5 thẻ từ cá nhân", icon: "⚡", unlocked: flashcardCount >= 5 }
       ];
 
       const container = document.getElementById('badgesContainer');
@@ -483,11 +625,9 @@
       document.getElementById('badgesModal').classList.remove('hidden');
     }
 
-    function closeBadgesModal() {
-      document.getElementById('badgesModal').classList.add('hidden');
-    }
+    function closeBadgesModal() { document.getElementById('badgesModal').classList.add('hidden'); }
 
-    // --- MODAL TẠO THƯ MỤC & FLASHCARD ---
+    // --- THƯ MỤC & FILE SUPABASE ---
     function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
     function closeCreateFolderModal() { document.getElementById('createFolderModal').classList.add('hidden'); }
     async function submitCreateFolder() {
@@ -501,19 +641,6 @@
       }
     }
 
-    function openAddFlashcardModal() { document.getElementById('wordInput').value = ''; document.getElementById('meaningInput').value = ''; document.getElementById('addFlashcardModal').classList.remove('hidden'); }
-    function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
-    function submitAddFlashcard() {
-      const word = document.getElementById('wordInput').value.trim();
-      const meaning = document.getElementById('meaningInput').value.trim();
-      if (word && meaning) {
-        flashcards.push({ id: Date.now(), word, meaning });
-        localStorage.setItem('app_flashcards', JSON.stringify(flashcards));
-        renderFlashcard();
-        closeAddFlashcardModal();
-      }
-    }
-
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
@@ -521,7 +648,6 @@
       overlay.classList.toggle('hidden');
     }
 
-    // --- ĐỒNG BỘ THƯ MỤC QUA SUPABASE ---
     async function fetchFolders() {
       const { data, error } = await supabaseClient.from('folders').select('*');
       if (!error && data && data.length > 0) {
@@ -571,7 +697,6 @@
       nav.innerHTML = html;
     }
 
-    // --- ĐỒNG BỘ FILE QUA SUPABASE ---
     async function fetchCloudFiles() {
       const { data, error } = await supabaseClient.from('documents_metadata').select('*');
       if (!error && data) {
@@ -852,49 +977,12 @@
       clearLoop();
     }
 
-    // --- FLASHCARD & SPEECH ---
-    function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
+    function openFlashcardModal() { 
+      currentCardIndex = 0; 
+      renderFlashcard(); 
+      document.getElementById('flashcardModal').classList.remove('hidden'); 
+    }
     function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
-    
-    function renderFlashcard() {
-      const container = document.getElementById('flashcardContainer');
-      if (flashcards.length === 0) { 
-        container.innerHTML = '<p class="text-center text-slate-400 text-sm py-8">Chưa có flashcard nào.</p>'; 
-        return; 
-      }
-      const card = flashcards[currentCardIndex];
-      
-      container.innerHTML = `
-        <div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')">
-          <div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center">
-            <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4">
-              <span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Từ vựng (${currentCardIndex + 1}/${flashcards.length})</span>
-              <div class="flex items-center gap-2">
-                <h2 class="text-xl font-bold text-slate-800">${card.word}</h2>
-                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-indigo-600 hover:text-indigo-800 p-1 text-base" title="Nghe phát âm">
-                  <i class="fa-solid fa-volume-high"></i>
-                </button>
-              </div>
-            </div>
-            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl">
-              <span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span>
-              <p class="text-sm font-medium leading-relaxed">${card.meaning}</p>
-            </div>
-          </div>
-        </div>
-      `;
-
-      if (document.getElementById('autoSpeechToggle').checked) {
-        speakText(card.word);
-      }
-    }
-
-    function nextCard() { 
-      if (flashcards.length > 0) { 
-        currentCardIndex = (currentCardIndex + 1) % flashcards.length; 
-        renderFlashcard(); 
-      } 
-    }
 
     function getMimeType(filename) {
       const ext = filename.split('.').pop().toLowerCase();
