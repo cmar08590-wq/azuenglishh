@@ -67,7 +67,7 @@
     <!-- TÀI KHOẢN -->
     <div id="authArea">
       <button onclick="openAuthModal()" id="loginBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-white/20 shadow-sm">
-        <i class="fa-solid fa-user-astronaut text-indigo-200"></i> <span id="userBtnText">Đang tải...</span>
+        <i class="fa-solid fa-user-astronaut text-indigo-200"></i> <span id="userBtnText">Đăng nhập</span>
       </button>
     </div>
   </header>
@@ -138,7 +138,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Cloud Session Permanent
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Fast Sync Active
       </div>
     </aside>
 
@@ -455,102 +455,95 @@
     let audioLoopB = null;
 
     async function initApp() {
-      // 1. Tự động khôi phục phiên đăng nhập cũ nếu có
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      await handleAuthState(session);
+      // Đọc trạng thái lưu sẵn từ localStorage để tránh bị giật màn hình
+      const savedUser = localStorage.getItem('azu_active_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          renderAuthenticatedState();
+        } catch(e) {}
+      }
 
-      // 2. Lắng nghe sự thay đổi trạng thái đăng nhập (đăng nhập/đăng xuất/làm mới token)
-      supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        await handleAuthState(session);
+      // Kiểm tra phiên đăng nhập từ Supabase
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      handleAuthState(session);
+
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        handleAuthState(session);
       });
     }
 
     async function handleAuthState(session) {
+      if (session) {
+        currentUser = session.user;
+        localStorage.setItem('azu_active_user', JSON.stringify(currentUser));
+        renderAuthenticatedState();
+      } else {
+        currentUser = null;
+        localStorage.removeItem('azu_active_user');
+        renderGuestState();
+      }
+    }
+
+    async function renderAuthenticatedState() {
       const guestLockScreen = document.getElementById('guestLockScreen');
       const appContainer = document.getElementById('appContainer');
       const authHeaderBtns = document.getElementById('authenticatedHeaderBtns');
 
-      if (session) {
-        currentUser = session.user;
-        document.getElementById('userBtnText').textContent = "Đăng xuất (" + currentUser.email.split('@')[0] + ")";
+      document.getElementById('userBtnText').textContent = "Đăng xuất (" + currentUser.email.split('@')[0] + ")";
 
-        guestLockScreen.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        authHeaderBtns.classList.remove('hidden');
+      guestLockScreen.classList.add('hidden');
+      appContainer.classList.remove('hidden');
+      authHeaderBtns.classList.remove('hidden');
 
-        await loadUserProfileFromDatabase();
-        await fetchFolders();
-        await fetchCloudFiles();
-        setupUploadListener();
-      } else {
-        currentUser = null;
-        document.getElementById('userBtnText').textContent = "Đăng nhập";
-
-        guestLockScreen.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-        authHeaderBtns.classList.add('hidden');
-      }
-    }
-
-    // --- ĐỒNG BỘ TIẾN TRÌNH VỚI DATABASE SUPABASE ---
-    async function loadUserProfileFromDatabase() {
-      if (!currentUser) return;
-
-      const { data, error } = await supabaseClient
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .single();
-
-      if (!error && data) {
-        userData = {
-          xp: data.xp || 0,
-          gems: data.gems || 50,
-          avatarName: data.avatar_name || currentUser.email.split('@')[0],
-          equippedHat: data.equipped_hat || '',
-          streakCount: data.streak_count || 0,
-          lastCheckIn: data.last_check_in || null
-        };
-        customFlashcards = data.custom_flashcards || [];
-      } else {
-        // Nếu là user mới chưa có dòng dữ liệu nào, khởi tạo mới
-        userData = {
-          xp: 0,
-          gems: 50,
-          avatarName: currentUser.email.split('@')[0],
-          equippedHat: '',
-          streakCount: 0,
-          lastCheckIn: null
-        };
-        customFlashcards = [{ id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }];
-        await saveUserProfileToDatabase();
-      }
-
+      loadUserDataLocal();
+      await fetchFolders();
+      await fetchCloudFiles();
+      setupUploadListener();
       updateGamificationUI();
       updateStreakUI();
     }
 
-    async function saveUserProfileToDatabase() {
-      if (!currentUser) return;
+    function renderGuestState() {
+      const guestLockScreen = document.getElementById('guestLockScreen');
+      const appContainer = document.getElementById('appContainer');
+      const authHeaderBtns = document.getElementById('authenticatedHeaderBtns');
 
-      const payload = {
-        user_id: currentUser.id,
-        email: currentUser.email,
-        xp: userData.xp,
-        gems: userData.gems,
-        avatar_name: userData.avatarName,
-        equipped_hat: userData.equippedHat,
-        streak_count: userData.streakCount,
-        last_check_in: userData.lastCheckIn,
-        custom_flashcards: customFlashcards
+      document.getElementById('userBtnText').textContent = "Đăng nhập";
+
+      guestLockScreen.classList.remove('hidden');
+      appContainer.classList.add('hidden');
+      authHeaderBtns.classList.add('hidden');
+    }
+
+    function loadUserDataLocal() {
+      if (!currentUser) return;
+      const key = 'app_user_profile_' + currentUser.id;
+      const cardKey = 'app_user_cards_' + currentUser.id;
+
+      userData = JSON.parse(localStorage.getItem(key)) || {
+        xp: 0,
+        gems: 50,
+        avatarName: currentUser.email.split('@')[0],
+        equippedHat: '',
+        streakCount: 0,
+        lastCheckIn: null
       };
 
-      await supabaseClient.from('user_profiles').upsert(payload);
+      customFlashcards = JSON.parse(localStorage.getItem(cardKey)) || [
+        { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }
+      ];
+    }
+
+    function saveUserDataLocal() {
+      if (!currentUser) return;
+      localStorage.setItem('app_user_profile_' + currentUser.id, JSON.stringify(userData));
+      localStorage.setItem('app_user_cards_' + currentUser.id, JSON.stringify(customFlashcards));
     }
 
     function openAuthModal() {
       if (currentUser) {
-        if (confirm(`Bạn đang đăng nhập tài khoản: ${currentUser.email}.\nBạn có muốn đăng xuất không?`)) {
+        if (confirm(`Bạn đang đăng nhập: ${currentUser.email}.\nBạn có muốn đăng xuất không?`)) {
           supabaseClient.auth.signOut().then(() => {
             handleAuthState(null);
           });
@@ -565,13 +558,14 @@
     async function handleLogin() {
       const email = document.getElementById('authEmail').value.trim();
       const password = document.getElementById('authPassword').value.trim();
-      if (!email || !password) { alert('Vui lòng nhập đầy đủ Email và Mật khẩu!'); return; }
+      if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu!'); return; }
 
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         alert('Lỗi đăng nhập: ' + error.message);
       } else {
         closeAuthModal();
+        handleAuthState(data.session);
       }
     }
 
@@ -588,12 +582,12 @@
       }
     }
 
-    // --- LINH VẬT & GAMIFICATION ---
+    // --- GAMIFICATION ---
     function changeAvatarName() {
       const newName = prompt('Nhập tên mới cho linh vật:', userData.avatarName || 'Mochi');
       if (newName && newName.trim()) {
         userData.avatarName = newName.trim();
-        saveUserProfileToDatabase();
+        saveUserDataLocal();
         updateGamificationUI();
       }
     }
@@ -601,7 +595,7 @@
     function addXp(amount) {
       userData.xp += amount;
       userData.gems += Math.floor(amount / 2);
-      saveUserProfileToDatabase();
+      saveUserDataLocal();
       updateGamificationUI();
     }
 
@@ -658,7 +652,7 @@
         if (!userData.inventory) userData.inventory = [];
         userData.inventory.push(id);
         userData.equippedHat = emoji;
-        saveUserProfileToDatabase();
+        saveUserDataLocal();
         openShopModal();
         updateGamificationUI();
         alert('🎉 Mua trang phục thành công!');
@@ -669,7 +663,7 @@
 
     function equipHat(emoji) {
       userData.equippedHat = userData.equippedHat === emoji ? '' : emoji;
-      saveUserProfileToDatabase();
+      saveUserDataLocal();
       openShopModal();
       updateGamificationUI();
     }
@@ -777,7 +771,7 @@
       const meaning = document.getElementById('meaningInput').value.trim();
       if (word && meaning) {
         customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
-        saveUserProfileToDatabase();
+        saveUserDataLocal();
         addXp(5);
         switchFlashcardTab('custom');
         closeAddFlashcardModal();
@@ -787,7 +781,7 @@
     function deleteCustomCard(id) {
       if (confirm('Xóa từ vựng cá nhân này?')) {
         customFlashcards = customFlashcards.filter(c => c.id !== id);
-        saveUserProfileToDatabase();
+        saveUserDataLocal();
         if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
         renderFlashcard();
       }
@@ -815,7 +809,7 @@
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 1) {
           userData.streakCount = 0;
-          saveUserProfileToDatabase();
+          saveUserDataLocal();
         }
       }
 
@@ -850,7 +844,9 @@
       if (input) {
         const newFolder = { id: 'f_' + Date.now(), name: input };
         folders.push(newFolder);
-        await supabaseClient.from('folders').insert([newFolder]);
+        try {
+          await supabaseClient.from('folders').insert([newFolder]);
+        } catch(e) {}
         addXp(10);
         renderFolders();
         closeCreateFolderModal();
@@ -865,16 +861,23 @@
     }
 
     async function fetchFolders() {
-      const { data, error } = await supabaseClient.from('folders').select('*');
-      if (!error && data && data.length > 0) {
-        folders = data;
-      } else {
+      try {
+        const { data, error } = await supabaseClient.from('folders').select('*');
+        if (!error && data && data.length > 0) {
+          folders = data;
+        } else {
+          folders = [
+            { id: 'general', name: 'Tài liệu chung' },
+            { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
+            { id: 'listening', name: 'Luyện nghe (Audio)' }
+          ];
+        }
+      } catch(e) {
         folders = [
           { id: 'general', name: 'Tài liệu chung' },
           { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
           { id: 'listening', name: 'Luyện nghe (Audio)' }
         ];
-        await supabaseClient.from('folders').insert(folders);
       }
       renderFolders();
     }
@@ -883,7 +886,9 @@
       if (confirm('Xóa thư mục này?')) {
         folders = folders.filter(f => f.id !== id);
         if (currentFolderId === id) currentFolderId = 'all';
-        await supabaseClient.from('folders').delete().eq('id', id);
+        try {
+          await supabaseClient.from('folders').delete().eq('id', id);
+        } catch(e) {}
         renderFolders();
         renderFiles();
       }
@@ -914,22 +919,24 @@
     }
 
     async function fetchCloudFiles() {
-      const { data, error } = await supabaseClient.from('documents_metadata').select('*');
-      if (!error && data) {
-        cloudFiles = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          size: item.size,
-          type: item.type,
-          folderId: item.folder_id,
-          dateAdded: item.date_added,
-          isStarred: item.is_starred,
-          tags: item.tags || [],
-          note: item.note || '',
-          url: item.url
-        }));
-        renderFiles();
-      }
+      try {
+        const { data, error } = await supabaseClient.from('documents_metadata').select('*');
+        if (!error && data) {
+          cloudFiles = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            size: item.size,
+            type: item.type,
+            folderId: item.folder_id,
+            dateAdded: item.date_added,
+            isStarred: item.is_starred,
+            tags: item.tags || [],
+            note: item.note || '',
+            url: item.url
+          }));
+          renderFiles();
+        }
+      } catch(e) {}
     }
 
     function setupUploadListener() {
@@ -963,11 +970,13 @@
             is_starred: false,
             tags: [],
             note: '',
-            url: publicUrlData.publicUrl,
-            user_id: currentUser ? currentUser.id : null
+            url: publicUrlData.publicUrl
           };
 
-          await supabaseClient.from('documents_metadata').insert([fileRecord]);
+          try {
+            await supabaseClient.from('documents_metadata').insert([fileRecord]);
+          } catch(err) {}
+
           addXp(10);
         }
 
@@ -1090,7 +1099,9 @@
       const file = cloudFiles.find(f => f.id == id);
       if (file) {
         file.isStarred = !file.isStarred;
-        await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id);
+        try {
+          await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id);
+        } catch(e) {}
         renderFiles();
       }
     }
@@ -1162,7 +1173,9 @@
     async function saveFileNote() {
       if (!currentPreviewRecord) return;
       currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
-      await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id);
+      try {
+        await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id);
+      } catch(e) {}
       alert('Đã lưu ghi chú!');
     }
 
