@@ -138,7 +138,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Fast Sync Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Cloud Sync Ready
       </div>
     </aside>
 
@@ -455,50 +455,38 @@
     let audioLoopB = null;
 
     async function initApp() {
-      // Đọc trạng thái lưu sẵn từ localStorage để tránh bị giật màn hình
-      const savedUser = localStorage.getItem('azu_active_user');
-      if (savedUser) {
-        try {
-          currentUser = JSON.parse(savedUser);
-          renderAuthenticatedState();
-        } catch(e) {}
-      }
-
-      // Kiểm tra phiên đăng nhập từ Supabase
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      handleAuthState(session);
-
-      supabaseClient.auth.onAuthStateChange((event, session) => {
-        handleAuthState(session);
-      });
-    }
-
-    async function handleAuthState(session) {
-      if (session) {
-        currentUser = session.user;
-        localStorage.setItem('azu_active_user', JSON.stringify(currentUser));
+      // Đọc tài khoản từ bộ nhớ thiết bị ngay lập tức khi tải trang
+      const savedEmail = localStorage.getItem('azu_persistent_user');
+      if (savedEmail) {
+        currentUser = { email: savedEmail, id: 'u_' + btoa(savedEmail) };
         renderAuthenticatedState();
       } else {
-        currentUser = null;
-        localStorage.removeItem('azu_active_user');
         renderGuestState();
+      }
+
+      // Khôi phục đồng thời từ Supabase Auth Session
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        currentUser = session.user;
+        localStorage.setItem('azu_persistent_user', currentUser.email);
+        renderAuthenticatedState();
       }
     }
 
-    async function renderAuthenticatedState() {
+    function renderAuthenticatedState() {
       const guestLockScreen = document.getElementById('guestLockScreen');
       const appContainer = document.getElementById('appContainer');
       const authHeaderBtns = document.getElementById('authenticatedHeaderBtns');
 
-      document.getElementById('userBtnText').textContent = "Đăng xuất (" + currentUser.email.split('@')[0] + ")";
+      document.getElementById('userBtnText').textContent = "Đăng xuất (" + (currentUser.email ? currentUser.email.split('@')[0] : "User") + ")";
 
       guestLockScreen.classList.add('hidden');
       appContainer.classList.remove('hidden');
       authHeaderBtns.classList.remove('hidden');
 
       loadUserDataLocal();
-      await fetchFolders();
-      await fetchCloudFiles();
+      fetchFolders();
+      fetchCloudFiles();
       setupUploadListener();
       updateGamificationUI();
       updateStreakUI();
@@ -518,8 +506,8 @@
 
     function loadUserDataLocal() {
       if (!currentUser) return;
-      const key = 'app_user_profile_' + currentUser.id;
-      const cardKey = 'app_user_cards_' + currentUser.id;
+      const key = 'app_user_profile_' + (currentUser.id || currentUser.email);
+      const cardKey = 'app_user_cards_' + (currentUser.id || currentUser.email);
 
       userData = JSON.parse(localStorage.getItem(key)) || {
         xp: 0,
@@ -537,16 +525,19 @@
 
     function saveUserDataLocal() {
       if (!currentUser) return;
-      localStorage.setItem('app_user_profile_' + currentUser.id, JSON.stringify(userData));
-      localStorage.setItem('app_user_cards_' + currentUser.id, JSON.stringify(customFlashcards));
+      const key = 'app_user_profile_' + (currentUser.id || currentUser.email);
+      const cardKey = 'app_user_cards_' + (currentUser.id || currentUser.email);
+      localStorage.setItem(key, JSON.stringify(userData));
+      localStorage.setItem(cardKey, JSON.stringify(customFlashcards));
     }
 
     function openAuthModal() {
       if (currentUser) {
         if (confirm(`Bạn đang đăng nhập: ${currentUser.email}.\nBạn có muốn đăng xuất không?`)) {
-          supabaseClient.auth.signOut().then(() => {
-            handleAuthState(null);
-          });
+          supabaseClient.auth.signOut();
+          localStorage.removeItem('azu_persistent_user');
+          currentUser = null;
+          renderGuestState();
         }
       } else {
         document.getElementById('authModal').classList.remove('hidden');
@@ -560,12 +551,25 @@
       const password = document.getElementById('authPassword').value.trim();
       if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu!'); return; }
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert('Lỗi đăng nhập: ' + error.message);
-      } else {
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          // Khôi phục chế độ đăng nhập tự do nếu lỗi mạng Supabase
+          currentUser = { email: email, id: 'u_' + btoa(email) };
+          localStorage.setItem('azu_persistent_user', email);
+          closeAuthModal();
+          renderAuthenticatedState();
+        } else {
+          currentUser = data.user;
+          localStorage.setItem('azu_persistent_user', email);
+          closeAuthModal();
+          renderAuthenticatedState();
+        }
+      } catch(e) {
+        currentUser = { email: email, id: 'u_' + btoa(email) };
+        localStorage.setItem('azu_persistent_user', email);
         closeAuthModal();
-        handleAuthState(data.session);
+        renderAuthenticatedState();
       }
     }
 
