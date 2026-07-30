@@ -29,7 +29,14 @@
       <h1 class="text-base md:text-xl font-bold tracking-wide">AZU English</h1>
     </div>
     
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 md:gap-3">
+      <!-- Nút STREAK -->
+      <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
+        <span id="streakCountText">0 Ngày</span>
+      </button>
+
+      <!-- Nút Flashcards -->
       <button onclick="openFlashcardModal()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
         <i class="fa-solid fa-layer-group"></i> Flashcards
       </button>
@@ -59,7 +66,7 @@
         <div>
           <div class="flex justify-between items-center mb-3">
             <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục</h2>
-            <button onclick="createFolder()" class="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1">
+            <button onclick="openCreateFolderModal()" class="text-indigo-600 hover:text-indigo-800 text-xs font-medium flex items-center gap-1">
               <i class="fa-solid fa-folder-plus"></i> Tạo mới
             </button>
           </div>
@@ -81,7 +88,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Auto Storage Sync Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Supabase Cloud Connected
       </div>
     </aside>
 
@@ -111,6 +118,56 @@
 
       <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </main>
+  </div>
+
+  <!-- POP-UP MODAL TẠO THƯ MỤC MỚI -->
+  <div id="createFolderModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-indigo-600"></i> Tạo Thư Mục Mới
+        </h3>
+        <button onclick="closeCreateFolderModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-500 block mb-1">Tên thư mục:</label>
+        <input type="text" id="folderNameInput" placeholder="VD: IELTS Listening, Grammar..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeCreateFolderModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-lg">Hủy</button>
+        <button onclick="submitCreateFolder()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow">Tạo ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POP-UP MODAL THÊM FLASHCARD MỚI -->
+  <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-plus text-indigo-600"></i> Thêm Từ Vựng Mới
+        </h3>
+        <button onclick="closeAddFlashcardModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1">Từ / Cụm từ tiếng Anh:</label>
+          <input type="text" id="wordInput" placeholder="VD: Metaphor..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1">Ý nghĩa tiếng Việt:</label>
+          <input type="text" id="meaningInput" placeholder="VD: Phép ẩn dụ..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAddFlashcardModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-lg">Hủy</button>
+        <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow">Thêm thẻ</button>
+      </div>
+    </div>
   </div>
 
   <!-- Preview Modal -->
@@ -189,7 +246,7 @@
       </div>
       <div id="flashcardContainer" class="py-2"></div>
       <div class="flex justify-between items-center pt-2 border-t">
-        <button onclick="openAddWordModal()" class="text-xs text-indigo-600 hover:underline font-medium">+ Thêm từ mới</button>
+        <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-medium">+ Thêm từ mới</button>
         <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">Thẻ tiếp theo <i class="fa-solid fa-arrow-right ml-1"></i></button>
       </div>
     </div>
@@ -217,6 +274,92 @@
       await fetchFolders();
       await fetchCloudFiles();
       setupUploadListener();
+      updateStreakUI();
+    }
+
+    // --- TÍNH NĂNG STREAK (ĐÁNH DẤU CHUYÊN CẦN HÀNG NGÀY) ---
+    function getStreakData() {
+      return JSON.parse(localStorage.getItem('app_streak_data')) || { count: 0, lastCheckIn: null };
+    }
+
+    function updateStreakUI() {
+      const data = getStreakData();
+      const today = new Date().toDateString();
+      const streakBtn = document.getElementById('streakBtn');
+      const streakText = document.getElementById('streakCountText');
+
+      if (data.lastCheckIn) {
+        const lastDate = new Date(data.lastCheckIn);
+        const diffTime = Math.abs(new Date(today) - new Date(lastDate.toDateString()));
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 1) {
+          data.count = 0; // Quá 1 ngày không học -> Reset Streak
+          localStorage.setItem('app_streak_data', JSON.stringify(data));
+        }
+      }
+
+      streakText.textContent = `${data.count} Ngày`;
+
+      if (data.lastCheckIn === today) {
+        streakBtn.classList.remove('bg-amber-500/20', 'border-amber-400/40');
+        streakBtn.classList.add('bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-300');
+        streakBtn.title = "Đã điểm danh hôm nay!";
+      }
+    }
+
+    function checkInStreak() {
+      const data = getStreakData();
+      const today = new Date().toDateString();
+
+      if (data.lastCheckIn === today) {
+        alert("Hôm nay bạn đã điểm danh Streak rồi! Hãy giữ vững phong độ vào ngày mai nhé 🔥");
+        return;
+      }
+
+      data.count += 1;
+      data.lastCheckIn = today;
+      localStorage.setItem('app_streak_data', JSON.stringify(data));
+      updateStreakUI();
+      alert(`🎉 Xuất sắc! Bạn đã tăng Streak lên ${data.count} ngày học liên tiếp!`);
+    }
+
+    // --- CỬA SỔ PROMPT CUSTOM (MODAL POP-UP) ---
+    function openCreateFolderModal() {
+      document.getElementById('folderNameInput').value = '';
+      document.getElementById('createFolderModal').classList.remove('hidden');
+    }
+    function closeCreateFolderModal() {
+      document.getElementById('createFolderModal').classList.add('hidden');
+    }
+    async function submitCreateFolder() {
+      const input = document.getElementById('folderNameInput').value.trim();
+      if (input) {
+        const newFolder = { id: 'f_' + Date.now(), name: input };
+        folders.push(newFolder);
+        await supabaseClient.from('folders').insert([newFolder]);
+        renderFolders();
+        closeCreateFolderModal();
+      }
+    }
+
+    function openAddFlashcardModal() {
+      document.getElementById('wordInput').value = '';
+      document.getElementById('meaningInput').value = '';
+      document.getElementById('addFlashcardModal').classList.remove('hidden');
+    }
+    function closeAddFlashcardModal() {
+      document.getElementById('addFlashcardModal').classList.add('hidden');
+    }
+    function submitAddFlashcard() {
+      const word = document.getElementById('wordInput').value.trim();
+      const meaning = document.getElementById('meaningInput').value.trim();
+      if (word && meaning) {
+        flashcards.push({ id: Date.now(), word, meaning });
+        localStorage.setItem('app_flashcards', JSON.stringify(flashcards));
+        renderFlashcard();
+        closeAddFlashcardModal();
+      }
     }
 
     function toggleSidebar() {
@@ -240,16 +383,6 @@
         await supabaseClient.from('folders').insert(folders);
       }
       renderFolders();
-    }
-
-    async function createFolder() {
-      const name = prompt('Nhập tên thư mục mới:');
-      if (name && name.trim()) {
-        const newFolder = { id: 'f_' + Date.now(), name: name.trim() };
-        folders.push(newFolder);
-        await supabaseClient.from('folders').insert([newFolder]);
-        renderFolders();
-      }
     }
 
     async function deleteFolder(id) {
@@ -348,28 +481,20 @@
       });
     }
 
-    // --- TÍNH NĂNG XÓA TẬN GỐC TRÊN STORAGE VÀ DATABASE ---
     async function deleteFile(id) {
       const fileToDelete = cloudFiles.find(f => f.id == id);
       if (!fileToDelete) return;
 
       if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}" khỏi Cloud Storage?`)) {
         try {
-          // 1. Lấy tên file gốc trên Storage từ URL
           if (fileToDelete.url) {
             const urlParts = fileToDelete.url.split('/');
             const storageFileName = urlParts[urlParts.length - 1];
-            
-            // Xóa file vật lý trong bucket 'documents'
             if (storageFileName) {
               await supabaseClient.storage.from('documents').remove([storageFileName]);
             }
           }
-
-          // 2. Xóa thông tin file trong bảng Database
           await supabaseClient.from('documents_metadata').delete().eq('id', id);
-
-          // 3. Cập nhật lại danh sách hiển thị
           await fetchCloudFiles();
         } catch (err) {
           alert('Lỗi khi xóa file: ' + err.message);
@@ -584,17 +709,6 @@
       container.innerHTML = `<div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')"><div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center"><div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4"><span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Từ vựng (${currentCardIndex + 1}/${flashcards.length})</span><h2 class="text-xl font-bold text-slate-800">${card.word}</h2></div><div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl"><span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span><p class="text-sm font-medium leading-relaxed">${card.meaning}</p></div></div></div>`;
     }
     function nextCard() { if (flashcards.length > 0) { currentCardIndex = (currentCardIndex + 1) % flashcards.length; renderFlashcard(); } }
-    function openAddWordModal() {
-      const word = prompt('Nhập từ vựng mới:');
-      if (word && word.trim()) {
-        const meaning = prompt(`Nhập nghĩa của từ "${word}":`);
-        if (meaning && meaning.trim()) {
-          flashcards.push({ id: Date.now(), word: word.trim(), meaning: meaning.trim() });
-          localStorage.setItem('app_flashcards', JSON.stringify(flashcards));
-          renderFlashcard();
-        }
-      }
-    }
 
     function getMimeType(filename) {
       const ext = filename.split('.').pop().toLowerCase();
@@ -625,7 +739,14 @@
 
     document.getElementById('searchInput').addEventListener('input', renderFiles);
     document.getElementById('searchInputDesktop').addEventListener('input', renderFiles);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closePreview(); closeFlashcardModal(); } });
+    document.addEventListener('keydown', (e) => { 
+      if (e.key === 'Escape') { 
+        closePreview(); 
+        closeFlashcardModal(); 
+        closeCreateFolderModal();
+        closeAddFlashcardModal();
+      } 
+    });
 
     initApp();
   </script>
