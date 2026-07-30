@@ -30,21 +30,28 @@
     </div>
     
     <div class="flex items-center gap-2 md:gap-3">
-      <!-- Nút STREAK -->
+      <!-- STREAK -->
       <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
         <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <!-- Nút HUY HIỆU -->
+      <!-- HUY HIỆU -->
       <button onclick="openBadgesModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
         <i class="fa-solid fa-trophy"></i> Thành tích
       </button>
 
-      <!-- Nút FLASHCARDS -->
+      <!-- FLASHCARDS -->
       <button onclick="openFlashcardModal()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
         <i class="fa-solid fa-layer-group"></i> Flashcards
       </button>
+
+      <!-- NÚT TÀI KHOẢN -->
+      <div id="authArea">
+        <button onclick="openAuthModal()" id="loginBtn" class="bg-white/10 hover:bg-white/20 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 border border-white/20">
+          <i class="fa-solid fa-user"></i> <span id="userBtnText">Đăng nhập</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -123,6 +130,36 @@
 
       <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </main>
+  </div>
+
+  <!-- MODAL ĐĂNG NHẬP / ĐĂNG KÝ -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="authModalTitle" class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-right-to-bracket text-indigo-600"></i> Đăng nhập tài khoản
+        </h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1">Email:</label>
+          <input type="email" id="authEmail" placeholder="yourname@gmail.com" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 block mb-1">Mật khẩu:</label>
+          <input type="password" id="authPassword" placeholder="••••••••" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2">
+        <button onclick="handleLogin()" class="w-full py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold shadow">Đăng nhập</button>
+        <button onclick="handleSignUp()" class="w-full py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold">Tạo tài khoản mới</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL TẠO THƯ MỤC MỚI -->
@@ -284,6 +321,7 @@
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let currentUser = null;
     let currentFolderId = 'all';
     let currentFilter = 'all';
     let selectedTag = null;
@@ -297,19 +335,78 @@
     let currentCardIndex = 0;
 
     async function initApp() {
+      checkUserSession();
       await fetchFolders();
       await fetchCloudFiles();
       setupUploadListener();
       updateStreakUI();
     }
 
+    // --- HỆ THỐNG AUTHENTICATION (ĐĂNG NHẬP / ĐĂNG KÝ) ---
+    async function checkUserSession() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        document.getElementById('userBtnText').textContent = currentUser.email.split('@')[0];
+      } else {
+        currentUser = null;
+        document.getElementById('userBtnText').textContent = "Đăng nhập";
+      }
+    }
+
+    function openAuthModal() {
+      if (currentUser) {
+        if (confirm(`Bạn đang đăng nhập với ${currentUser.email}. Muốn đăng xuất?`)) {
+          supabaseClient.auth.signOut().then(() => {
+            currentUser = null;
+            document.getElementById('userBtnText').textContent = "Đăng nhập";
+          });
+        }
+      } else {
+        document.getElementById('authModal').classList.remove('hidden');
+      }
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu'); return; }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert('Lỗi đăng nhập: ' + error.message);
+      } else {
+        currentUser = data.user;
+        document.getElementById('userBtnText').textContent = currentUser.email.split('@')[0];
+        closeAuthModal();
+        alert('Đăng nhập thành công!');
+      }
+    }
+
+    async function handleSignUp() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu'); return; }
+
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) {
+        alert('Lỗi đăng ký: ' + error.message);
+      } else {
+        alert('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
+      }
+    }
+
     // --- TÍNH NĂNG ĐỌC GIỌNG MẪU (TEXT-TO-SPEECH) ---
     function speakText(text) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Dừng câu đọc trước nếu có
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; // Giọng Tiếng Anh Mỹ
-        utterance.rate = 0.9;     // Tốc độ vừa phải
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
       }
     }
@@ -787,7 +884,6 @@
         </div>
       `;
 
-      // Kiểm tra nếu bật Tự động phát giọng đọc
       if (document.getElementById('autoSpeechToggle').checked) {
         speakText(card.word);
       }
@@ -836,6 +932,7 @@
         closeCreateFolderModal();
         closeAddFlashcardModal();
         closeBadgesModal();
+        closeAuthModal();
       } 
     });
 
