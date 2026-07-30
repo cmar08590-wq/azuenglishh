@@ -81,7 +81,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Supabase Full Cloud Sync
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Auto Storage Sync Active
       </div>
     </aside>
 
@@ -232,7 +232,6 @@
       if (!error && data && data.length > 0) {
         folders = data;
       } else {
-        // Khởi tạo mặc định nếu bảng trống
         folders = [
           { id: 'general', name: 'Tài liệu chung' },
           { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
@@ -347,6 +346,35 @@
         await fetchCloudFiles();
         fileInput.value = '';
       });
+    }
+
+    // --- TÍNH NĂNG XÓA TẬN GỐC TRÊN STORAGE VÀ DATABASE ---
+    async function deleteFile(id) {
+      const fileToDelete = cloudFiles.find(f => f.id == id);
+      if (!fileToDelete) return;
+
+      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}" khỏi Cloud Storage?`)) {
+        try {
+          // 1. Lấy tên file gốc trên Storage từ URL
+          if (fileToDelete.url) {
+            const urlParts = fileToDelete.url.split('/');
+            const storageFileName = urlParts[urlParts.length - 1];
+            
+            // Xóa file vật lý trong bucket 'documents'
+            if (storageFileName) {
+              await supabaseClient.storage.from('documents').remove([storageFileName]);
+            }
+          }
+
+          // 2. Xóa thông tin file trong bảng Database
+          await supabaseClient.from('documents_metadata').delete().eq('id', id);
+
+          // 3. Cập nhật lại danh sách hiển thị
+          await fetchCloudFiles();
+        } catch (err) {
+          alert('Lỗi khi xóa file: ' + err.message);
+        }
+      }
     }
 
     function switchFolder(id) {
@@ -516,13 +544,6 @@
       currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
       await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id);
       alert('Đã lưu ghi chú!');
-    }
-
-    async function deleteFile(id) {
-      if (confirm('Xóa file này?')) {
-        await supabaseClient.from('documents_metadata').delete().eq('id', id);
-        await fetchCloudFiles();
-      }
     }
 
     function changeAudioSpeed(speed) {
