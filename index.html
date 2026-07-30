@@ -67,12 +67,12 @@
     <!-- TÀI KHOẢN -->
     <div id="authArea">
       <button onclick="openAuthModal()" id="loginBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-white/20 shadow-sm">
-        <i class="fa-solid fa-user-astronaut text-indigo-200"></i> <span id="userBtnText">Đăng nhập</span>
+        <i class="fa-solid fa-user-astronaut text-indigo-200"></i> <span id="userBtnText">Đang tải...</span>
       </button>
     </div>
   </header>
 
-  <!-- MÀN HÌNH KHÓA CHƯA ĐĂNG NHẬP (GUEST LOCK SCREEN) -->
+  <!-- MÀN HÌNH KHÓA CHƯA ĐĂNG NHẬP -->
   <div id="guestLockScreen" class="flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-indigo-50 to-slate-50">
     <div class="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-inner animate-bounce">
       <i class="fa-solid fa-lock"></i>
@@ -86,14 +86,14 @@
     </button>
   </div>
 
-  <!-- MAIN APP CONTAINER (CHỈ HIỆN KHU ĐÃ ĐĂNG NHẬP) -->
+  <!-- MAIN APP CONTAINER -->
   <div id="appContainer" class="flex-1 flex relative overflow-hidden hidden">
     
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 p-4 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-xl md:shadow-none">
       <div class="space-y-5">
         
-        <!-- LINH VẬT ĐÁNG YÊU KHUNG NHÚN NHẢY -->
+        <!-- LINH VẬT ĐÁNG YÊU -->
         <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-3 rounded-2xl border border-indigo-100/80 flex items-center gap-3 relative shadow-sm">
           <div id="userAvatarContainer" class="w-14 h-14 bg-white rounded-2xl border-2 border-indigo-400 flex items-center justify-center shadow-md relative overflow-hidden animate-avatar">
             <i class="fa-solid fa-cat text-2xl text-indigo-500"></i>
@@ -138,7 +138,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Secure Auth Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Cloud Session Permanent
       </div>
     </aside>
 
@@ -198,20 +198,12 @@
             <span class="flex items-center gap-2">🥇 1. <span id="rankUserDisplayName">Mochi</span> (Bạn)</span>
             <span class="text-indigo-600" id="topUserXp">0 XP</span>
           </div>
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600">
-            <span class="flex items-center gap-2">🥈 2. Minh Anh</span>
-            <span>240 XP</span>
-          </div>
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600">
-            <span class="flex items-center gap-2">🥉 3. Alex Chen</span>
-            <span>180 XP</span>
-          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL SHOP SHOP TRANG PHỤC NHÂN VẬT -->
+  <!-- MODAL SHOP SHOP TRANG PHỤC -->
   <div id="shopModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -287,7 +279,7 @@
     </div>
   </div>
 
-  <!-- MODAL THÊM FLASHCARD CÁ NHÂN MỚI -->
+  <!-- MODAL THÊM FLASHCARD CÁ NHÂN -->
   <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-2">
@@ -436,7 +428,8 @@
       gems: 50,
       avatarName: 'Mochi Ham Học',
       equippedHat: '',
-      inventory: []
+      streakCount: 0,
+      lastCheckIn: null
     };
 
     const shopItems = [
@@ -462,67 +455,104 @@
     let audioLoopB = null;
 
     async function initApp() {
-      await checkUserSession();
+      // 1. Tự động khôi phục phiên đăng nhập cũ nếu có
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      await handleAuthState(session);
+
+      // 2. Lắng nghe sự thay đổi trạng thái đăng nhập (đăng nhập/đăng xuất/làm mới token)
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        await handleAuthState(session);
+      });
     }
 
-    // --- KIỂM TRA ĐĂNG NHẬP (BẮT BUỘC ĐỂ MỞ KHÓA TẤT CẢ) ---
-    async function checkUserSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      
+    async function handleAuthState(session) {
       const guestLockScreen = document.getElementById('guestLockScreen');
       const appContainer = document.getElementById('appContainer');
       const authHeaderBtns = document.getElementById('authenticatedHeaderBtns');
 
       if (session) {
         currentUser = session.user;
-        const userKey = 'app_user_data_' + currentUser.id;
-        const userCardKey = 'app_custom_cards_' + currentUser.id;
-
-        userData = JSON.parse(localStorage.getItem(userKey)) || {
-          xp: 0,
-          gems: 50,
-          avatarName: currentUser.email.split('@')[0],
-          equippedHat: '',
-          inventory: []
-        };
-
-        customFlashcards = JSON.parse(localStorage.getItem(userCardKey)) || [
-          { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ, ngôn ngữ chuyên ngành' }
-        ];
-
         document.getElementById('userBtnText').textContent = "Đăng xuất (" + currentUser.email.split('@')[0] + ")";
-        
+
         guestLockScreen.classList.add('hidden');
         appContainer.classList.remove('hidden');
         authHeaderBtns.classList.remove('hidden');
 
+        await loadUserProfileFromDatabase();
         await fetchFolders();
         await fetchCloudFiles();
         setupUploadListener();
-        updateGamificationUI();
-        updateStreakUI();
       } else {
         currentUser = null;
         document.getElementById('userBtnText').textContent = "Đăng nhập";
-        
+
         guestLockScreen.classList.remove('hidden');
         appContainer.classList.add('hidden');
         authHeaderBtns.classList.add('hidden');
       }
     }
 
-    function saveUserData() {
-      if (currentUser) {
-        localStorage.setItem('app_user_data_' + currentUser.id, JSON.stringify(userData));
-        localStorage.setItem('app_custom_cards_' + currentUser.id, JSON.stringify(customFlashcards));
+    // --- ĐỒNG BỘ TIẾN TRÌNH VỚI DATABASE SUPABASE ---
+    async function loadUserProfileFromDatabase() {
+      if (!currentUser) return;
+
+      const { data, error } = await supabaseClient
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (!error && data) {
+        userData = {
+          xp: data.xp || 0,
+          gems: data.gems || 50,
+          avatarName: data.avatar_name || currentUser.email.split('@')[0],
+          equippedHat: data.equipped_hat || '',
+          streakCount: data.streak_count || 0,
+          lastCheckIn: data.last_check_in || null
+        };
+        customFlashcards = data.custom_flashcards || [];
+      } else {
+        // Nếu là user mới chưa có dòng dữ liệu nào, khởi tạo mới
+        userData = {
+          xp: 0,
+          gems: 50,
+          avatarName: currentUser.email.split('@')[0],
+          equippedHat: '',
+          streakCount: 0,
+          lastCheckIn: null
+        };
+        customFlashcards = [{ id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }];
+        await saveUserProfileToDatabase();
       }
+
+      updateGamificationUI();
+      updateStreakUI();
+    }
+
+    async function saveUserProfileToDatabase() {
+      if (!currentUser) return;
+
+      const payload = {
+        user_id: currentUser.id,
+        email: currentUser.email,
+        xp: userData.xp,
+        gems: userData.gems,
+        avatar_name: userData.avatarName,
+        equipped_hat: userData.equippedHat,
+        streak_count: userData.streakCount,
+        last_check_in: userData.lastCheckIn,
+        custom_flashcards: customFlashcards
+      };
+
+      await supabaseClient.from('user_profiles').upsert(payload);
     }
 
     function openAuthModal() {
       if (currentUser) {
         if (confirm(`Bạn đang đăng nhập tài khoản: ${currentUser.email}.\nBạn có muốn đăng xuất không?`)) {
           supabaseClient.auth.signOut().then(() => {
-            checkUserSession();
+            handleAuthState(null);
           });
         }
       } else {
@@ -542,29 +572,28 @@
         alert('Lỗi đăng nhập: ' + error.message);
       } else {
         closeAuthModal();
-        await checkUserSession();
       }
     }
 
     async function handleSignUp() {
       const email = document.getElementById('authEmail').value.trim();
       const password = document.getElementById('authPassword').value.trim();
-      if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu để tạo tài khoản mới!'); return; }
+      if (!email || !password) { alert('Vui lòng nhập Email và Mật khẩu!'); return; }
 
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) {
         alert('Lỗi đăng ký: ' + error.message);
       } else {
-        alert('Tạo tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ.');
+        alert('Tạo tài khoản thành công! Bạn có thể đăng nhập ngay.');
       }
     }
 
-    // --- LINH VẬT & GAME DATA ---
+    // --- LINH VẬT & GAMIFICATION ---
     function changeAvatarName() {
-      const newName = prompt('Nhập tên mới cho linh vật của bạn:', userData.avatarName || 'Mochi');
+      const newName = prompt('Nhập tên mới cho linh vật:', userData.avatarName || 'Mochi');
       if (newName && newName.trim()) {
         userData.avatarName = newName.trim();
-        saveUserData();
+        saveUserProfileToDatabase();
         updateGamificationUI();
       }
     }
@@ -572,7 +601,7 @@
     function addXp(amount) {
       userData.xp += amount;
       userData.gems += Math.floor(amount / 2);
-      saveUserData();
+      saveUserProfileToDatabase();
       updateGamificationUI();
     }
 
@@ -602,7 +631,7 @@
       const container = document.getElementById('shopItemsContainer');
 
       container.innerHTML = shopItems.map(item => {
-        const isBought = userData.inventory.includes(item.id);
+        const isBought = (userData.inventory || []).includes(item.id);
         const isEquipped = userData.equippedHat === item.emoji;
 
         return `
@@ -626,9 +655,10 @@
     function buyShopItem(id, price, emoji) {
       if (userData.gems >= price) {
         userData.gems -= price;
+        if (!userData.inventory) userData.inventory = [];
         userData.inventory.push(id);
         userData.equippedHat = emoji;
-        saveUserData();
+        saveUserProfileToDatabase();
         openShopModal();
         updateGamificationUI();
         alert('🎉 Mua trang phục thành công!');
@@ -639,7 +669,7 @@
 
     function equipHat(emoji) {
       userData.equippedHat = userData.equippedHat === emoji ? '' : emoji;
-      saveUserData();
+      saveUserProfileToDatabase();
       openShopModal();
       updateGamificationUI();
     }
@@ -747,7 +777,7 @@
       const meaning = document.getElementById('meaningInput').value.trim();
       if (word && meaning) {
         customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
-        saveUserData();
+        saveUserProfileToDatabase();
         addXp(5);
         switchFlashcardTab('custom');
         closeAddFlashcardModal();
@@ -757,7 +787,7 @@
     function deleteCustomCard(id) {
       if (confirm('Xóa từ vựng cá nhân này?')) {
         customFlashcards = customFlashcards.filter(c => c.id !== id);
-        saveUserData();
+        saveUserProfileToDatabase();
         if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
         renderFlashcard();
       }
@@ -774,50 +804,42 @@
     }
 
     // --- STREAK ---
-    function getStreakData() {
-      if (!currentUser) return { count: 0, lastCheckIn: null };
-      return JSON.parse(localStorage.getItem('app_streak_' + currentUser.id)) || { count: 0, lastCheckIn: null };
-    }
-
     function updateStreakUI() {
-      const data = getStreakData();
       const today = new Date().toDateString();
       const streakBtn = document.getElementById('streakBtn');
       const streakText = document.getElementById('streakCountText');
 
-      if (data.lastCheckIn) {
-        const lastDate = new Date(data.lastCheckIn);
+      if (userData.lastCheckIn) {
+        const lastDate = new Date(userData.lastCheckIn);
         const diffTime = Math.abs(new Date(today) - new Date(lastDate.toDateString()));
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 1) {
-          data.count = 0;
-          if (currentUser) localStorage.setItem('app_streak_' + currentUser.id, JSON.stringify(data));
+          userData.streakCount = 0;
+          saveUserProfileToDatabase();
         }
       }
 
-      streakText.textContent = `${data.count} Ngày`;
+      streakText.textContent = `${userData.streakCount || 0} Ngày`;
 
-      if (data.lastCheckIn === today) {
+      if (userData.lastCheckIn === today) {
         streakBtn.classList.remove('bg-amber-500/20', 'border-amber-400/40');
         streakBtn.classList.add('bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-300');
       }
     }
 
     function checkInStreak() {
-      const data = getStreakData();
       const today = new Date().toDateString();
 
-      if (data.lastCheckIn === today) {
+      if (userData.lastCheckIn === today) {
         alert("Hôm nay bạn đã điểm danh Streak rồi! Hãy giữ vững phong độ vào ngày mai nhé 🔥");
         return;
       }
 
-      data.count += 1;
-      data.lastCheckIn = today;
-      if (currentUser) localStorage.setItem('app_streak_' + currentUser.id, JSON.stringify(data));
+      userData.streakCount = (userData.streakCount || 0) + 1;
+      userData.lastCheckIn = today;
       addXp(15);
       updateStreakUI();
-      alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${data.count} ngày liên tiếp!`);
+      alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${userData.streakCount} ngày liên tiếp!`);
     }
 
     // --- THƯ MỤC & FILE SUPABASE ---
@@ -941,7 +963,8 @@
             is_starred: false,
             tags: [],
             note: '',
-            url: publicUrlData.publicUrl
+            url: publicUrlData.publicUrl,
+            user_id: currentUser ? currentUser.id : null
           };
 
           await supabaseClient.from('documents_metadata').insert([fileRecord]);
