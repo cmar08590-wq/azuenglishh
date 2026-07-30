@@ -38,7 +38,7 @@
       <h1 class="text-base md:text-xl font-bold tracking-wide">AZU English</h1>
     </div>
     
-    <div id="authenticatedHeaderBtns" class="flex items-center gap-2 md:gap-2.5">
+    <div class="flex items-center gap-2 md:gap-2.5">
       <!-- MỨC RANK & XP -->
       <button onclick="openRankModal()" id="rankBtn" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-bold px-2.5 py-1 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
         <i class="fa-solid fa-trophy text-amber-800 text-sm animate-pulse"></i>
@@ -63,31 +63,19 @@
         <span class="hidden sm:inline">Flashcards</span>
       </button>
     </div>
-
-    <!-- TÀI KHOẢN -->
-    <div id="authArea">
-      <button onclick="openAuthModal()" id="loginBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-white/20 shadow-sm">
-        <i class="fa-solid fa-user-astronaut text-indigo-200"></i> <span id="userBtnText">Đăng nhập</span>
-      </button>
-    </div>
   </header>
 
-  <!-- MÀN HÌNH KHÓA CHƯA ĐĂNG NHẬP -->
-  <div id="guestLockScreen" class="flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-indigo-50 to-slate-50">
-    <div class="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-inner animate-bounce">
-      <i class="fa-solid fa-lock"></i>
+  <!-- Search bar mobile -->
+  <div class="p-3 bg-indigo-700 md:hidden">
+    <div class="relative w-full">
+      <input type="text" id="searchInput" placeholder="Tìm kiếm tài liệu, tag..." 
+        class="w-full pl-9 pr-4 py-1.5 rounded-xl text-slate-800 text-xs focus:outline-none">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
     </div>
-    <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Yêu Cầu Đăng Nhập Tài Khoản</h2>
-    <p class="text-sm text-slate-500 max-w-md mb-6 leading-relaxed">
-      Vui lòng nhập Email tài khoản để mở khóa kho lưu trữ tài liệu Cloud, nuôi linh vật cá nhân, điểm danh Streak và tích lũy điểm XP!
-    </p>
-    <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-bold text-sm transition shadow-lg shadow-indigo-200 flex items-center gap-2">
-      <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập / Đăng Ký Ngay
-    </button>
   </div>
 
   <!-- MAIN APP CONTAINER -->
-  <div id="appContainer" class="flex-1 flex relative overflow-hidden hidden">
+  <div class="flex-1 flex relative overflow-hidden">
     
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 p-4 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-xl md:shadow-none">
@@ -138,7 +126,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Cloud Sync Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Public Access Active
       </div>
     </aside>
 
@@ -223,35 +211,6 @@
       <div class="space-y-3">
         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mũ & Phụ kiện Đáng Yêu</h4>
         <div class="grid grid-cols-3 gap-2" id="shopItemsContainer"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL ĐĂNG NHẬP / ĐĂNG KÝ -->
-  <div id="authModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 id="authModalTitle" class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-right-to-bracket text-indigo-600"></i> Đăng nhập tài khoản
-        </h3>
-        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Email tài khoản:</label>
-          <input type="email" id="authEmail" placeholder="vd: yourname@gmail.com" class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Mật khẩu:</label>
-          <input type="password" id="authPassword" placeholder="••••••••" class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-2 pt-2">
-        <button onclick="handleLogin()" class="w-full py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-semibold shadow">Xác nhận Đăng Nhập</button>
       </div>
     </div>
   </div>
@@ -415,7 +374,6 @@
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentUser = null;
     let currentFolderId = 'all';
     let currentFilter = 'all';
     let selectedTag = null;
@@ -454,25 +412,6 @@
     let audioLoopB = null;
 
     function initApp() {
-      const activeEmail = localStorage.getItem('azu_active_user_email');
-      if (activeEmail) {
-        currentUser = { email: activeEmail, id: 'u_' + btoa(activeEmail) };
-        renderAuthenticatedState();
-      } else {
-        renderGuestState();
-      }
-    }
-
-    function renderAuthenticatedState() {
-      const guestLockScreen = document.getElementById('guestLockScreen');
-      const appContainer = document.getElementById('appContainer');
-
-      const name = currentUser.email ? currentUser.email.split('@')[0] : "User";
-      document.getElementById('userBtnText').textContent = "Đăng xuất (" + name + ")";
-
-      guestLockScreen.classList.add('hidden');
-      appContainer.classList.remove('hidden');
-
       loadUserDataLocal();
       fetchFolders();
       fetchCloudFiles();
@@ -481,65 +420,24 @@
       updateStreakUI();
     }
 
-    function renderGuestState() {
-      const guestLockScreen = document.getElementById('guestLockScreen');
-      const appContainer = document.getElementById('appContainer');
-
-      document.getElementById('userBtnText').textContent = "Đăng nhập";
-
-      guestLockScreen.classList.remove('hidden');
-      appContainer.classList.add('hidden');
-    }
-
     function loadUserDataLocal() {
-      if (!currentUser) return;
-      const key = 'app_user_profile_' + currentUser.email;
-      const cardKey = 'app_user_cards_' + currentUser.email;
-
-      userData = JSON.parse(localStorage.getItem(key)) || {
+      userData = JSON.parse(localStorage.getItem('azu_public_user_profile')) || {
         xp: 0,
         gems: 50,
-        avatarName: currentUser.email.split('@')[0],
+        avatarName: 'Mochi Ham Học',
         equippedHat: '',
         streakCount: 0,
         lastCheckIn: null
       };
 
-      customFlashcards = JSON.parse(localStorage.getItem(cardKey)) || [
+      customFlashcards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [
         { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }
       ];
     }
 
     function saveUserDataLocal() {
-      if (!currentUser) return;
-      const key = 'app_user_profile_' + currentUser.email;
-      const cardKey = 'app_user_cards_' + currentUser.email;
-      localStorage.setItem(key, JSON.stringify(userData));
-      localStorage.setItem(cardKey, JSON.stringify(customFlashcards));
-    }
-
-    function openAuthModal() {
-      if (currentUser) {
-        if (confirm(`Bạn đang đăng nhập: ${currentUser.email}.\nBạn có muốn đăng xuất không?`)) {
-          localStorage.removeItem('azu_active_user_email');
-          currentUser = null;
-          renderGuestState();
-        }
-      } else {
-        document.getElementById('authModal').classList.remove('hidden');
-      }
-    }
-
-    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-
-    function handleLogin() {
-      const email = document.getElementById('authEmail').value.trim();
-      if (!email) { alert('Vui lòng nhập Email tài khoản!'); return; }
-
-      currentUser = { email: email, id: 'u_' + btoa(email) };
-      localStorage.setItem('azu_active_user_email', email);
-      closeAuthModal();
-      renderAuthenticatedState();
+      localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
+      localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
     }
 
     // --- GAMIFICATION ---
@@ -1204,7 +1102,6 @@
         closeAddFlashcardModal();
         closeRankModal();
         closeShopModal();
-        closeAuthModal();
       } 
     });
 
