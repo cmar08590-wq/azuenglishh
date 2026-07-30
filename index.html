@@ -36,7 +36,12 @@
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <!-- Nút Flashcards -->
+      <!-- Nút HUY HIỆU -->
+      <button onclick="openBadgesModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+        <i class="fa-solid fa-trophy"></i> Thành tích
+      </button>
+
+      <!-- Nút FLASHCARDS -->
       <button onclick="openFlashcardModal()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
         <i class="fa-solid fa-layer-group"></i> Flashcards
       </button>
@@ -88,7 +93,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Supabase Cloud Connected
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Public Files Active
       </div>
     </aside>
 
@@ -120,7 +125,7 @@
     </main>
   </div>
 
-  <!-- POP-UP MODAL TẠO THƯ MỤC MỚI -->
+  <!-- MODAL TẠO THƯ MỤC MỚI -->
   <div id="createFolderModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-2">
@@ -142,7 +147,7 @@
     </div>
   </div>
 
-  <!-- POP-UP MODAL THÊM FLASHCARD MỚI -->
+  <!-- MODAL THÊM FLASHCARD MỚI -->
   <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-2">
@@ -167,6 +172,21 @@
         <button onclick="closeAddFlashcardModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-lg">Hủy</button>
         <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg shadow">Thêm thẻ</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL BẢNG HUY HIỆU THÀNH TÍCH -->
+  <div id="badgesModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-500"></i> Bảng Thành Tích Cá Nhân
+        </h3>
+        <button onclick="closeBadgesModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="badgesContainer" class="grid grid-cols-2 gap-3 py-2"></div>
     </div>
   </div>
 
@@ -240,9 +260,15 @@
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
           <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Ôn Từ Vựng
         </h3>
-        <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+            <input type="checkbox" id="autoSpeechToggle" class="rounded text-indigo-600 focus:ring-0">
+            <span>Tự đọc 🔊</span>
+          </label>
+          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
       </div>
       <div id="flashcardContainer" class="py-2"></div>
       <div class="flex justify-between items-center pt-2 border-t">
@@ -277,7 +303,18 @@
       updateStreakUI();
     }
 
-    // --- TÍNH NĂNG STREAK (ĐÁNH DẤU CHUYÊN CẦN HÀNG NGÀY) ---
+    // --- TÍNH NĂNG ĐỌC GIỌNG MẪU (TEXT-TO-SPEECH) ---
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Dừng câu đọc trước nếu có
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // Giọng Tiếng Anh Mỹ
+        utterance.rate = 0.9;     // Tốc độ vừa phải
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // --- TÍNH NĂNG STREAK & HUY HIỆU ---
     function getStreakData() {
       return JSON.parse(localStorage.getItem('app_streak_data')) || { count: 0, lastCheckIn: null };
     }
@@ -292,9 +329,8 @@
         const lastDate = new Date(data.lastCheckIn);
         const diffTime = Math.abs(new Date(today) - new Date(lastDate.toDateString()));
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
         if (diffDays > 1) {
-          data.count = 0; // Quá 1 ngày không học -> Reset Streak
+          data.count = 0;
           localStorage.setItem('app_streak_data', JSON.stringify(data));
         }
       }
@@ -304,7 +340,6 @@
       if (data.lastCheckIn === today) {
         streakBtn.classList.remove('bg-amber-500/20', 'border-amber-400/40');
         streakBtn.classList.add('bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-300');
-        streakBtn.title = "Đã điểm danh hôm nay!";
       }
     }
 
@@ -324,14 +359,40 @@
       alert(`🎉 Xuất sắc! Bạn đã tăng Streak lên ${data.count} ngày học liên tiếp!`);
     }
 
-    // --- CỬA SỔ PROMPT CUSTOM (MODAL POP-UP) ---
-    function openCreateFolderModal() {
-      document.getElementById('folderNameInput').value = '';
-      document.getElementById('createFolderModal').classList.remove('hidden');
+    function openBadgesModal() {
+      const streakData = getStreakData();
+      const fileCount = cloudFiles.length;
+      const flashcardCount = flashcards.length;
+
+      const badges = [
+        { title: "Tân Binh Học Tập", desc: "Đạt Streak 3 ngày", icon: "🏅", unlocked: streakData.count >= 3 },
+        { title: "Chiến Binh Chuyên Cần", desc: "Đạt Streak 7 ngày", icon: "🚀", unlocked: streakData.count >= 7 },
+        { title: "Thủ Thư Đám Mây", desc: "Tải lên 5 tài liệu", icon: "📚", unlocked: fileCount >= 5 },
+        { title: "Bậc Thầy Từ Vựng", desc: "Tạo 10 thẻ Flashcard", icon: "⚡", unlocked: flashcardCount >= 10 }
+      ];
+
+      const container = document.getElementById('badgesContainer');
+      container.innerHTML = badges.map(b => `
+        <div class="p-3 rounded-xl border ${b.unlocked ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200 opacity-50'} flex items-center gap-3">
+          <span class="text-2xl">${b.icon}</span>
+          <div>
+            <h4 class="font-bold text-xs ${b.unlocked ? 'text-amber-900' : 'text-slate-600'}">${b.title}</h4>
+            <p class="text-[10px] text-slate-500">${b.desc}</p>
+            <span class="text-[9px] font-semibold ${b.unlocked ? 'text-emerald-600' : 'text-slate-400'}">${b.unlocked ? '✓ Đã mở khóa' : '🔒 Chưa đạt'}</span>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('badgesModal').classList.remove('hidden');
     }
-    function closeCreateFolderModal() {
-      document.getElementById('createFolderModal').classList.add('hidden');
+
+    function closeBadgesModal() {
+      document.getElementById('badgesModal').classList.add('hidden');
     }
+
+    // --- MODAL TẠO THƯ MỤC & FLASHCARD ---
+    function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
+    function closeCreateFolderModal() { document.getElementById('createFolderModal').classList.add('hidden'); }
     async function submitCreateFolder() {
       const input = document.getElementById('folderNameInput').value.trim();
       if (input) {
@@ -343,14 +404,8 @@
       }
     }
 
-    function openAddFlashcardModal() {
-      document.getElementById('wordInput').value = '';
-      document.getElementById('meaningInput').value = '';
-      document.getElementById('addFlashcardModal').classList.remove('hidden');
-    }
-    function closeAddFlashcardModal() {
-      document.getElementById('addFlashcardModal').classList.add('hidden');
-    }
+    function openAddFlashcardModal() { document.getElementById('wordInput').value = ''; document.getElementById('meaningInput').value = ''; document.getElementById('addFlashcardModal').classList.remove('hidden'); }
+    function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
     function submitAddFlashcard() {
       const word = document.getElementById('wordInput').value.trim();
       const meaning = document.getElementById('meaningInput').value.trim();
@@ -700,15 +755,50 @@
       clearLoop();
     }
 
+    // --- FLASHCARD & SPEECH ---
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
     function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
+    
     function renderFlashcard() {
       const container = document.getElementById('flashcardContainer');
-      if (flashcards.length === 0) { container.innerHTML = '<p class="text-center text-slate-400 text-sm py-8">Chưa có flashcard nào.</p>'; return; }
+      if (flashcards.length === 0) { 
+        container.innerHTML = '<p class="text-center text-slate-400 text-sm py-8">Chưa có flashcard nào.</p>'; 
+        return; 
+      }
       const card = flashcards[currentCardIndex];
-      container.innerHTML = `<div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')"><div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center"><div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4"><span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Từ vựng (${currentCardIndex + 1}/${flashcards.length})</span><h2 class="text-xl font-bold text-slate-800">${card.word}</h2></div><div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl"><span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span><p class="text-sm font-medium leading-relaxed">${card.meaning}</p></div></div></div>`;
+      
+      container.innerHTML = `
+        <div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center">
+            <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4">
+              <span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Từ vựng (${currentCardIndex + 1}/${flashcards.length})</span>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-slate-800">${card.word}</h2>
+                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-indigo-600 hover:text-indigo-800 p-1 text-base" title="Nghe phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+            </div>
+            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl">
+              <span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span>
+              <p class="text-sm font-medium leading-relaxed">${card.meaning}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Kiểm tra nếu bật Tự động phát giọng đọc
+      if (document.getElementById('autoSpeechToggle').checked) {
+        speakText(card.word);
+      }
     }
-    function nextCard() { if (flashcards.length > 0) { currentCardIndex = (currentCardIndex + 1) % flashcards.length; renderFlashcard(); } }
+
+    function nextCard() { 
+      if (flashcards.length > 0) { 
+        currentCardIndex = (currentCardIndex + 1) % flashcards.length; 
+        renderFlashcard(); 
+      } 
+    }
 
     function getMimeType(filename) {
       const ext = filename.split('.').pop().toLowerCase();
@@ -745,6 +835,7 @@
         closeFlashcardModal(); 
         closeCreateFolderModal();
         closeAddFlashcardModal();
+        closeBadgesModal();
       } 
     });
 
