@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AZU English - Pro Learning Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Thư viện đọc file Word (.docx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <style>
+    .modal-backdrop {
+      background-color: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+    }
+    .flashcard { perspective: 1000px; }
+    .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back { backface-visibility: hidden; }
+    .flashcard-back { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-indigo-600 text-white shadow-md px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <i class="fa-solid fa-graduation-cap text-2xl"></i>
+      <h1 class="text-xl font-bold tracking-wide">AZU English</h1>
+    </div>
+    
+    <div class="flex items-center gap-3 flex-1 max-w-xl">
+      <div class="relative w-full">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm tài liệu, tag..." 
+          class="w-full pl-9 pr-4 py-1.5 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="openFlashcardModal()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-layer-group"></i> Flashcards
+      </button>
+      <button onclick="exportBackup()" title="Sao lưu dữ liệu" class="bg-indigo-700 hover:bg-indigo-800 text-white p-2 rounded-lg text-sm transition">
+        <i class="fa-solid fa-download"></i>
+      </button>
+      <label title="Phục hồi dữ liệu" class="bg-indigo-700 hover:bg-indigo-800 text-white p-2 rounded-lg text-sm transition cursor-pointer">
+        <i class="fa-solid fa-upload"></i>
+        <input type="file" id="importInput" accept=".json" class="hidden" onchange="importBackup(event)">
+      </label>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between overflow-y-auto">
+      <div class="space-y-6">
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Thư mục</h2>
+            <button onclick="createFolder()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1">
+              <i class="fa-solid fa-folder-plus"></i> Tạo
+            </button>
+          </div>
+          <nav id="folderList" class="space-y-1"></nav>
+        </div>
+
+        <div>
+          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Bộ lọc nhanh</h2>
+          <div class="space-y-1">
+            <button onclick="setFilter('starred')" id="filterStarred" class="w-full text-left px-3 py-1.5 rounded-lg text-sm flex items-center justify-between text-slate-600 hover:bg-slate-100">
+              <span class="flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i> Đã đánh dấu</span>
+              <span id="starredCount" class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-medium">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Thẻ Tags</h2>
+          <div id="tagCloud" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 border-t pt-3">
+        Lưu trữ cục bộ (IndexedDB V3)
+      </div>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 id="currentFolderName" class="text-2xl font-bold text-slate-800">Tất cả tài liệu</h2>
+          <p id="fileCount" class="text-sm text-slate-500 mt-0.5">0 tệp tin</p>
+        </div>
+        
+        <!-- Nút Tải File được kích hoạt trực tiếp -->
+        <label class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm font-medium shadow-sm transition flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Tải file lên
+          <input type="file" id="fileInput" multiple class="hidden">
+        </label>
+      </div>
+
+      <!-- Grid file -->
+      <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+    </main>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-4 md:p-6">
+    <div class="bg-white rounded-t-xl px-6 py-4 flex justify-between items-center shadow-lg border-b border-slate-200">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <span id="previewIcon" class="text-xl"></span>
+        <h3 id="previewTitle" class="font-bold text-slate-800 text-base md:text-lg truncate">Xem tài liệu</h3>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="previewDownloadBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> Tải về
+        </button>
+        <button onclick="closePreview()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="bg-slate-100 flex-1 overflow-hidden rounded-b-xl flex flex-col md:flex-row p-2 gap-2 relative">
+      <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-2"></div>
+      
+      <!-- Sidebar Ghi chú & Audio Player -->
+      <div id="previewSidebar" class="w-full md:w-80 bg-white rounded-lg p-4 border border-slate-200 flex flex-col justify-between hidden">
+        <div id="audioControlsContainer" class="hidden border-b pb-4 mb-4">
+          <h4 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-indigo-600"></i> Lingo Player
+          </h4>
+          <div class="space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span>Tốc độ:</span>
+              <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border rounded px-2 py-1 text-slate-700">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2.0">2.0x</option>
+              </select>
+            </div>
+            
+            <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+              <span class="font-medium text-slate-600 block mb-2">Lặp đoạn A-B (Shadowing):</span>
+              <div class="flex gap-1 mb-2">
+                <button onclick="setLoopPoint('A')" class="flex-1 bg-white border hover:bg-slate-100 py-1 rounded font-medium text-slate-700">Set A</button>
+                <button onclick="setLoopPoint('B')" class="flex-1 bg-white border hover:bg-slate-100 py-1 rounded font-medium text-slate-700">Set B</button>
+                <button onclick="clearLoop()" class="bg-white border hover:bg-red-50 text-red-500 px-2 rounded"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <p id="loopStatus" class="text-slate-400 italic">Chưa chọn đoạn lặp</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+          <h4 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học
+          </h4>
+          <textarea id="fileNoteArea" placeholder="Ghi chú cho tài liệu này..." 
+            class="w-full flex-1 p-2.5 border rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none mb-3"></textarea>
+          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg text-xs font-medium transition">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flashcard Modal -->
+  <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Ôn Từ Vựng
+        </h3>
+        <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="flashcardContainer" class="py-4"></div>
+
+      <div class="flex justify-between items-center pt-2 border-t">
+        <button onclick="openAddWordModal()" class="text-xs text-indigo-600 hover:underline font-medium">
+          + Thêm từ mới
+        </button>
+        <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition">
+          Thẻ tiếp theo <i class="fa-solid fa-arrow-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let db;
+    let currentFolderId = 'all';
+    let currentFilter = 'all';
+    let selectedTag = null;
+    let folders = JSON.parse(localStorage.getItem('app_folders')) || [
+      { id: 'general', name: 'Tài liệu chung' },
+      { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
+      { id: 'listening', name: 'Luyện nghe (Audio)' }
+    ];
+    let flashcards = JSON.parse(localStorage.getItem('app_flashcards')) || [
+      { id: 1, word: 'Allomorph', meaning: 'Biến thể hình thái âm học của cùng một morpheme' },
+      { id: 2, word: 'Aspiration', meaning: 'Bật hơi khi phát âm (/pʰ/, /tʰ/, /kʰ/)' }
+    ];
+
+    let currentPreviewRecord = null;
+    let audioLoopA = null;
+    let audioLoopB = null;
+    let currentCardIndex = 0;
+
+    function initDB() {
+      const request = indexedDB.open('AZUEnglishDB_V4', 1);
+      request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains('files')) {
+          const store = db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
+          store.createIndex('folderId', 'folderId', { unique: false });
+        }
+      };
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        renderFolders();
+        renderFiles();
+        updateStarredCount();
+        setupUploadListener();
+      };
+    }
+
+    // --- Lắng nghe sự kiện Upload File chắc chắn 100% ---
+    function setupUploadListener() {
+      const fileInput = document.getElementById('fileInput');
+      fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const targetFolder = currentFolderId === 'all' ? 'general' : currentFolderId;
+
+        Array.from(files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const fileData = {
+              name: file.name,
+              type: file.type || getMimeType(file.name),
+              size: file.size,
+              folderId: targetFolder,
+              dateAdded: new Date().toLocaleDateString('vi-VN'),
+              isStarred: false,
+              tags: [],
+              note: '',
+              contentData: evt.target.result
+            };
+
+            const tx = db.transaction(['files'], 'readwrite');
+            const store = tx.objectStore('files');
+            store.add(fileData);
+            tx.oncomplete = () => {
+              renderFiles();
+              updateStarredCount();
+            };
+          };
+          reader.readAsDataURL(file);
+        });
+
+        fileInput.value = '';
+      });
+    }
+
+    function renderFolders() {
+      const nav = document.getElementById('folderList');
+      let html = `
+        <button onclick="switchFolder('all')" class="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-slate-600 hover:bg-slate-100'}">
+          <i class="fa-solid fa-layer-group"></i> Tất cả tài liệu
+        </button>
+      `;
+
+      folders.forEach(f => {
+        const isActive = currentFolderId === f.id && currentFilter === 'all' && !selectedTag;
+        html += `
+          <div class="group flex justify-between items-center rounded-lg ${isActive ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-slate-600 hover:bg-slate-100'}">
+            <button onclick="switchFolder('${f.id}')" class="flex-1 text-left px-3 py-2 text-sm flex items-center gap-2 truncate">
+              <i class="fa-solid fa-folder${isActive ? '-open' : ''}"></i> ${f.name}
+            </button>
+            <button onclick="deleteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 px-2 py-1 text-slate-400 hover:text-red-500 text-xs">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+      });
+      nav.innerHTML = html;
+      saveFolders();
+    }
+
+    function createFolder() {
+      const name = prompt('Nhập tên thư mục mới:');
+      if (name && name.trim()) {
+        folders.push({ id: 'f_' + Date.now(), name: name.trim() });
+        renderFolders();
+      }
+    }
+
+    function deleteFolder(id) {
+      if (confirm('Xóa thư mục này? Các file bên trong cũng sẽ bị xoá.')) {
+        folders = folders.filter(f => f.id !== id);
+        if (currentFolderId === id) currentFolderId = 'all';
+        
+        const tx = db.transaction(['files'], 'readwrite');
+        const store = tx.objectStore('files');
+        const index = store.index('folderId');
+        const req = index.getAllKeys(id);
+        req.onsuccess = () => {
+          req.result.forEach(key => store.delete(key));
+          renderFolders();
+          renderFiles();
+        };
+      }
+    }
+
+    function saveFolders() {
+      localStorage.setItem('app_folders', JSON.stringify(folders));
+    }
+
+    function switchFolder(id) {
+      currentFolderId = id;
+      currentFilter = 'all';
+      selectedTag = null;
+      const folderObj = folders.find(f => f.id === id);
+      document.getElementById('currentFolderName').textContent = id === 'all' ? 'Tất cả tài liệu' : folderObj.name;
+      renderFolders();
+      renderFiles();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      selectedTag = null;
+      document.getElementById('currentFolderName').textContent = filter === 'starred' ? 'Tài liệu đã đánh dấu ⭐' : 'Tất cả tài liệu';
+      renderFolders();
+      renderFiles();
+    }
+
+    function filterByTag(tagName) {
+      selectedTag = selectedTag === tagName ? null : tagName;
+      document.getElementById('currentFolderName').textContent = selectedTag ? `Tài liệu gắn tag #${selectedTag}` : 'Tất cả tài liệu';
+      renderFolders();
+      renderFiles();
+    }
+
+    function renderFiles() {
+      const grid = document.getElementById('fileGrid');
+      const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+      
+      if (!db) return;
+      const tx = db.transaction(['files'], 'readonly');
+      const store = tx.objectStore('files');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        let files = req.result;
+
+        renderTagCloud(files);
+
+        if (currentFolderId !== 'all' && currentFilter === 'all' && !selectedTag) {
+          files = files.filter(f => f.folderId === currentFolderId);
+        }
+
+        if (currentFilter === 'starred') {
+          files = files.filter(f => f.isStarred);
+        }
+
+        if (selectedTag) {
+          files = files.filter(f => f.tags && f.tags.includes(selectedTag));
+        }
+
+        if (searchKeyword) {
+          files = files.filter(f => f.name.toLowerCase().includes(searchKeyword) || (f.tags && f.tags.some(t => t.toLowerCase().includes(searchKeyword))));
+        }
+
+        document.getElementById('fileCount').textContent = `${files.length} tệp tin`;
+
+        if (files.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full py-12 text-center text-slate-400">
+              <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
+              <p>Chưa có tài liệu nào.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = files.map(f => `
+          <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-md transition flex flex-col justify-between relative group">
+            <button onclick="toggleStar(event, ${f.id})" class="absolute top-3 right-3 text-slate-300 hover:text-amber-400 transition ${f.isStarred ? 'text-amber-400' : ''}">
+              <i class="fa-solid fa-star text-base"></i>
+            </button>
+
+            <div class="flex items-start gap-3 cursor-pointer" onclick="previewFile(${f.id})">
+              <div class="p-2.5 bg-slate-100 rounded-lg text-indigo-600 text-xl">
+                ${getFileIcon(f.type, f.name)}
+              </div>
+              <div class="overflow-hidden flex-1 pr-4">
+                <h3 class="font-medium text-slate-800 text-sm truncate hover:text-indigo-600 transition" title="${f.name}">${f.name}</h3>
+                <p class="text-xs text-slate-400 mt-1">${formatSize(f.size)} • ${f.dateAdded}</p>
+                <div class="flex flex-wrap gap-1 mt-2">
+                  ${(f.tags || []).map(t => `<span class="bg-indigo-50 text-indigo-600 text-[10px] px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-100">
+              <div class="flex gap-1">
+                <button onclick="previewFile(${f.id})" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1">
+                  <i class="fa-solid fa-eye"></i> Xem ngay
+                </button>
+                <button onclick="addTagPrompt(event, ${f.id})" class="text-xs text-slate-500 hover:text-indigo-600 px-1.5 py-1 rounded hover:bg-slate-50" title="Gán Tag">
+                  <i class="fa-solid fa-tag"></i>
+                </button>
+              </div>
+              <div class="flex gap-1">
+                <button onclick="downloadFile(${f.id})" class="text-xs text-slate-600 hover:text-indigo-600 px-2 py-1 rounded hover:bg-slate-50">
+                  <i class="fa-solid fa-download"></i>
+                </button>
+                <button onclick="deleteFile(${f.id})" class="text-xs text-slate-400 hover:text-red-600 px-2 py-1 rounded hover:bg-slate-50">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      };
+    }
+
+    function toggleStar(event, id) {
+      event.stopPropagation();
+      const tx = db.transaction(['files'], 'readwrite');
+      const store = tx.objectStore('files');
+      const req = store.get(id);
+
+      req.onsuccess = () => {
+        const record = req.result;
+        record.isStarred = !record.isStarred;
+        store.put(record);
+        tx.oncomplete = () => {
+          renderFiles();
+          updateStarredCount();
+        };
+      };
+    }
+
+    function addTagPrompt(event, id) {
+      event.stopPropagation();
+      const tag = prompt('Nhập tên Tag (vd: Grammar, Phonetics...):');
+      if (tag && tag.trim()) {
+        const tx = db.transaction(['files'], 'readwrite');
+        const store = tx.objectStore('files');
+        const req = store.get(id);
+
+        req.onsuccess = () => {
+          const record = req.result;
+          record.tags = record.tags || [];
+          if (!record.tags.includes(tag.trim())) {
+            record.tags.push(tag.trim());
+            store.put(record);
+          }
+          tx.oncomplete = () => renderFiles();
+        };
+      }
+    }
+
+    function renderTagCloud(allFiles) {
+      const tagMap = {};
+      allFiles.forEach(f => {
+        (f.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; });
+      });
+
+      const container = document.getElementById('tagCloud');
+      const tagKeys = Object.keys(tagMap);
+
+      if (tagKeys.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-400 italic">Chưa có tag nào</span>';
+        return;
+      }
+
+      container.innerHTML = tagKeys.map(t => `
+        <button onclick="filterByTag('${t}')" class="text-xs px-2 py-1 rounded-md transition ${selectedTag === t ? 'bg-indigo-600 text-white font-medium' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'}">
+          #${t} (${tagMap[t]})
+        </button>
+      `).join('');
+    }
+
+    function updateStarredCount() {
+      if (!db) return;
+      const tx = db.transaction(['files'], 'readonly');
+      const store = tx.objectStore('files');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        const count = req.result.filter(f => f.isStarred).length;
+        document.getElementById('starredCount').textContent = count;
+      };
+    }
+
+    // --- Xem File Trực Tiếp (Preview) ---
+    function previewFile(id) {
+      const tx = db.transaction(['files'], 'readonly');
+      const store = tx.objectStore('files');
+      const req = store.get(id);
+
+      req.onsuccess = () => {
+        const record = req.result;
+        if (!record) return;
+
+        currentPreviewRecord = record;
+
+        const modal = document.getElementById('previewModal');
+        const previewBody = document.getElementById('previewBody');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewIcon = document.getElementById('previewIcon');
+        const downloadBtn = document.getElementById('previewDownloadBtn');
+        const previewSidebar = document.getElementById('previewSidebar');
+        const audioControls = document.getElementById('audioControlsContainer');
+        const noteArea = document.getElementById('fileNoteArea');
+
+        previewTitle.textContent = record.name;
+        previewIcon.innerHTML = getFileIcon(record.type, record.name);
+        downloadBtn.onclick = () => downloadFile(id);
+        noteArea.value = record.note || '';
+
+        previewSidebar.classList.remove('hidden');
+        audioControls.classList.add('hidden');
+
+        const fileDataUrl = record.contentData;
+        const ext = record.name.split('.').pop().toLowerCase();
+
+        if (record.type.includes('pdf') || ext === 'pdf') {
+          previewBody.innerHTML = `<iframe src="${fileDataUrl}" class="w-full h-full rounded-lg border-0"></iframe>`;
+        } else if (record.type.includes('image') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
+          previewBody.innerHTML = `<div class="w-full h-full flex items-center justify-center p-4"><img src="${fileDataUrl}" class="max-h-full max-w-full object-contain rounded-lg shadow" /></div>`;
+        } else if (ext === 'docx') {
+          previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p>Đang đọc file Word...</p></div>`;
+          
+          fetch(fileDataUrl)
+            .then(res => res.arrayBuffer())
+            .then(arrayBuffer => {
+              mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                .then(result => {
+                  previewBody.innerHTML = `
+                    <div class="w-full h-full bg-white p-8 rounded-lg shadow overflow-auto text-slate-800 leading-relaxed max-w-4xl prose">
+                      ${result.value}
+                    </div>
+                  `;
+                })
+                .catch(err => { previewBody.innerHTML = `<p class="text-red-500">Lỗi đọc file: ${err.message}</p>`; });
+            });
+        } else if (record.type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) {
+          audioControls.classList.remove('hidden');
+          previewBody.innerHTML = `
+            <div class="bg-white p-8 rounded-2xl shadow-md text-center max-w-md w-full my-auto">
+              <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-music"></i>
+              </div>
+              <p class="font-medium text-slate-800 mb-6 truncate">${record.name}</p>
+              <audio id="mainAudioPlayer" controls src="${fileDataUrl}" class="w-full" ontimeupdate="checkAudioLoop()"></audio>
+            </div>
+          `;
+        } else if (record.type.includes('video') || ['mp4', 'webm'].includes(ext)) {
+          previewBody.innerHTML = `
+            <div class="w-full h-full flex items-center justify-center p-2">
+              <video controls src="${fileDataUrl}" class="max-h-full max-w-full rounded-lg shadow"></video>
+            </div>
+          `;
+        } else if (record.type.includes('text') || ['txt', 'json', 'js', 'css', 'html', 'md', 'py'].includes(ext)) {
+          fetch(fileDataUrl)
+            .then(res => res.text())
+            .then(text => {
+              previewBody.innerHTML = `
+                <div class="w-full h-full bg-white p-6 rounded-lg shadow overflow-auto font-mono text-sm text-slate-800 whitespace-pre-wrap">
+                  ${escapeHtml(text)}
+                </div>
+              `;
+            });
+        } else {
+          previewBody.innerHTML = `
+            <div class="bg-white p-8 rounded-2xl shadow-md text-center max-w-sm w-full my-auto">
+              <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-file-circle-exclamation"></i>
+              </div>
+              <h4 class="font-bold text-slate-800 mb-2">Không hỗ trợ xem trực tiếp</h4>
+              <p class="text-xs text-slate-500 mb-6">Định dạng <b>.${ext}</b> chưa hỗ trợ mở nhanh. Hãy đổi sang file PDF/DOCX hoặc tải về máy nhé!</p>
+              <button onclick="downloadFile(${id})" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium text-sm transition">
+                <i class="fa-solid fa-download"></i> Tải file về máy
+              </button>
+            </div>
+          `;
+        }
+
+        modal.classList.remove('hidden');
+      };
+    }
+
+    function saveFileNote() {
+      if (!currentPreviewRecord) return;
+      const note = document.getElementById('fileNoteArea').value;
+      const tx = db.transaction(['files'], 'readwrite');
+      const store = tx.objectStore('files');
+      
+      const req = store.get(currentPreviewRecord.id);
+      req.onsuccess = () => {
+        const record = req.result;
+        record.note = note;
+        store.put(record);
+        tx.oncomplete = () => alert('Đã lưu ghi chú thành công!');
+      };
+    }
+
+    // --- Audio Player ---
+    function changeAudioSpeed(speed) {
+      const audio = document.getElementById('mainAudioPlayer');
+      if (audio) audio.playbackRate = parseFloat(speed);
+    }
+
+    function setLoopPoint(point) {
+      const audio = document.getElementById('mainAudioPlayer');
+      if (!audio) return;
+
+      if (point === 'A') audioLoopA = audio.currentTime;
+      else if (point === 'B') audioLoopB = audio.currentTime;
+
+      const status = document.getElementById('loopStatus');
+      if (audioLoopA !== null && audioLoopB !== null) {
+        if (audioLoopA >= audioLoopB) {
+          alert('Điểm A phải nhỏ hơn điểm B!');
+          clearLoop();
+          return;
+        }
+        status.textContent = `Lặp từ ${audioLoopA.toFixed(1)}s ➔ ${audioLoopB.toFixed(1)}s`;
+        status.classList.remove('italic', 'text-slate-400');
+        status.classList.add('text-indigo-600', 'font-medium');
+      } else if (audioLoopA !== null) {
+        status.textContent = `Đã chọn A: ${audioLoopA.toFixed(1)}s (Chọn B...)`;
+      }
+    }
+
+    function clearLoop() {
+      audioLoopA = null;
+      audioLoopB = null;
+      const status = document.getElementById('loopStatus');
+      status.textContent = 'Chưa chọn đoạn lặp';
+      status.classList.add('italic', 'text-slate-400');
+      status.classList.remove('text-indigo-600', 'font-medium');
+    }
+
+    function checkAudioLoop() {
+      const audio = document.getElementById('mainAudioPlayer');
+      if (audio && audioLoopA !== null && audioLoopB !== null) {
+        if (audio.currentTime >= audioLoopB) {
+          audio.currentTime = audioLoopA;
+          audio.play();
+        }
+      }
+    }
+
+    function closePreview() {
+      const modal = document.getElementById('previewModal');
+      modal.classList.add('hidden');
+      document.getElementById('previewBody').innerHTML = '';
+      clearLoop();
+    }
+
+    // --- Flashcards ---
+    function openFlashcardModal() {
+      currentCardIndex = 0;
+      renderFlashcard();
+      document.getElementById('flashcardModal').classList.remove('hidden');
+    }
+
+    function closeFlashcardModal() {
+      document.getElementById('flashcardModal').classList.add('hidden');
+    }
+
+    function renderFlashcard() {
+      const container = document.getElementById('flashcardContainer');
+      if (flashcards.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-400 text-sm py-8">Chưa có flashcard nào.</p>';
+        return;
+      }
+
+      const card = flashcards[currentCardIndex];
+      container.innerHTML = `
+        <div class="flashcard cursor-pointer h-56 w-full" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-6 text-center">
+            <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
+              <span class="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Từ vựng (${currentCardIndex + 1}/${flashcards.length})</span>
+              <h2 class="text-2xl font-bold text-slate-800">${escapeHtml(card.word)}</h2>
+              <span class="text-[11px] text-slate-400 mt-4">(Lật thẻ xem nghĩa)</span>
+            </div>
+            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-indigo-600 text-white rounded-2xl">
+              <span class="text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span>
+              <p class="text-base font-medium leading-relaxed">${escapeHtml(card.meaning)}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function nextCard() {
+      if (flashcards.length === 0) return;
+      currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+      renderFlashcard();
+    }
+
+    function openAddWordModal() {
+      const word = prompt('Nhập từ vựng mới:');
+      if (word && word.trim()) {
+        const meaning = prompt(`Nhập nghĩa của từ "${word}":`);
+        if (meaning && meaning.trim()) {
+          flashcards.push({ id: Date.now(), word: word.trim(), meaning: meaning.trim() });
+          localStorage.setItem('app_flashcards', JSON.stringify(flashcards));
+          renderFlashcard();
+        }
+      }
+    }
+
+    // --- Utilities ---
+    function downloadFile(id) {
+      const tx = db.transaction(['files'], 'readonly');
+      const store = tx.objectStore('files');
+      const req = store.get(id);
+
+      req.onsuccess = () => {
+        const record = req.result;
+        const a = document.createElement('a');
+        a.href = record.contentData;
+        a.download = record.name;
+        a.click();
+      };
+    }
+
+    function deleteFile(id) {
+      if (confirm('Bạn có chắc muốn xóa file này?')) {
+        const tx = db.transaction(['files'], 'readwrite');
+        tx.objectStore('files').delete(id);
+        tx.oncomplete = () => {
+          renderFiles();
+          updateStarredCount();
+        };
+      }
+    }
+
+    function getMimeType(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      if (ext === 'pdf') return 'application/pdf';
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
+      if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return 'audio/' + ext;
+      if (['mp4', 'webm'].includes(ext)) return 'video/' + ext;
+      return 'application/octet-stream';
+    }
+
+    function getFileIcon(type, name) {
+      const ext = name.split('.').pop().toLowerCase();
+      if (type.includes('pdf') || ext === 'pdf') return '<i class="fa-solid fa-file-pdf text-red-500"></i>';
+      if (type.includes('word') || ['doc', 'docx'].includes(ext)) return '<i class="fa-solid fa-file-word text-blue-500"></i>';
+      if (type.includes('image') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return '<i class="fa-solid fa-file-image text-emerald-500"></i>';
+      if (type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return '<i class="fa-solid fa-file-audio text-amber-500"></i>';
+      if (type.includes('video') || ['mp4', 'webm'].includes(ext)) return '<i class="fa-solid fa-file-video text-purple-500"></i>';
+      return '<i class="fa-solid fa-file text-slate-400"></i>';
+    }
+
+    function formatSize(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function escapeHtml(text) {
+      return (text || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderFiles);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePreview();
+        closeFlashcardModal();
+      }
+    });
+
+    initDB();
+  </script>
+</body>
+</html>
