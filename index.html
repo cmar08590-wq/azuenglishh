@@ -30,15 +30,21 @@
     </div>
     
     <div class="flex items-center gap-2 md:gap-3">
+      <!-- MỨC RANK & XP -->
+      <button onclick="openRankModal()" id="rankBtn" class="bg-amber-400 text-indigo-950 font-bold px-2.5 py-1 rounded-lg text-xs transition flex items-center gap-1 shadow-sm">
+        <span id="rankBadgeIcon">🥉</span>
+        <span id="userXpText">0 XP</span>
+      </button>
+
       <!-- STREAK -->
       <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
         <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <!-- HUY HIỆU -->
-      <button onclick="openBadgesModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
-        <i class="fa-solid fa-trophy"></i> Thành tích
+      <!-- AVATAR SHOP -->
+      <button onclick="openShopModal()" class="bg-pink-500 hover:bg-pink-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+        <i class="fa-solid fa-shirt"></i> Shop Nhân Vật
       </button>
 
       <!-- FLASHCARDS -->
@@ -70,9 +76,18 @@
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 p-4 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between shadow-xl md:shadow-none">
       <div class="space-y-6">
-        <div class="flex justify-between items-center md:hidden pb-2 border-b">
-          <span class="font-bold text-slate-700">Danh mục</span>
-          <button onclick="toggleSidebar()" class="text-slate-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+        
+        <!-- KHU VỰC AVATAR NHÂN VẬT -->
+        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-3 rounded-2xl border border-indigo-100 flex items-center gap-3 relative">
+          <div id="userAvatarContainer" class="w-14 h-14 bg-white rounded-full border-2 border-indigo-500 flex items-center justify-center text-3xl shadow-sm relative overflow-hidden">
+            <span id="avatarBaseEmoji">🐱</span>
+            <span id="avatarHatEmoji" class="absolute -top-1 text-sm"></span>
+          </div>
+          <div>
+            <h4 id="avatarNameText" class="font-bold text-xs text-slate-800 truncate">Học Viên AZU</h4>
+            <span id="rankTitleText" class="inline-block text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full mt-0.5">🥉 Hạng Đồng</span>
+            <p id="gemBalanceText" class="text-[11px] text-pink-600 font-bold mt-1">💎 0 Gems</p>
+          </div>
         </div>
 
         <div>
@@ -100,7 +115,7 @@
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Public Files Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Gamified Learning Active
       </div>
     </aside>
 
@@ -130,6 +145,71 @@
 
       <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </main>
+  </div>
+
+  <!-- MODAL BANG XEP HANG RANK -->
+  <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-500"></i> Bảng Xếp Hạng Leagues
+        </h3>
+        <button onclick="closeRankModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-center">
+        <p class="text-xs text-amber-800 font-semibold">Cấp bậc hiện tại của bạn:</p>
+        <h2 id="modalRankTitle" class="text-xl font-extrabold text-amber-600 mt-1">🥉 Hạng Đồng (0 XP)</h2>
+        <div class="w-full bg-amber-200 h-2 rounded-full mt-2 overflow-hidden">
+          <div id="modalXpBar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <p id="modalXpNext" class="text-[10px] text-amber-700 mt-1">Cần thêm 50 XP để lên Hạng Bạc 🥈</p>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Học Viên</h4>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200 font-semibold text-slate-800">
+            <span class="flex items-center gap-2">🥇 1. Vũ Hoàng (Bạn)</span>
+            <span class="text-indigo-600" id="topUserXp">0 XP</span>
+          </div>
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600">
+            <span class="flex items-center gap-2">🥈 2. Minh Anh</span>
+            <span>240 XP</span>
+          </div>
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600">
+            <span class="flex items-center gap-2">🥉 3. Alex Chen</span>
+            <span>180 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SHOP SHOP TRANG PHỤC NHÂN VẬT -->
+  <div id="shopModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-store text-pink-500"></i> Cửa Hàng Trang Phục
+        </h3>
+        <button onclick="closeShopModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex justify-between items-center bg-pink-50 p-3 rounded-xl border border-pink-200">
+        <span class="text-xs font-semibold text-pink-800">Số dư Gems của bạn:</span>
+        <span id="shopGemText" class="text-sm font-bold text-pink-600">💎 0 Gems</span>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mũ & Phụ kiện</h4>
+        <div class="grid grid-cols-3 gap-2" id="shopItemsContainer"></div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL ĐĂNG NHẬP / ĐĂNG KÝ -->
@@ -212,21 +292,6 @@
     </div>
   </div>
 
-  <!-- MODAL BẢNG HUY HIỆU THÀNH TÍCH -->
-  <div id="badgesModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-trophy text-amber-500"></i> Bảng Thành Tích Cá Nhân
-        </h3>
-        <button onclick="closeBadgesModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <div id="badgesContainer" class="grid grid-cols-2 gap-3 py-2"></div>
-    </div>
-  </div>
-
   <!-- Preview Modal -->
   <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-2 md:p-6">
     <div class="bg-white rounded-t-xl px-4 py-3 flex justify-between items-center shadow-lg border-b border-slate-200">
@@ -290,11 +355,9 @@
     </div>
   </div>
 
-  <!-- FLASHCARD MODAL (ĐÃ NÂNG CẤP PHÂN CHIA TAB VÀ TỰ TẠO) -->
+  <!-- FLASHCARD MODAL -->
   <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-3 relative">
-      
-      <!-- Header Flashcards -->
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
           <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Từ Vựng
@@ -310,7 +373,6 @@
         </div>
       </div>
 
-      <!-- Tab Chuyển Đổi: Từ Vựng Có Sẵn vs Từ Vựng Cá Nhân -->
       <div class="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-medium">
         <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-1.5 rounded-lg transition bg-white text-indigo-600 shadow-sm font-semibold">
           📌 Từ vựng có sẵn
@@ -320,10 +382,8 @@
         </button>
       </div>
 
-      <!-- Thân thẻ Flashcard -->
       <div id="flashcardContainer" class="py-1"></div>
 
-      <!-- Footer Flashcards -->
       <div class="flex justify-between items-center pt-2 border-t">
         <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
           <i class="fa-solid fa-plus-circle"></i> + Tạo từ mới
@@ -332,7 +392,6 @@
           Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
-
     </div>
   </div>
 
@@ -349,7 +408,20 @@
     let folders = [];
     let cloudFiles = [];
 
-    // --- BỘ TỪ VỰNG CÓ SẴN (SYSTEM FLASHCARDS) ---
+    // --- GAME DATA (XP, GEMS, RANK, SHOP) ---
+    let userData = JSON.parse(localStorage.getItem('app_user_gamification')) || {
+      xp: 0,
+      gems: 50,
+      equippedHat: '',
+      inventory: []
+    };
+
+    const shopItems = [
+      { id: 'hat_grad', name: 'Mũ Cử Nhân', emoji: '🎓', price: 20 },
+      { id: 'hat_crown', name: 'Vương Miện', emoji: '👑', price: 50 },
+      { id: 'hat_wizard', name: 'Mũ Phù Thủy', emoji: '🧙‍♂️', price: 30 }
+    ];
+
     const systemFlashcards = [
       { id: 's1', word: 'Metaphor', meaning: 'Phép ẩn dụ (so sánh ngầm)' },
       { id: 's2', word: 'Curiosity', meaning: 'Sự tò mò, ham học hỏi' },
@@ -359,14 +431,12 @@
       { id: 's6', word: 'Comprehension', meaning: 'Khả năng hiểu, sự lĩnh hội' }
     ];
 
-    // --- BỘ TỪ VỰNG CÁ NHÂN (CUSTOM FLASHCARDS - LƯU LOCALSTORAGE) ---
     let customFlashcards = JSON.parse(localStorage.getItem('app_custom_flashcards')) || [
       { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ, ngôn ngữ chuyên ngành' }
     ];
 
-    let currentFlashcardTab = 'system'; // 'system' hoặc 'custom'
+    let currentFlashcardTab = 'system';
     let currentCardIndex = 0;
-
     let currentPreviewRecord = null;
     let audioLoopA = null;
     let audioLoopB = null;
@@ -376,18 +446,112 @@
       await fetchFolders();
       await fetchCloudFiles();
       setupUploadListener();
+      updateGamificationUI();
       updateStreakUI();
     }
 
-    // --- HỆ THỐNG AUTHENTICATION ---
+    // --- QUẢN LÝ XP & HẠNG LEAGUES ---
+    function addXp(amount) {
+      userData.xp += amount;
+      userData.gems += Math.floor(amount / 2); // Cứ 2 XP được 1 Gem
+      saveUserData();
+      updateGamificationUI();
+    }
+
+    function saveUserData() {
+      localStorage.setItem('app_user_gamification', JSON.stringify(userData));
+    }
+
+    function getRankInfo(xp) {
+      if (xp >= 500) return { title: '👑 Hạng Huyền Thoại', icon: '👑', max: 1000 };
+      if (xp >= 300) return { title: '💎 Hạng Kim Cương', icon: '💎', max: 500 };
+      if (xp >= 150) return { title: '🥇 Hạng Vàng', icon: '🥇', max: 300 };
+      if (xp >= 50) return { title: '🥈 Hạng Bạc', icon: '🥈', max: 150 };
+      return { title: '🥉 Hạng Đồng', icon: '🥉', max: 50 };
+    }
+
+    function updateGamificationUI() {
+      const rank = getRankInfo(userData.xp);
+      document.getElementById('userXpText').textContent = `${userData.xp} XP`;
+      document.getElementById('rankBadgeIcon').textContent = rank.icon;
+      document.getElementById('rankTitleText').textContent = rank.title;
+      document.getElementById('gemBalanceText').textContent = `💎 ${userData.gems} Gems`;
+
+      document.getElementById('avatarHatEmoji').textContent = userData.equippedHat || '';
+      document.getElementById('topUserXp').textContent = `${userData.xp} XP`;
+    }
+
+    // --- SHOP CỬA HÀNG TRANG PHỤC ---
+    function openShopModal() {
+      document.getElementById('shopGemText').textContent = `💎 ${userData.gems} Gems`;
+      const container = document.getElementById('shopItemsContainer');
+
+      container.innerHTML = shopItems.map(item => {
+        const isBought = userData.inventory.includes(item.id);
+        const isEquipped = userData.equippedHat === item.emoji;
+
+        return `
+          <div class="p-3 bg-slate-50 border rounded-xl flex flex-col items-center text-center gap-1">
+            <span class="text-2xl">${item.emoji}</span>
+            <span class="text-[11px] font-bold text-slate-800">${item.name}</span>
+            ${isEquipped ? `
+              <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">Đang mặc</span>
+            ` : isBought ? `
+              <button onclick="equipHat('${item.emoji}')" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">Mặc vào</button>
+            ` : `
+              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.emoji}')" class="text-[10px] bg-pink-500 hover:bg-pink-600 text-white px-2 py-0.5 rounded font-bold">💎 ${item.price}</button>
+            `}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('shopModal').classList.remove('hidden');
+    }
+
+    function buyShopItem(id, price, emoji) {
+      if (userData.gems >= price) {
+        userData.gems -= price;
+        userData.inventory.push(id);
+        userData.equippedHat = emoji;
+        saveUserData();
+        openShopModal();
+        updateGamificationUI();
+        alert('🎉 Mua trang phục thành công!');
+      } else {
+        alert('Bạn không đủ Gems! Hãy học thêm Flashcard để tích lũy Gems nhé 💎');
+      }
+    }
+
+    function equipHat(emoji) {
+      userData.equippedHat = userData.equippedHat === emoji ? '' : emoji;
+      saveUserData();
+      openShopModal();
+      updateGamificationUI();
+    }
+
+    function closeShopModal() { document.getElementById('shopModal').classList.add('hidden'); }
+
+    function openRankModal() {
+      const rank = getRankInfo(userData.xp);
+      document.getElementById('modalRankTitle').textContent = `${rank.title} (${userData.xp} XP)`;
+      document.getElementById('modalXpBar').style.width = `${Math.min(100, (userData.xp / rank.max) * 100)}%`;
+      document.getElementById('rankModal').classList.remove('hidden');
+    }
+
+    function closeRankModal() { document.getElementById('rankModal').classList.add('hidden'); }
+
+    // --- AUTHENTICATION ---
     async function checkUserSession() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         currentUser = session.user;
-        document.getElementById('userBtnText').textContent = currentUser.email.split('@')[0];
+        const name = currentUser.email.split('@')[0];
+        document.getElementById('userBtnText').textContent = name;
+        document.getElementById('avatarNameText').textContent = name;
       } else {
         currentUser = null;
         document.getElementById('userBtnText').textContent = "Đăng nhập";
+        document.getElementById('avatarNameText').textContent = "Học Viên AZU";
       }
     }
 
@@ -397,6 +561,7 @@
           supabaseClient.auth.signOut().then(() => {
             currentUser = null;
             document.getElementById('userBtnText').textContent = "Đăng nhập";
+            document.getElementById('avatarNameText').textContent = "Học Viên AZU";
           });
         }
       } else {
@@ -416,7 +581,9 @@
         alert('Lỗi đăng nhập: ' + error.message);
       } else {
         currentUser = data.user;
-        document.getElementById('userBtnText').textContent = currentUser.email.split('@')[0];
+        const name = currentUser.email.split('@')[0];
+        document.getElementById('userBtnText').textContent = name;
+        document.getElementById('avatarNameText').textContent = name;
         closeAuthModal();
         alert('Đăng nhập thành công!');
       }
@@ -435,11 +602,10 @@
       }
     }
 
-    // --- QUẢN LÝ FLASHCARDS & PHÁT ÂM ---
+    // --- FLASHCARDS ---
     function switchFlashcardTab(tab) {
       currentFlashcardTab = tab;
       currentCardIndex = 0;
-
       const tabSys = document.getElementById('tabSystemBtn');
       const tabCus = document.getElementById('tabCustomBtn');
 
@@ -450,7 +616,6 @@
         tabCus.className = "flex-1 py-1.5 rounded-lg transition bg-white text-indigo-600 shadow-sm font-semibold";
         tabSys.className = "flex-1 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-800";
       }
-
       renderFlashcard();
     }
 
@@ -512,6 +677,7 @@
       const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
       if (activeList.length > 0) {
         currentCardIndex = (currentCardIndex + 1) % activeList.length;
+        addXp(2); // +2 XP khi lật thẻ từ mới
         renderFlashcard();
       }
     }
@@ -529,6 +695,7 @@
       if (word && meaning) {
         customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
         localStorage.setItem('app_custom_flashcards', JSON.stringify(customFlashcards));
+        addXp(5); // +5 XP khi tự tạo thẻ từ mới
         switchFlashcardTab('custom');
         closeAddFlashcardModal();
       }
@@ -553,7 +720,7 @@
       }
     }
 
-    // --- STREAK & HUY HIỆU ---
+    // --- STREAK ---
     function getStreakData() {
       return JSON.parse(localStorage.getItem('app_streak_data')) || { count: 0, lastCheckIn: null };
     }
@@ -594,38 +761,10 @@
       data.count += 1;
       data.lastCheckIn = today;
       localStorage.setItem('app_streak_data', JSON.stringify(data));
+      addXp(15); // +15 XP khi Check-in Streak hàng ngày
       updateStreakUI();
-      alert(`🎉 Xuất sắc! Bạn đã tăng Streak lên ${data.count} ngày học liên tiếp!`);
+      alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${data.count} ngày liên tiếp!`);
     }
-
-    function openBadgesModal() {
-      const streakData = getStreakData();
-      const fileCount = cloudFiles.length;
-      const flashcardCount = customFlashcards.length;
-
-      const badges = [
-        { title: "Tân Binh Học Tập", desc: "Đạt Streak 3 ngày", icon: "🏅", unlocked: streakData.count >= 3 },
-        { title: "Chiến Binh Chuyên Cần", desc: "Đạt Streak 7 ngày", icon: "🚀", unlocked: streakData.count >= 7 },
-        { title: "Thủ Thư Đám Mây", desc: "Tải lên 5 tài liệu", icon: "📚", unlocked: fileCount >= 5 },
-        { title: "Bậc Thầy Từ Vựng", desc: "Tạo 5 thẻ từ cá nhân", icon: "⚡", unlocked: flashcardCount >= 5 }
-      ];
-
-      const container = document.getElementById('badgesContainer');
-      container.innerHTML = badges.map(b => `
-        <div class="p-3 rounded-xl border ${b.unlocked ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200 opacity-50'} flex items-center gap-3">
-          <span class="text-2xl">${b.icon}</span>
-          <div>
-            <h4 class="font-bold text-xs ${b.unlocked ? 'text-amber-900' : 'text-slate-600'}">${b.title}</h4>
-            <p class="text-[10px] text-slate-500">${b.desc}</p>
-            <span class="text-[9px] font-semibold ${b.unlocked ? 'text-emerald-600' : 'text-slate-400'}">${b.unlocked ? '✓ Đã mở khóa' : '🔒 Chưa đạt'}</span>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('badgesModal').classList.remove('hidden');
-    }
-
-    function closeBadgesModal() { document.getElementById('badgesModal').classList.add('hidden'); }
 
     // --- THƯ MỤC & FILE SUPABASE ---
     function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
@@ -636,6 +775,7 @@
         const newFolder = { id: 'f_' + Date.now(), name: input };
         folders.push(newFolder);
         await supabaseClient.from('folders').insert([newFolder]);
+        addXp(10);
         renderFolders();
         closeCreateFolderModal();
       }
@@ -751,6 +891,7 @@
           };
 
           await supabaseClient.from('documents_metadata').insert([fileRecord]);
+          addXp(10); // +10 XP khi Upload tài liệu học mới
         }
 
         await fetchCloudFiles();
@@ -977,11 +1118,7 @@
       clearLoop();
     }
 
-    function openFlashcardModal() { 
-      currentCardIndex = 0; 
-      renderFlashcard(); 
-      document.getElementById('flashcardModal').classList.remove('hidden'); 
-    }
+    function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
     function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
 
     function getMimeType(filename) {
@@ -1019,7 +1156,8 @@
         closeFlashcardModal(); 
         closeCreateFolderModal();
         closeAddFlashcardModal();
-        closeBadgesModal();
+        closeRankModal();
+        closeShopModal();
         closeAuthModal();
       } 
     });
