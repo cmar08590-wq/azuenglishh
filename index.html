@@ -21,7 +21,7 @@
       50% { transform: scale(1.08); }
     }
     .animate-avatar { animation: pulse-subtle 3s infinite ease-in-out; }
-    .hover-rotate:hover { transform: rotate(8deg) scale(1.05); transition: transform 0.2s ease; }
+    .hover-rotate:hover { transform: rotate(6deg) scale(1.03); transition: transform 0.2s ease; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
@@ -36,19 +36,16 @@
     </div>
     
     <div class="flex items-center gap-2 md:gap-2.5">
-      <!-- MỨC RANK & XP -->
       <button onclick="openRankModal()" id="rankBtn" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-bold px-2.5 py-1 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
         <i class="fa-solid fa-trophy text-amber-800 text-sm animate-pulse"></i>
         <span id="userXpText">0 XP</span>
       </button>
 
-      <!-- STREAK -->
       <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
         <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <!-- SHOP -->
       <button onclick="openShopModal()" class="bg-pink-500 hover:bg-pink-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
         <i class="fa-solid fa-bag-shopping text-pink-200 text-sm hover-rotate"></i> 
         <span class="hidden sm:inline">Cửa Hàng</span>
@@ -56,14 +53,14 @@
     </div>
   </header>
 
-  <!-- MAIN APP CONTAINER -->
+  <!-- MAIN CONTAINER -->
   <div class="flex-1 flex relative overflow-hidden">
     
     <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shadow-sm hidden md:flex">
       <div class="space-y-5">
         
-        <!-- LINH VẬT ĐÁNG YÊU -->
+        <!-- LINH VẬT -->
         <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-3 rounded-2xl border border-indigo-100/80 flex items-center gap-3 relative shadow-sm">
           <div id="userAvatarContainer" class="w-14 h-14 bg-white rounded-2xl border-2 border-indigo-400 flex items-center justify-center shadow-md relative overflow-hidden animate-avatar">
             <i class="fa-solid fa-cat text-2xl text-indigo-500"></i>
@@ -98,11 +95,14 @@
           <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
             <i class="fa-solid fa-brain text-purple-500"></i> Flashcards Từ Vựng
           </button>
+          <button onclick="showView('books')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-book-bookmark text-emerald-500"></i> Sách Bổ Trợ
+          </button>
         </nav>
       </div>
 
       <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> AZU Dashboard Active
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> AZU System Active
       </div>
     </aside>
 
@@ -116,16 +116,16 @@
           <p class="text-xs md:text-sm text-slate-500 mt-1">Chọn tính năng bạn muốn rèn luyện hôm nay:</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           
-          <!-- THẺ 1: FILE & TÀI LIỆU -->
+          <!-- THẺ 1: FILE & THƯ MỤC -->
           <div onclick="showView('files')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
             <div class="space-y-3">
               <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition">
                 <i class="fa-solid fa-folder-open"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-lg">Kho File & Tài Liệu</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Lưu trữ giáo trình PDF, Word, bài nghe Audio. Xem trực tiếp và ghi chú bài học tiện lợi.</p>
+              <h3 class="font-bold text-slate-800 text-base">Kho File & Thư Mục</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Tạo thư mục phân loại, lưu trữ PDF, Word, Audio và tải tài liệu dễ dàng.</p>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
               <span>Mở Kho File</span> <i class="fa-solid fa-arrow-right"></i>
@@ -138,11 +138,11 @@
               <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition">
                 <i class="fa-solid fa-headphones"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-lg">Nghe Chép Chính Tả</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Luyện tai nghe sâu (Active Listening). Nghe đoạn audio ngắn, gõ lại văn bản và nhận điểm XP!</p>
+              <h3 class="font-bold text-slate-800 text-base">Nghe Chép Chính Tả</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Tải audio MP3 lên để tự động tạo thành bài nghe chép chính tả trực tiếp!</p>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-600">
-              <span>Thử Sức Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+              <span>Luyện Nghe Ngay</span> <i class="fa-solid fa-arrow-right"></i>
             </div>
           </div>
 
@@ -152,47 +152,53 @@
               <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition">
                 <i class="fa-solid fa-brain"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-lg">Flashcards Ôn Từ Vựng</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Thẻ từ vựng thông minh kèm giọng đọc tự động chuẩn Anh - Mỹ. Tự tạo bộ từ cá nhân dễ dàng.</p>
+              <h3 class="font-bold text-slate-800 text-base">Flashcards Từ Vựng</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Ôn bộ từ mẫu hoặc tự tạo Flashcards cá nhân có tự đọc phát âm chuẩn.</p>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
               <span>Học Từ Vựng</span> <i class="fa-solid fa-arrow-right"></i>
             </div>
           </div>
 
-          <!-- THẺ 4: SÁCH & TÀI LIỆU BỔ TRỢ -->
+          <!-- THẺ 4: SÁCH BỔ TRỢ -->
           <div onclick="showView('books')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
             <div class="space-y-3">
               <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition">
                 <i class="fa-solid fa-book-bookmark"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-lg">Sách & Tài Liệu Bổ Trợ</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tổng hợp các đầu sách ngữ pháp, giáo trình IELTS và tài liệu chọn lọc từ cộng đồng.</p>
+              <h3 class="font-bold text-slate-800 text-base">Sách Bổ Trợ</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Tổng hợp sách giáo trình PDF/Word chọn lọc để tra cứu và đọc trực tiếp.</p>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600">
-              <span>Tra Cứu Sách</span> <i class="fa-solid fa-arrow-right"></i>
+              <span>Đọc Sách Ngay</span> <i class="fa-solid fa-arrow-right"></i>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- VIEW 2: KHO FILE & TÀI LIỆU -->
+      <!-- VIEW 2: KHO FILE & THƯ MỤC -->
       <div id="viewFiles" class="space-y-6 hidden">
         <div class="flex items-center justify-between">
           <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
           </button>
-          <div class="relative max-w-xs w-full">
-            <input type="text" id="searchInputDesktop" placeholder="Tìm file, tag..." class="w-full pl-9 pr-4 py-1.5 rounded-xl text-slate-800 text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-slate-400 text-xs"></i>
-          </div>
+          
+          <button onclick="openCreateFolderModal()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
+          </button>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <!-- DANH SÁCH THƯ MỤC HÀNG NGANG -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh Sách Thư Mục</h3>
+          <div id="folderNavHorizontal" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t">
           <div>
-            <h2 id="currentFolderName" class="text-xl md:text-2xl font-bold text-slate-800">Tất cả tài liệu</h2>
-            <p id="fileCount" class="text-xs md:text-sm text-slate-500 mt-0.5">0 tệp tin</p>
+            <h2 id="currentFolderName" class="text-xl font-bold text-slate-800">Tất cả tài liệu</h2>
+            <p id="fileCount" class="text-xs text-slate-500 mt-0.5">0 tệp tin</p>
           </div>
           
           <label class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl cursor-pointer text-xs md:text-sm font-medium shadow-sm transition flex items-center justify-center gap-2">
@@ -210,45 +216,57 @@
           <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
           </button>
-          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">🎧 Dictation Mode</span>
+          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">🎧 Dictation Hub</span>
         </div>
 
-        <div class="max-w-2xl mx-auto bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-6">
-          <div class="text-center space-y-2 border-b pb-4">
-            <h3 class="text-xl font-bold text-slate-800">Luyện Nghe Chép Chính Tả 🎧</h3>
-            <p class="text-xs text-slate-500">Lắng nghe đoạn Audio phát âm và gõ chính xác từ vựng bạn nghe được vào ô bên dưới:</p>
-          </div>
-
-          <!-- AUDIO PLAYER -->
-          <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex flex-col items-center gap-3">
-            <div class="flex items-center gap-3">
-              <button onclick="playDictationAudio()" class="w-12 h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center text-xl shadow-md transition">
-                <i class="fa-solid fa-play ml-1" id="dictationPlayIcon"></i>
-              </button>
-              <button onclick="speakDictationCurrentWord()" class="bg-white hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-200 transition flex items-center gap-1">
-                🔊 Nghe mẫu phát âm
-              </button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- CỘT BÊN TRÁI: DANH SÁCH BÀI NGHE AUDIO -->
+          <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe Audio
+              </h3>
+              <label class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg cursor-pointer font-bold transition">
+                + Up File Audio
+                <input type="file" id="audioUploadInput" accept="audio/*" class="hidden">
+              </label>
             </div>
-            <p class="text-[11px] text-amber-800 font-medium italic">Gợi ý chủ đề: <span id="dictationTopicText" class="font-bold">Giao tiếp hàng ngày</span></p>
-          </div>
-
-          <!-- Ô NHẬP ĐÁP ÁN -->
-          <div class="space-y-3">
-            <label class="text-xs font-bold text-slate-600 block">Nhập câu bạn nghe được:</label>
-            <input type="text" id="dictationInput" placeholder="Gõ câu/từ bạn nghe được ở đây..." class="w-full p-3 border-2 border-indigo-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-medium">
             
-            <div class="flex justify-between items-center pt-2">
-              <button onclick="checkDictationAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                Check Đáp Án ✓
-              </button>
-              <button onclick="nextDictationQuestion()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
-                Câu tiếp theo ➔
-              </button>
+            <div id="audioLessonsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- CỘT BÊN PHẢI: TRÌNH CHÉP CHÍNH TẢ TRỰC TIẾP -->
+          <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
+            <div class="border-b pb-3">
+              <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Đang chọn bài</span>
+              <h3 id="activeAudioTitle" class="text-lg font-bold text-slate-800 mt-1">Vui lòng chọn bài nghe bên trái</h3>
+            </div>
+
+            <!-- AUDIO PLAYER CHÍNH -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center gap-3">
+              <audio id="dictationAudioPlayer" controls class="w-full"></audio>
+              <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                <span>Tốc độ:</span>
+                <button onclick="setDictationSpeed(0.75)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">0.75x (Chậm)</button>
+                <button onclick="setDictationSpeed(1.0)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">1.0x (Chuẩn)</button>
+              </div>
+            </div>
+
+            <!-- KHU VỰC GÕ CHÉP CHÍNH TẢ -->
+            <div class="space-y-3">
+              <label class="text-xs font-bold text-slate-600 block">Gõ lại những gì bạn nghe được vào đây:</label>
+              <textarea id="dictationTextArea" rows="5" placeholder="Nghe audio và gõ bài chép chính tả tại đây..." class="w-full p-3 border-2 border-indigo-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none"></textarea>
+              
+              <div class="flex justify-between items-center pt-1">
+                <button onclick="saveDictationNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-floppy-disk"></i> Lưu Bài Chép (+10 XP)
+                </button>
+                <p class="text-[11px] text-slate-400 italic">Bài chép sẽ được tự động lưu lại vào ghi chú bài nghe này!</p>
+              </div>
             </div>
           </div>
 
-          <!-- KẾT QUẢ CHẤM ĐIỂM -->
-          <div id="dictationResult" class="p-3 rounded-xl text-xs font-bold hidden"></div>
         </div>
       </div>
 
@@ -263,7 +281,7 @@
 
         <div>
           <h2 class="text-xl font-bold text-slate-800">Thư Viện Sách & Giáo Trình 📚</h2>
-          <p class="text-xs text-slate-500 mt-1">Các đầu sách học tiếng Anh được phân loại sẵn cho bạn:</p>
+          <p class="text-xs text-slate-500 mt-1">Các đầu sách PDF / Word chọn lọc cho bạn tra cứu:</p>
         </div>
 
         <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -416,16 +434,6 @@
                 <option value="2.0">2.0x</option>
               </select>
             </div>
-            
-            <div class="bg-slate-50 p-2 rounded border border-slate-200">
-              <span class="font-medium text-slate-600 block mb-1">Lặp đoạn A-B:</span>
-              <div class="flex gap-1 mb-1">
-                <button onclick="setLoopPoint('A')" class="flex-1 bg-white border hover:bg-slate-100 py-1 rounded text-[10px] font-medium text-slate-700">Set A</button>
-                <button onclick="setLoopPoint('B')" class="flex-1 bg-white border hover:bg-slate-100 py-1 rounded text-[10px] font-medium text-slate-700">Set B</button>
-                <button onclick="clearLoop()" class="bg-white border hover:bg-red-50 text-red-500 px-2 rounded"><i class="fa-solid fa-xmark"></i></button>
-              </div>
-              <p id="loopStatus" class="text-[10px] text-slate-400 italic">Chưa chọn đoạn lặp</p>
-            </div>
           </div>
         </div>
 
@@ -493,6 +501,7 @@
     let selectedTag = null;
     let folders = [];
     let cloudFiles = [];
+    let currentDictationFile = null;
 
     let userData = {
       xp: 0,
@@ -518,34 +527,23 @@
       { id: 's6', word: 'Comprehension', meaning: 'Khả năng hiểu, sự lĩnh hội' }
     ];
 
-    // BỘ BÀI LUYỆN NGHE CHÉP CHÍNH TẢ
-    const dictationQuestions = [
-      { sentence: "Practice makes perfect", topic: "Giao tiếp cơ bản" },
-      { sentence: "Learning English is a journey", topic: "Học tập" },
-      { sentence: "Never stop listening to audio", topic: "Luyện nghe" },
-      { sentence: "Curiosity is the key to knowledge", topic: "Từ vựng" }
-    ];
-    let currentDictationIndex = 0;
-
     let customFlashcards = [];
     let currentFlashcardTab = 'system';
     let currentCardIndex = 0;
     let currentPreviewRecord = null;
-    let audioLoopA = null;
-    let audioLoopB = null;
 
     function initApp() {
       loadUserDataLocal();
       fetchFolders();
       fetchCloudFiles();
       setupUploadListener();
+      setupAudioDictationUploadListener();
       updateGamificationUI();
       updateStreakUI();
       showView('hub');
-      loadDictationQuestion();
     }
 
-    // --- CHUYỂN ĐỔI CÁC MÀN HÌNH (VIEWS) ---
+    // --- CHUYỂN MÀN HÌNH (VIEWS) ---
     function showView(viewName) {
       document.getElementById('viewHub').classList.add('hidden');
       document.getElementById('viewFiles').classList.add('hidden');
@@ -556,6 +554,7 @@
         document.getElementById('viewFiles').classList.remove('hidden');
       } else if (viewName === 'dictation') {
         document.getElementById('viewDictation').classList.remove('hidden');
+        renderDictationLessonsList();
       } else if (viewName === 'books') {
         document.getElementById('viewBooks').classList.remove('hidden');
         renderBooksView();
@@ -584,46 +583,119 @@
       localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
     }
 
-    // --- DICTATION MODE (LUYỆN NGHE CHÉP CHÍNH TẢ) ---
-    function loadDictationQuestion() {
-      const q = dictationQuestions[currentDictationIndex];
-      document.getElementById('dictationTopicText').textContent = q.topic;
-      document.getElementById('dictationInput').value = '';
-      const res = document.getElementById('dictationResult');
-      res.classList.add('hidden');
-    }
+    // --- LUYỆN NGHE CHÉP CHÍNH TẢ TỰ ĐỘNG TỪ TẤT CẢ FILE AUDIO ---
+    function renderDictationLessonsList() {
+      const listContainer = document.getElementById('audioLessonsList');
+      const audioFiles = cloudFiles.filter(f => f.type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => f.name.toLowerCase().endsWith(ext)));
 
-    function speakDictationCurrentWord() {
-      const q = dictationQuestions[currentDictationIndex];
-      speakText(q.sentence);
-    }
-
-    function playDictationAudio() {
-      speakDictationCurrentWord();
-    }
-
-    function checkDictationAnswer() {
-      const q = dictationQuestions[currentDictationIndex];
-      const userInput = document.getElementById('dictationInput').value.trim().toLowerCase();
-      const targetInput = q.sentence.toLowerCase();
-      const res = document.getElementById('dictationResult');
-
-      if (!userInput) return;
-
-      res.classList.remove('hidden');
-      if (userInput === targetInput) {
-        res.className = "p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 block";
-        res.innerHTML = "🎉 Chính xác 100%! Bạn được cộng +10 XP!";
-        addXp(10);
-      } else {
-        res.className = "p-3 rounded-xl text-xs font-bold bg-red-100 text-red-800 border border-red-300 block";
-        res.innerHTML = `❌ Chưa chính xác! Đáp án đúng là: "<span class='underline'>${q.sentence}</span>"`;
+      if (audioFiles.length === 0) {
+        listContainer.innerHTML = `
+          <div class="py-6 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-music text-2xl mb-2"></i>
+            <p>Chưa có file Audio nào.</p>
+            <p class="text-[10px] text-amber-600 mt-1 font-bold">Hãy bấm "+ Up File Audio" để tải lên!</p>
+          </div>
+        `;
+        return;
       }
+
+      listContainer.innerHTML = audioFiles.map(file => `
+        <div onclick="selectDictationFile('${file.id}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition flex items-center justify-between group">
+          <div class="flex items-center gap-2 overflow-hidden">
+            <i class="fa-solid fa-circle-play text-amber-500 text-base group-hover:scale-110 transition"></i>
+            <div class="overflow-hidden">
+              <h4 class="font-bold text-slate-800 text-xs truncate">${file.name}</h4>
+              <p class="text-[10px] text-slate-400">${formatSize(file.size)}</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+        </div>
+      `).join('');
     }
 
-    function nextDictationQuestion() {
-      currentDictationIndex = (currentDictationIndex + 1) % dictationQuestions.length;
-      loadDictationQuestion();
+    function selectDictationFile(fileId) {
+      const file = cloudFiles.find(f => f.id == fileId);
+      if (!file) return;
+
+      currentDictationFile = file;
+      document.getElementById('activeAudioTitle').textContent = file.name;
+      document.getElementById('activeAudioTag').textContent = "Bài Nghe Đang Chọn";
+      
+      const player = document.getElementById('dictationAudioPlayer');
+      player.src = file.url;
+      player.play();
+
+      document.getElementById('dictationTextArea').value = file.note || '';
+    }
+
+    function setDictationSpeed(speed) {
+      const player = document.getElementById('dictationAudioPlayer');
+      if (player) player.playbackRate = speed;
+    }
+
+    async function saveDictationNote() {
+      if (!currentDictationFile) {
+        alert('Vui lòng chọn 1 bài nghe Audio bên trái trước!');
+        return;
+      }
+
+      const noteText = document.getElementById('dictationTextArea').value;
+      currentDictationFile.note = noteText;
+
+      try {
+        await supabaseClient.from('documents_metadata').update({ note: noteText }).eq('id', currentDictationFile.id);
+      } catch(e) {}
+
+      addXp(10);
+      alert('🎉 Đã lưu bài chép chính tả và cộng +10 XP!');
+    }
+
+    function setupAudioDictationUploadListener() {
+      const audioInput = document.getElementById('audioUploadInput');
+      if (!audioInput) return;
+
+      audioInput.addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        for (let file of files) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+          const { data, error } = await supabaseClient.storage.from('documents').upload(fileName, file);
+
+          if (error) {
+            alert('Lỗi tải file: ' + error.message);
+            continue;
+          }
+
+          const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
+
+          const fileRecord = {
+            id: String(Date.now() + Math.random()),
+            name: file.name,
+            size: file.size,
+            type: file.type || 'audio/mp3',
+            folder_id: 'listening',
+            date_added: new Date().toLocaleDateString('vi-VN'),
+            is_starred: false,
+            tags: ['listening', 'dictation'],
+            note: '',
+            url: publicUrlData.publicUrl
+          };
+
+          try {
+            await supabaseClient.from('documents_metadata').insert([fileRecord]);
+          } catch(err) {}
+
+          addXp(10);
+        }
+
+        await fetchCloudFiles();
+        renderDictationLessonsList();
+        audioInput.value = '';
+        alert('🎉 Đã tải bài nghe Audio lên thành công!');
+      });
     }
 
     function renderBooksView() {
@@ -631,7 +703,7 @@
       const books = cloudFiles.filter(f => f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.docx'));
 
       if (books.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-book-open text-3xl mb-2"></i><p>Chưa có sách bổ trợ nào được tải lên Kho File.</p></div>`;
+        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-book-open text-3xl mb-2"></i><p>Chưa có sách bổ trợ nào trên Cloud.</p></div>`;
         return;
       }
 
@@ -905,7 +977,7 @@
       alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${userData.streakCount} ngày liên tiếp!`);
     }
 
-    // --- THƯ MỤC & FILE SUPABASE ---
+    // --- THƯ MỤC & FILE ---
     function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
     function closeCreateFolderModal() { document.getElementById('createFolderModal').classList.add('hidden'); }
     async function submitCreateFolder() {
@@ -958,27 +1030,27 @@
     }
 
     function renderFolders() {
-      const nav = document.getElementById('folderList');
+      const navHorizontal = document.getElementById('folderNavHorizontal');
       let html = `
-        <button onclick="switchFolder('all')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm flex items-center gap-2 ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-slate-600 hover:bg-slate-100'}">
-          <i class="fa-solid fa-layer-group"></i> Tất cả tài liệu
+        <button onclick="switchFolder('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          📂 Tất cả
         </button>
       `;
 
       folders.forEach(f => {
         const isActive = currentFolderId === f.id && currentFilter === 'all' && !selectedTag;
         html += `
-          <div class="group flex justify-between items-center rounded-xl ${isActive ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-slate-600 hover:bg-slate-100'}">
-            <button onclick="switchFolder('${f.id}')" class="flex-1 text-left px-3 py-2 text-xs md:text-sm flex items-center gap-2 truncate">
-              <i class="fa-solid fa-folder${isActive ? '-open' : ''}"></i> ${f.name}
+          <div class="inline-flex items-center rounded-xl border ${isActive ? 'bg-indigo-600 text-white font-bold border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+            <button onclick="switchFolder('${f.id}')" class="px-3 py-1.5 text-xs">
+              📁 ${f.name}
             </button>
-            <button onclick="deleteFolder('${f.id}')" class="px-2 py-1 text-slate-400 hover:text-red-500 text-xs">
-              <i class="fa-solid fa-trash"></i>
+            <button onclick="deleteFolder('${f.id}')" class="pr-2 text-slate-400 hover:text-red-500 text-[10px]">
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
         `;
       });
-      nav.innerHTML = html;
+      navHorizontal.innerHTML = html;
     }
 
     async function fetchCloudFiles() {
@@ -1099,7 +1171,6 @@
 
     function renderFiles() {
       const grid = document.getElementById('fileGrid');
-      const searchKeyword = (document.getElementById('searchInputDesktop').value || '').toLowerCase();
       let files = [...cloudFiles];
 
       renderTagCloud(files);
@@ -1109,14 +1180,11 @@
       }
       if (currentFilter === 'starred') files = files.filter(f => f.isStarred);
       if (selectedTag) files = files.filter(f => f.tags && f.tags.includes(selectedTag));
-      if (searchKeyword) {
-        files = files.filter(f => f.name.toLowerCase().includes(searchKeyword));
-      }
 
       document.getElementById('fileCount').textContent = `${files.length} tệp tin`;
 
       if (files.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Chưa có tài liệu trên Cloud.</p></div>`;
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Chưa có tài liệu trong thư mục này.</p></div>`;
         return;
       }
 
@@ -1247,29 +1315,10 @@
       const audio = document.getElementById('mainAudioPlayer');
       if (audio) audio.playbackRate = parseFloat(speed);
     }
-    function setLoopPoint(point) {
-      const audio = document.getElementById('mainAudioPlayer');
-      if (!audio) return;
-      if (point === 'A') audioLoopA = audio.currentTime;
-      else if (point === 'B') audioLoopB = audio.currentTime;
-      const status = document.getElementById('loopStatus');
-      if (audioLoopA !== null && audioLoopB !== null) {
-        status.textContent = `Lặp từ ${audioLoopA.toFixed(1)}s ➔ ${audioLoopB.toFixed(1)}s`;
-      }
-    }
-    function clearLoop() { audioLoopA = null; audioLoopB = null; }
-    function checkAudioLoop() {
-      const audio = document.getElementById('mainAudioPlayer');
-      if (audio && audioLoopA !== null && audioLoopB !== null && audio.currentTime >= audioLoopB) {
-        audio.currentTime = audioLoopA;
-        audio.play();
-      }
-    }
 
     function closePreview() {
       document.getElementById('previewModal').classList.add('hidden');
       document.getElementById('previewBody').innerHTML = '';
-      clearLoop();
     }
 
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
@@ -1302,7 +1351,6 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    document.getElementById('searchInputDesktop').addEventListener('input', renderFiles);
     document.addEventListener('keydown', (e) => { 
       if (e.key === 'Escape') { 
         closePreview(); 
