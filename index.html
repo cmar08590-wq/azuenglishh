@@ -1242,6 +1242,7 @@
       const tagMap = {};
       allFiles.forEach(f => { (f.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }); });
       const container = document.getElementById('tagCloud');
+      if (!container) return;
       const tagKeys = Object.keys(tagMap);
       if (tagKeys.length === 0) { container.innerHTML = '<span class="text-xs text-slate-400 italic">Chưa có tag nào</span>'; return; }
       container.innerHTML = tagKeys.map(t => `<button onclick="filterByTag('${t}')" class="text-xs px-2 py-1 rounded-xl transition ${selectedTag === t ? 'bg-indigo-600 text-white font-medium' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'}">#${t} (${tagMap[t]})</button>`).join('');
