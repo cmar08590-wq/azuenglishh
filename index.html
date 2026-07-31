@@ -28,6 +28,14 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -38,7 +46,7 @@
             <div class="flex items-center justify-between h-16">
                 
                 <!-- Logo & Brand -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="navigateToModule('lobby')">
                     <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
                         <i class="fa-solid fa-graduation-cap text-xl"></i>
                     </div>
@@ -112,7 +120,7 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Sách Bổ Trợ (Phần mới tách riêng độc lập) -->
+                <!-- Card 2: Sách Bổ Trợ -->
                 <div onclick="navigateToModule('books')" class="group cursor-pointer bg-white rounded-2xl p-6 border border-slate-200/80 hover:border-emerald-500/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
                     <div class="space-y-4">
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
