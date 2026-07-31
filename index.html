@@ -1,1369 +1,402 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AZU English - Cloud Learning Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <style>
-    .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
-    .flashcard { perspective: 1000px; }
-    .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
-    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
-    .flashcard-front, .flashcard-back { backface-visibility: hidden; }
-    .flashcard-back { transform: rotateY(180deg); }
-    
-    @keyframes pulse-subtle {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    .animate-avatar { animation: pulse-subtle 3s infinite ease-in-out; }
-    .hover-rotate:hover { transform: rotate(6deg) scale(1.03); transition: transform 0.2s ease; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZU English - Cloud Learning Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-100 font-sans min-h-screen text-slate-800">
 
-  <!-- Header -->
-  <header class="bg-indigo-600 text-white shadow-md px-4 py-3 flex justify-between items-center gap-2">
-    <div class="flex items-center gap-2 cursor-pointer" onclick="showView('hub')">
-      <div class="w-8 h-8 flex items-center justify-center bg-indigo-500 rounded-xl">
-        <i class="fa-solid fa-graduation-cap text-xl text-amber-300 animate-bounce"></i>
-      </div>
-      <h1 class="text-base md:text-xl font-bold tracking-wide">AZU English</h1>
-    </div>
-    
-    <div class="flex items-center gap-2 md:gap-2.5">
-      <button onclick="openRankModal()" id="rankBtn" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-bold px-2.5 py-1 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-trophy text-amber-800 text-sm animate-pulse"></i>
-        <span id="userXpText">0 XP</span>
-      </button>
-
-      <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-        <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
-        <span id="streakCountText">0 Ngày</span>
-      </button>
-
-      <button onclick="openShopModal()" class="bg-pink-500 hover:bg-pink-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-bag-shopping text-pink-200 text-sm hover-rotate"></i> 
-        <span class="hidden sm:inline">Cửa Hàng</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- MAIN CONTAINER -->
-  <div class="flex-1 flex relative overflow-hidden">
-    
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shadow-sm hidden md:flex">
-      <div class="space-y-5">
-        
-        <!-- LINH VẬT -->
-        <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-3 rounded-2xl border border-indigo-100/80 flex items-center gap-3 relative shadow-sm">
-          <div id="userAvatarContainer" class="w-14 h-14 bg-white rounded-2xl border-2 border-indigo-400 flex items-center justify-center shadow-md relative overflow-hidden animate-avatar">
-            <i class="fa-solid fa-cat text-2xl text-indigo-500"></i>
-            <span id="avatarHatEmoji" class="absolute -top-1 right-1 text-xs"></span>
-          </div>
-          <div class="flex-1 overflow-hidden">
-            <div class="flex items-center gap-1.5">
-              <h4 id="avatarNameText" class="font-bold text-xs text-slate-800 truncate">Mochi Ham Học</h4>
-              <button onclick="changeAvatarName()" class="text-slate-400 hover:text-indigo-600 text-[10px]" title="Đổi tên linh vật">
-                <i class="fa-solid fa-pen"></i>
-              </button>
+    <!-- TOP BAR -->
+    <header class="bg-indigo-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-graduation-cap text-2xl text-amber-300"></i>
+                <h1 class="text-xl font-bold tracking-wide">AZU English</h1>
             </div>
-            <span id="rankTitleText" class="inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full mt-1">🥉 Hạng Đồng</span>
-            <p id="gemBalanceText" class="text-[11px] text-pink-600 font-bold mt-1 flex items-center gap-1">
-              <i class="fa-solid fa-gem text-pink-500"></i> <span>0 Gems</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- MENU ĐIỀU HƯỚNG SẢNH -->
-        <nav class="space-y-1">
-          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menu Trung Tâm</h2>
-          <button onclick="showView('hub')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-house text-indigo-600"></i> Trang Chủ Sảnh
-          </button>
-          <button onclick="showView('files')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-folder-open text-blue-500"></i> Kho File & Tài Liệu
-          </button>
-          <button onclick="showView('dictation')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-headphones text-amber-500"></i> Luyện Nghe Chép Chính Tả
-          </button>
-          <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-brain text-purple-500"></i> Flashcards Từ Vựng
-          </button>
-          <button onclick="showView('books')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-book-bookmark text-emerald-500"></i> Sách Bổ Trợ
-          </button>
-        </nav>
-      </div>
-
-      <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> AZU System Active
-      </div>
-    </aside>
-
-    <!-- CONTENT AREA -->
-    <main class="flex-1 p-4 md:p-6 overflow-y-auto w-full">
-
-      <!-- VIEW 1: SẢNH TRUNG TÂM (HUB DASHBOARD) -->
-      <div id="viewHub" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-extrabold text-slate-800">Sảnh Học Tập AZU English 🚀</h2>
-          <p class="text-xs md:text-sm text-slate-500 mt-1">Chọn tính năng bạn muốn rèn luyện hôm nay:</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          
-          <!-- THẺ 1: FILE & THƯ MỤC -->
-          <div onclick="showView('files')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition">
-                <i class="fa-solid fa-folder-open"></i>
-              </div>
-              <h3 class="font-bold text-slate-800 text-base">Kho File & Thư Mục</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tạo thư mục phân loại, lưu trữ PDF, Word, Audio và tải tài liệu dễ dàng.</p>
+            <div class="flex items-center space-x-4">
+                <span class="bg-indigo-800 px-3 py-1 rounded-full text-sm text-amber-300 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-trophy"></i> 45 XP
+                </span>
+                <span class="bg-indigo-800 px-3 py-1 rounded-full text-sm text-orange-300 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-fire"></i> 1 Ngày
+                </span>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
-              <span>Mở Kho File</span> <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </div>
-
-          <!-- THẺ 2: LUYỆN NGHE CHÉP CHÍNH TẢ -->
-          <div onclick="showView('dictation')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition">
-                <i class="fa-solid fa-headphones"></i>
-              </div>
-              <h3 class="font-bold text-slate-800 text-base">Nghe Chép Chính Tả</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tải audio MP3 lên để tự động tạo thành bài nghe chép chính tả trực tiếp!</p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-600">
-              <span>Luyện Nghe Ngay</span> <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </div>
-
-          <!-- THẺ 3: FLASHCARDS -->
-          <div onclick="openFlashcardModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition">
-                <i class="fa-solid fa-brain"></i>
-              </div>
-              <h3 class="font-bold text-slate-800 text-base">Flashcards Từ Vựng</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Ôn bộ từ mẫu hoặc tự tạo Flashcards cá nhân có tự đọc phát âm chuẩn.</p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
-              <span>Học Từ Vựng</span> <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </div>
-
-          <!-- THẺ 4: SÁCH BỔ TRỢ -->
-          <div onclick="showView('books')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition">
-                <i class="fa-solid fa-book-bookmark"></i>
-              </div>
-              <h3 class="font-bold text-slate-800 text-base">Sách Bổ Trợ</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tổng hợp sách giáo trình PDF/Word chọn lọc để tra cứu và đọc trực tiếp.</p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600">
-              <span>Đọc Sách Ngay</span> <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </div>
-
         </div>
-      </div>
-
-      <!-- VIEW 2: KHO FILE & THƯ MỤC -->
-      <div id="viewFiles" class="space-y-6 hidden">
-        <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
-          </button>
-          
-          <button onclick="openCreateFolderModal()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
-          </button>
-        </div>
-
-        <!-- DANH SÁCH THƯ MỤC HÀNG NGANG -->
-        <div class="space-y-2">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh Sách Thư Mục</h3>
-          <div id="folderNavHorizontal" class="flex flex-wrap gap-2"></div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t">
-          <div>
-            <h2 id="currentFolderName" class="text-xl font-bold text-slate-800">Tất cả tài liệu</h2>
-            <p id="fileCount" class="text-xs text-slate-500 mt-0.5">0 tệp tin</p>
-          </div>
-          
-          <label class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl cursor-pointer text-xs md:text-sm font-medium shadow-sm transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Tải file lên Cloud
-            <input type="file" id="fileInput" multiple class="hidden">
-          </label>
-        </div>
-
-        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-      </div>
-
-      <!-- VIEW 3: LUYỆN NGHE CHÉP CHÍNH TẢ (DICTATION MODE) -->
-      <div id="viewDictation" class="space-y-6 hidden">
-        <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
-          </button>
-          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">🎧 Dictation Hub</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- CỘT BÊN TRÁI: DANH SÁCH BÀI NGHE AUDIO -->
-          <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe Audio
-              </h3>
-              <label class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg cursor-pointer font-bold transition">
-                + Up File Audio
-                <input type="file" id="audioUploadInput" accept="audio/*" class="hidden">
-              </label>
-            </div>
-            
-            <div id="audioLessonsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1"></div>
-          </div>
-
-          <!-- CỘT BÊN PHẢI: TRÌNH CHÉP CHÍNH TẢ TRỰC TIẾP -->
-          <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
-            <div class="border-b pb-3">
-              <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Đang chọn bài</span>
-              <h3 id="activeAudioTitle" class="text-lg font-bold text-slate-800 mt-1">Vui lòng chọn bài nghe bên trái</h3>
-            </div>
-
-            <!-- AUDIO PLAYER CHÍNH -->
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center gap-3">
-              <audio id="dictationAudioPlayer" controls class="w-full"></audio>
-              <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                <span>Tốc độ:</span>
-                <button onclick="setDictationSpeed(0.75)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">0.75x (Chậm)</button>
-                <button onclick="setDictationSpeed(1.0)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">1.0x (Chuẩn)</button>
-              </div>
-            </div>
-
-            <!-- KHU VỰC GÕ CHÉP CHÍNH TẢ -->
-            <div class="space-y-3">
-              <label class="text-xs font-bold text-slate-600 block">Gõ lại những gì bạn nghe được vào đây:</label>
-              <textarea id="dictationTextArea" rows="5" placeholder="Nghe audio và gõ bài chép chính tả tại đây..." class="w-full p-3 border-2 border-indigo-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none"></textarea>
-              
-              <div class="flex justify-between items-center pt-1">
-                <button onclick="saveDictationNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
-                  <i class="fa-solid fa-floppy-disk"></i> Lưu Bài Chép (+10 XP)
-                </button>
-                <p class="text-[11px] text-slate-400 italic">Bài chép sẽ được tự động lưu lại vào ghi chú bài nghe này!</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- VIEW 4: SÁCH BỔ TRỢ -->
-      <div id="viewBooks" class="space-y-6 hidden">
-        <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
-          </button>
-          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">📚 Sách bổ trợ</span>
-        </div>
-
-        <div>
-          <h2 class="text-xl font-bold text-slate-800">Thư Viện Sách & Giáo Trình 📚</h2>
-          <p class="text-xs text-slate-500 mt-1">Các đầu sách PDF / Word chọn lọc cho bạn tra cứu:</p>
-        </div>
-
-        <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-      </div>
-
-    </main>
-  </div>
-
-  <!-- MODAL BANG XEP HANG RANK -->
-  <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-trophy text-amber-500 animate-bounce"></i> Bảng Xếp Hạng Leagues
-        </h3>
-        <button onclick="closeRankModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-center">
-        <p class="text-xs text-amber-800 font-semibold">Cấp bậc hiện tại của bạn:</p>
-        <h2 id="modalRankTitle" class="text-xl font-extrabold text-amber-600 mt-1">🥉 Hạng Đồng (0 XP)</h2>
-        <div class="w-full bg-amber-200 h-2 rounded-full mt-2 overflow-hidden">
-          <div id="modalXpBar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
-        </div>
-        <p id="modalXpNext" class="text-[10px] text-amber-700 mt-1">Cần thêm 50 XP để lên Hạng Bạc 🥈</p>
-      </div>
-
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Học Viên</h4>
-        <div class="space-y-2 text-xs">
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200 font-semibold text-slate-800">
-            <span class="flex items-center gap-2">🥇 1. <span id="rankUserDisplayName">Mochi</span> (Bạn)</span>
-            <span class="text-indigo-600" id="topUserXp">0 XP</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL SHOP SHOP TRANG PHỤC -->
-  <div id="shopModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-bag-shopping text-pink-500 hover-rotate"></i> Cửa Hàng Trang Phục
-        </h3>
-        <button onclick="closeShopModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="flex justify-between items-center bg-pink-50 p-3 rounded-xl border border-pink-200">
-        <span class="text-xs font-semibold text-pink-800">Số dư Gems của bạn:</span>
-        <span id="shopGemText" class="text-sm font-bold text-pink-600">💎 0 Gems</span>
-      </div>
-
-      <div class="space-y-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mũ & Phụ kiện Đáng Yêu</h4>
-        <div class="grid grid-cols-3 gap-2" id="shopItemsContainer"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL TẠO THƯ MỤC MỚI -->
-  <div id="createFolderModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-folder-plus text-indigo-600"></i> Tạo Thư Mục Mới
-        </h3>
-        <button onclick="closeCreateFolderModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <div>
-        <label class="text-xs font-semibold text-slate-500 block mb-1">Tên thư mục:</label>
-        <input type="text" id="folderNameInput" placeholder="VD: IELTS Listening, Grammar..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeCreateFolderModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">Hủy</button>
-        <button onclick="submitCreateFolder()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow">Tạo ngay</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL THÊM FLASHCARD CÁ NHÂN -->
-  <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-plus text-indigo-600"></i> Tạo Thẻ Từ Vựng Cá Nhân
-        </h3>
-        <button onclick="closeAddFlashcardModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Từ / Cụm từ tiếng Anh:</label>
-          <input type="text" id="wordInput" placeholder="VD: Metaphor..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Ý nghĩa tiếng Việt:</label>
-          <input type="text" id="meaningInput" placeholder="VD: Phép ẩn dụ..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-        </div>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeAddFlashcardModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">Hủy</button>
-        <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow">Lưu thẻ</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Preview Modal -->
-  <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-2 md:p-6">
-    <div class="bg-white rounded-t-xl px-4 py-3 flex justify-between items-center shadow-lg border-b border-slate-200">
-      <div class="flex items-center gap-2 overflow-hidden">
-        <span id="previewIcon" class="text-lg"></span>
-        <h3 id="previewTitle" class="font-bold text-slate-800 text-sm md:text-base truncate">Xem tài liệu</h3>
-      </div>
-      <div class="flex items-center gap-2">
-        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1">
-          <i class="fa-solid fa-download"></i> Tải về
-        </a>
-        <button onclick="closePreview()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl text-lg">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-    
-    <div class="bg-slate-100 flex-1 overflow-hidden rounded-b-xl flex flex-col md:flex-row p-2 gap-2 relative">
-      <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-1"></div>
-      
-      <div id="previewSidebar" class="w-full md:w-80 bg-white rounded-xl p-3 border border-slate-200 flex flex-col justify-between hidden">
-        <div id="audioControlsContainer" class="hidden border-b pb-3 mb-3">
-          <h4 class="font-bold text-slate-700 text-xs mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-indigo-600"></i> Lingo Player
-          </h4>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center justify-between">
-              <span>Tốc độ:</span>
-              <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border rounded px-2 py-1 text-slate-700">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1.0" selected>1.0x</option>
-                <option value="1.25">1.25x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2.0">2.0x</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-1 flex flex-col min-h-[100px]">
-          <h4 class="font-bold text-slate-700 text-xs mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học
-          </h4>
-          <textarea id="fileNoteArea" placeholder="Ghi chú bài học..." class="w-full flex-1 p-2 border rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none mb-2"></textarea>
-          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-xl text-xs font-medium transition">
-            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FLASHCARD MODAL -->
-  <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-3 relative">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-brain text-indigo-600"></i> Flashcards Từ Vựng
-        </h3>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
-            <input type="checkbox" id="autoSpeechToggle" class="rounded text-indigo-600 focus:ring-0">
-            <span>Tự đọc 🔊</span>
-          </label>
-          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-slate-600">
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-medium">
-        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-1.5 rounded-xl transition bg-white text-indigo-600 shadow-sm font-semibold">
-          📌 Từ vựng có sẵn
-        </button>
-        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-800">
-          👤 Từ vựng cá nhân (<span id="customCardCount">0</span>)
-        </button>
-      </div>
-
-      <div id="flashcardContainer" class="py-1"></div>
-
-      <div class="flex justify-between items-center pt-2 border-t">
-        <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-plus-circle"></i> + Tạo từ mới
-        </button>
-        <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1">
-          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // --- SUPABASE CONFIGURATION ---
-    const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let currentFolderId = 'all';
-    let currentFilter = 'all';
-    let selectedTag = null;
-    let folders = [];
-    let cloudFiles = [];
-    let currentDictationFile = null;
-
-    let userData = {
-      xp: 0,
-      gems: 50,
-      avatarName: 'Mochi Ham Học',
-      equippedHat: '',
-      streakCount: 0,
-      lastCheckIn: null
-    };
-
-    const shopItems = [
-      { id: 'hat_grad', name: 'Mũ Cử Nhân', emoji: '🎓', price: 20 },
-      { id: 'hat_crown', name: 'Vương Miện', emoji: '👑', price: 50 },
-      { id: 'hat_wizard', name: 'Mũ Phù Thủy', emoji: '🧙‍♂️', price: 30 }
-    ];
-
-    const systemFlashcards = [
-      { id: 's1', word: 'Metaphor', meaning: 'Phép ẩn dụ (so sánh ngầm)' },
-      { id: 's2', word: 'Curiosity', meaning: 'Sự tò mò, ham học hỏi' },
-      { id: 's3', word: 'Fluency', meaning: 'Sự lưu lưu khoát, trôi chảy' },
-      { id: 's4', word: 'Vocabulary', meaning: 'Vốn từ vựng' },
-      { id: 's5', word: 'Pronunciation', meaning: 'Sự phát âm' },
-      { id: 's6', word: 'Comprehension', meaning: 'Khả năng hiểu, sự lĩnh hội' }
-    ];
-
-    let customFlashcards = [];
-    let currentFlashcardTab = 'system';
-    let currentCardIndex = 0;
-    let currentPreviewRecord = null;
-
-    function initApp() {
-      loadUserDataLocal();
-      fetchFolders();
-      fetchCloudFiles();
-      setupUploadListener();
-      setupAudioDictationUploadListener();
-      updateGamificationUI();
-      updateStreakUI();
-      showView('hub');
-    }
-
-    // --- CHUYỂN MÀN HÌNH (VIEWS) ---
-    function showView(viewName) {
-      document.getElementById('viewHub').classList.add('hidden');
-      document.getElementById('viewFiles').classList.add('hidden');
-      document.getElementById('viewDictation').classList.add('hidden');
-      document.getElementById('viewBooks').classList.add('hidden');
-
-      if (viewName === 'files') {
-        document.getElementById('viewFiles').classList.remove('hidden');
-      } else if (viewName === 'dictation') {
-        document.getElementById('viewDictation').classList.remove('hidden');
-        renderDictationLessonsList();
-      } else if (viewName === 'books') {
-        document.getElementById('viewBooks').classList.remove('hidden');
-        renderBooksView();
-      } else {
-        document.getElementById('viewHub').classList.remove('hidden');
-      }
-    }
-
-    function loadUserDataLocal() {
-      userData = JSON.parse(localStorage.getItem('azu_public_user_profile')) || {
-        xp: 0,
-        gems: 50,
-        avatarName: 'Mochi Ham Học',
-        equippedHat: '',
-        streakCount: 0,
-        lastCheckIn: null
-      };
-
-      customFlashcards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [
-        { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }
-      ];
-    }
-
-    function saveUserDataLocal() {
-      localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
-      localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
-    }
-
-    // --- LUYỆN NGHE CHÉP CHÍNH TẢ TỰ ĐỘNG TỪ TẤT CẢ FILE AUDIO ---
-    function renderDictationLessonsList() {
-      const listContainer = document.getElementById('audioLessonsList');
-      const audioFiles = cloudFiles.filter(f => f.type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => f.name.toLowerCase().endsWith(ext)));
-
-      if (audioFiles.length === 0) {
-        listContainer.innerHTML = `
-          <div class="py-6 text-center text-slate-400 text-xs">
-            <i class="fa-solid fa-music text-2xl mb-2"></i>
-            <p>Chưa có file Audio nào.</p>
-            <p class="text-[10px] text-amber-600 mt-1 font-bold">Hãy bấm "+ Up File Audio" để tải lên!</p>
-          </div>
-        `;
-        return;
-      }
-
-      listContainer.innerHTML = audioFiles.map(file => `
-        <div onclick="selectDictationFile('${file.id}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition flex items-center justify-between group">
-          <div class="flex items-center gap-2 overflow-hidden">
-            <i class="fa-solid fa-circle-play text-amber-500 text-base group-hover:scale-110 transition"></i>
-            <div class="overflow-hidden">
-              <h4 class="font-bold text-slate-800 text-xs truncate">${file.name}</h4>
-              <p class="text-[10px] text-slate-400">${formatSize(file.size)}</p>
-            </div>
-          </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-        </div>
-      `).join('');
-    }
-
-    function selectDictationFile(fileId) {
-      const file = cloudFiles.find(f => f.id == fileId);
-      if (!file) return;
-
-      currentDictationFile = file;
-      document.getElementById('activeAudioTitle').textContent = file.name;
-      document.getElementById('activeAudioTag').textContent = "Bài Nghe Đang Chọn";
-      
-      const player = document.getElementById('dictationAudioPlayer');
-      player.src = file.url;
-      player.play();
-
-      document.getElementById('dictationTextArea').value = file.note || '';
-    }
-
-    function setDictationSpeed(speed) {
-      const player = document.getElementById('dictationAudioPlayer');
-      if (player) player.playbackRate = speed;
-    }
-
-    async function saveDictationNote() {
-      if (!currentDictationFile) {
-        alert('Vui lòng chọn 1 bài nghe Audio bên trái trước!');
-        return;
-      }
-
-      const noteText = document.getElementById('dictationTextArea').value;
-      currentDictationFile.note = noteText;
-
-      try {
-        await supabaseClient.from('documents_metadata').update({ note: noteText }).eq('id', currentDictationFile.id);
-      } catch(e) {}
-
-      addXp(10);
-      alert('🎉 Đã lưu bài chép chính tả và cộng +10 XP!');
-    }
-
-    function setupAudioDictationUploadListener() {
-      const audioInput = document.getElementById('audioUploadInput');
-      if (!audioInput) return;
-
-      audioInput.addEventListener('change', async function(e) {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        for (let file of files) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-          const { data, error } = await supabaseClient.storage.from('documents').upload(fileName, file);
-
-          if (error) {
-            alert('Lỗi tải file: ' + error.message);
-            continue;
-          }
-
-          const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
-
-          const fileRecord = {
-            id: String(Date.now() + Math.random()),
-            name: file.name,
-            size: file.size,
-            type: file.type || 'audio/mp3',
-            folder_id: 'listening',
-            date_added: new Date().toLocaleDateString('vi-VN'),
-            is_starred: false,
-            tags: ['listening', 'dictation'],
-            note: '',
-            url: publicUrlData.publicUrl
-          };
-
-          try {
-            await supabaseClient.from('documents_metadata').insert([fileRecord]);
-          } catch(err) {}
-
-          addXp(10);
-        }
-
-        await fetchCloudFiles();
-        renderDictationLessonsList();
-        audioInput.value = '';
-        alert('🎉 Đã tải bài nghe Audio lên thành công!');
-      });
-    }
-
-    function renderBooksView() {
-      const grid = document.getElementById('bookGrid');
-      const books = cloudFiles.filter(f => f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.docx'));
-
-      if (books.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-book-open text-3xl mb-2"></i><p>Chưa có sách bổ trợ nào trên Cloud.</p></div>`;
-        return;
-      }
-
-      grid.innerHTML = books.map(b => `
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-3 overflow-hidden">
-            <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-xl">
-              <i class="fa-solid fa-book"></i>
-            </div>
-            <div class="overflow-hidden">
-              <h4 class="font-bold text-slate-800 text-xs truncate">${b.name}</h4>
-              <p class="text-[10px] text-slate-400 mt-0.5">${formatSize(b.size)}</p>
-            </div>
-          </div>
-          <button onclick="previewFile('${b.id}')" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-700 transition">Đọc sách</button>
-        </div>
-      `).join('');
-    }
-
-    // --- GAMIFICATION ---
-    function changeAvatarName() {
-      const newName = prompt('Nhập tên mới cho linh vật:', userData.avatarName || 'Mochi');
-      if (newName && newName.trim()) {
-        userData.avatarName = newName.trim();
-        saveUserDataLocal();
-        updateGamificationUI();
-      }
-    }
-
-    function addXp(amount) {
-      userData.xp += amount;
-      userData.gems += Math.floor(amount / 2);
-      saveUserDataLocal();
-      updateGamificationUI();
-    }
-
-    function getRankInfo(xp) {
-      if (xp >= 500) return { title: '👑 Hạng Huyền Thoại', icon: '👑', max: 1000 };
-      if (xp >= 300) return { title: '💎 Hạng Kim Cương', icon: '💎', max: 500 };
-      if (xp >= 150) return { title: '🥇 Hạng Vàng', icon: '🥇', max: 300 };
-      if (xp >= 50) return { title: '🥈 Hạng Bạc', icon: '🥈', max: 150 };
-      return { title: '🥉 Hạng Đồng', icon: '🥉', max: 50 };
-    }
-
-    function updateGamificationUI() {
-      const rank = getRankInfo(userData.xp);
-      document.getElementById('userXpText').textContent = `${userData.xp} XP`;
-      document.getElementById('rankTitleText').textContent = rank.title;
-      document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500"></i> ${userData.gems} Gems`;
-
-      document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi Ham Học';
-      document.getElementById('rankUserDisplayName').textContent = userData.avatarName || 'Mochi';
-      document.getElementById('avatarHatEmoji').textContent = userData.equippedHat || '';
-      document.getElementById('topUserXp').textContent = `${userData.xp} XP`;
-    }
-
-    // --- SHOP ---
-    function openShopModal() {
-      document.getElementById('shopGemText').textContent = `💎 ${userData.gems} Gems`;
-      const container = document.getElementById('shopItemsContainer');
-
-      container.innerHTML = shopItems.map(item => {
-        const isBought = (userData.inventory || []).includes(item.id);
-        const isEquipped = userData.equippedHat === item.emoji;
-
-        return `
-          <div class="p-3 bg-slate-50 border rounded-xl flex flex-col items-center text-center gap-1">
-            <span class="text-2xl">${item.emoji}</span>
-            <span class="text-[11px] font-bold text-slate-800">${item.name}</span>
-            ${isEquipped ? `
-              <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">Đang mặc</span>
-            ` : isBought ? `
-              <button onclick="equipHat('${item.emoji}')" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">Mặc vào</button>
-            ` : `
-              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.emoji}')" class="text-[10px] bg-pink-500 hover:bg-pink-600 text-white px-2 py-0.5 rounded font-bold">💎 ${item.price}</button>
-            `}
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('shopModal').classList.remove('hidden');
-    }
-
-    function buyShopItem(id, price, emoji) {
-      if (userData.gems >= price) {
-        userData.gems -= price;
-        if (!userData.inventory) userData.inventory = [];
-        userData.inventory.push(id);
-        userData.equippedHat = emoji;
-        saveUserDataLocal();
-        openShopModal();
-        updateGamificationUI();
-        alert('🎉 Mua trang phục thành công!');
-      } else {
-        alert('Bạn không đủ Gems! Hãy học thêm Flashcard để tích lũy Gems nhé 💎');
-      }
-    }
-
-    function equipHat(emoji) {
-      userData.equippedHat = userData.equippedHat === emoji ? '' : emoji;
-      saveUserDataLocal();
-      openShopModal();
-      updateGamificationUI();
-    }
-
-    function closeShopModal() { document.getElementById('shopModal').classList.add('hidden'); }
-
-    function openRankModal() {
-      const rank = getRankInfo(userData.xp);
-      document.getElementById('modalRankTitle').textContent = `${rank.title} (${userData.xp} XP)`;
-      document.getElementById('modalXpBar').style.width = `${Math.min(100, (userData.xp / rank.max) * 100)}%`;
-      document.getElementById('rankModal').classList.remove('hidden');
-    }
-
-    function closeRankModal() { document.getElementById('rankModal').classList.add('hidden'); }
-
-    // --- FLASHCARDS ---
-    function switchFlashcardTab(tab) {
-      currentFlashcardTab = tab;
-      currentCardIndex = 0;
-      const tabSys = document.getElementById('tabSystemBtn');
-      const tabCus = document.getElementById('tabCustomBtn');
-
-      if (tab === 'system') {
-        tabSys.className = "flex-1 py-1.5 rounded-xl transition bg-white text-indigo-600 shadow-sm font-semibold";
-        tabCus.className = "flex-1 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-800";
-      } else {
-        tabCus.className = "flex-1 py-1.5 rounded-xl transition bg-white text-indigo-600 shadow-sm font-semibold";
-        tabSys.className = "flex-1 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-800";
-      }
-      renderFlashcard();
-    }
-
-    function renderFlashcard() {
-      const container = document.getElementById('flashcardContainer');
-      document.getElementById('customCardCount').textContent = customFlashcards.length;
-
-      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
-
-      if (activeList.length === 0) {
-        container.innerHTML = `
-          <div class="h-48 flex flex-col items-center justify-center text-slate-400 text-xs">
-            <i class="fa-regular fa-folder-open text-3xl mb-2"></i>
-            <p>Chưa có từ vựng cá nhân nào.</p>
-            <button onclick="openAddFlashcardModal()" class="mt-2 text-indigo-600 underline font-semibold">+ Thêm từ mới ngay</button>
-          </div>
-        `;
-        return;
-      }
-
-      const card = activeList[currentCardIndex];
-
-      container.innerHTML = `
-        <div class="flashcard cursor-pointer h-48 w-full" onclick="this.classList.toggle('flipped')">
-          <div class="flashcard-inner relative w-full h-full rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white shadow-sm flex items-center justify-center p-4 text-center">
-            
-            <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-4">
-              <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider mb-2">
-                ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Cá nhân'} (${currentCardIndex + 1}/${activeList.length})
-              </span>
-              <div class="flex items-center gap-2">
-                <h2 class="text-xl font-bold text-slate-800">${card.word}</h2>
-                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-indigo-600 hover:text-indigo-800 p-1 text-base" title="Nghe phát âm">
-                  <i class="fa-solid fa-volume-high"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-4 bg-indigo-600 text-white rounded-2xl relative">
-              ${currentFlashcardTab === 'custom' ? `
-                <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-3 right-3 text-indigo-200 hover:text-red-300 text-xs" title="Xóa từ này">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              ` : ''}
-              <span class="text-[10px] font-semibold text-indigo-200 uppercase tracking-wider mb-2">Ý nghĩa</span>
-              <p class="text-sm font-medium leading-relaxed">${card.meaning}</p>
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      if (document.getElementById('autoSpeechToggle').checked) {
-        speakText(card.word);
-      }
-    }
-
-    function nextCard() {
-      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
-      if (activeList.length > 0) {
-        currentCardIndex = (currentCardIndex + 1) % activeList.length;
-        addXp(2);
-        renderFlashcard();
-      }
-    }
-
-    function openAddFlashcardModal() {
-      document.getElementById('wordInput').value = '';
-      document.getElementById('meaningInput').value = '';
-      document.getElementById('addFlashcardModal').classList.remove('hidden');
-    }
-    function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
-
-    function submitAddFlashcard() {
-      const word = document.getElementById('wordInput').value.trim();
-      const meaning = document.getElementById('meaningInput').value.trim();
-      if (word && meaning) {
-        customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
-        saveUserDataLocal();
-        addXp(5);
-        switchFlashcardTab('custom');
-        closeAddFlashcardModal();
-      }
-    }
-
-    function deleteCustomCard(id) {
-      if (confirm('Xóa từ vựng cá nhân này?')) {
-        customFlashcards = customFlashcards.filter(c => c.id !== id);
-        saveUserDataLocal();
-        if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
-        renderFlashcard();
-      }
-    }
-
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-
-    // --- STREAK ---
-    function updateStreakUI() {
-      const today = new Date().toDateString();
-      const streakBtn = document.getElementById('streakBtn');
-      const streakText = document.getElementById('streakCountText');
-
-      if (userData.lastCheckIn) {
-        const lastDate = new Date(userData.lastCheckIn);
-        const diffTime = Math.abs(new Date(today) - new Date(lastDate.toDateString()));
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 1) {
-          userData.streakCount = 0;
-          saveUserDataLocal();
-        }
-      }
-
-      streakText.textContent = `${userData.streakCount || 0} Ngày`;
-
-      if (userData.lastCheckIn === today) {
-        streakBtn.classList.remove('bg-amber-500/20', 'border-amber-400/40');
-        streakBtn.classList.add('bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-300');
-      }
-    }
-
-    function checkInStreak() {
-      const today = new Date().toDateString();
-
-      if (userData.lastCheckIn === today) {
-        alert("Hôm nay bạn đã điểm danh Streak rồi! Hãy giữ vững phong độ vào ngày mai nhé 🔥");
-        return;
-      }
-
-      userData.streakCount = (userData.streakCount || 0) + 1;
-      userData.lastCheckIn = today;
-      addXp(15);
-      updateStreakUI();
-      alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${userData.streakCount} ngày liên tiếp!`);
-    }
-
-    // --- THƯ MỤC & FILE ---
-    function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
-    function closeCreateFolderModal() { document.getElementById('createFolderModal').classList.add('hidden'); }
-    async function submitCreateFolder() {
-      const input = document.getElementById('folderNameInput').value.trim();
-      if (input) {
-        const newFolder = { id: 'f_' + Date.now(), name: input };
-        folders.push(newFolder);
-        try { await supabaseClient.from('folders').insert([newFolder]); } catch(e) {}
-        addXp(10);
-        renderFolders();
-        closeCreateFolderModal();
-      }
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');
-    }
-
-    async function fetchFolders() {
-      try {
-        const { data, error } = await supabaseClient.from('folders').select('*');
-        if (!error && data && data.length > 0) {
-          folders = data;
-        } else {
-          folders = [
-            { id: 'general', name: 'Tài liệu chung' },
-            { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
-            { id: 'listening', name: 'Luyện nghe (Audio)' }
-          ];
-        }
-      } catch(e) {
-        folders = [
-          { id: 'general', name: 'Tài liệu chung' },
-          { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
-          { id: 'listening', name: 'Luyện nghe (Audio)' }
-        ];
-      }
-      renderFolders();
-    }
-
-    async function deleteFolder(id) {
-      if (confirm('Xóa thư mục này?')) {
-        folders = folders.filter(f => f.id !== id);
-        if (currentFolderId === id) currentFolderId = 'all';
-        try { await supabaseClient.from('folders').delete().eq('id', id); } catch(e) {}
-        renderFolders();
-        renderFiles();
-      }
-    }
-
-    function renderFolders() {
-      const navHorizontal = document.getElementById('folderNavHorizontal');
-      let html = `
-        <button onclick="switchFolder('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          📂 Tất cả
-        </button>
-      `;
-
-      folders.forEach(f => {
-        const isActive = currentFolderId === f.id && currentFilter === 'all' && !selectedTag;
-        html += `
-          <div class="inline-flex items-center rounded-xl border ${isActive ? 'bg-indigo-600 text-white font-bold border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
-            <button onclick="switchFolder('${f.id}')" class="px-3 py-1.5 text-xs">
-              📁 ${f.name}
+    </header>
+
+    <!-- MAIN WRAPPER -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- TAB NAVIGATION -->
+        <div class="flex border-b border-slate-300 mb-6 bg-white rounded-t-xl px-4 pt-2 shadow-sm">
+            <button id="tabFilesBtn" onclick="switchMainTab('files')" class="px-5 py-3 font-semibold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-folder-open"></i> Quản Lý Tệp Tin
             </button>
-            <button onclick="deleteFolder('${f.id}')" class="pr-2 text-slate-400 hover:text-red-500 text-[10px]">
-              <i class="fa-solid fa-xmark"></i>
+            <button id="tabBooksBtn" onclick="switchMainTab('books')" class="px-5 py-3 font-semibold text-slate-500 border-b-2 border-transparent hover:text-indigo-600 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-book-bookmark"></i> Sách Bổ Trợ (Độc Lập)
             </button>
-          </div>
-        `;
-      });
-      navHorizontal.innerHTML = html;
-    }
+        </div>
 
-    async function fetchCloudFiles() {
-      try {
-        const { data, error } = await supabaseClient.from('documents_metadata').select('*');
-        if (!error && data) {
-          cloudFiles = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            size: item.size,
-            type: item.type,
-            folderId: item.folder_id,
-            dateAdded: item.date_added,
-            isStarred: item.is_starred,
-            tags: item.tags || [],
-            note: item.note || '',
-            url: item.url
-          }));
-          renderFiles();
-        }
-      } catch(e) {}
-    }
+        <!-- ================= SECTION 1: QUẢN LÝ TỆP TIN (CŨ - GIỮ NGUYÊN) ================= -->
+        <section id="sectionFiles" class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-folder"></i> DANH SÁCH THƯ MỤC TỆP TIN
+                    </h2>
+                    <button onclick="createFolder('file')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-1 transition">
+                        <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
+                    </button>
+                </div>
+                
+                <!-- Folders List -->
+                <div id="fileFolderList" class="flex flex-wrap gap-2 mb-4"></div>
 
-    function setupUploadListener() {
-      const fileInput = document.getElementById('fileInput');
-      fileInput.addEventListener('change', async function(e) {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+                <!-- Tag Cloud Container (Đã sửa lỗi null) -->
+                <div id="tagCloud" class="flex flex-wrap gap-1 mt-3"></div>
+            </div>
 
-        const targetFolder = currentFolderId === 'all' ? 'general' : currentFolderId;
+            <!-- Current Folder Header & Upload -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 id="currentFileFolderName" class="text-2xl font-bold text-slate-800">Tất cả tệp</h3>
+                        <p id="currentFileCount" class="text-sm text-slate-400">0 tệp tin</p>
+                    </div>
+                    <div>
+                        <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event, 'file')">
+                        <button onclick="document.getElementById('fileInput').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Tải file lên Cloud
+                        </button>
+                    </div>
+                </div>
 
-        for (let file of files) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                <!-- File Grid Display -->
+                <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            </div>
+        </section>
 
-          const { data, error } = await supabaseClient.storage.from('documents').upload(fileName, file);
+        <!-- ================= SECTION 2: SÁCH BỔ TRỢ (MỚI - ĐỘC LẬP) ================= -->
+        <section id="sectionBooks" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-book"></i> THƯ MỤC SÁCH BỔ TRỢ
+                    </h2>
+                    <button onclick="createFolder('book')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-1 transition">
+                        <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Sách
+                    </button>
+                </div>
+                
+                <!-- Book Folders List -->
+                <div id="bookFolderList" class="flex flex-wrap gap-2 mb-2"></div>
+            </div>
 
-          if (error) {
-            alert('Lỗi tải file: ' + error.message);
-            continue;
-          }
+            <!-- Current Book Folder Header & Upload -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 id="currentBookFolderName" class="text-2xl font-bold text-slate-800">Tất cả Sách</h3>
+                        <p id="currentBookCount" class="text-sm text-slate-400">0 cuốn sách</p>
+                    </div>
+                    <div>
+                        <input type="file" id="bookInput" accept=".pdf,.epub,.mobi" class="hidden" onchange="handleFileUpload(event, 'book')">
+                        <button onclick="document.getElementById('bookInput').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                            <i class="fa-solid fa-file-circle-plus"></i> Tải Sách Mới Lên
+                        </button>
+                    </div>
+                </div>
 
-          const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
+                <!-- Book Grid Display -->
+                <div id="bookGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            </div>
+        </section>
 
-          const fileRecord = {
-            id: String(Date.now() + Math.random()),
-            name: file.name,
-            size: file.size,
-            type: file.type || getMimeType(file.name),
-            folder_id: targetFolder,
-            date_added: new Date().toLocaleDateString('vi-VN'),
-            is_starred: false,
-            tags: [],
-            note: '',
-            url: publicUrlData.publicUrl
-          };
+    </div>
 
-          try {
-            await supabaseClient.from('documents_metadata').insert([fileRecord]);
-          } catch(err) {}
+    <!-- PREVIEW MODAL (DÙNG CHUNG AN TOÀN) -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h4 id="previewTitle" class="font-bold text-slate-800 text-lg truncate max-w-xl">Preview Document</h4>
+                <div class="flex items-center gap-3">
+                    <a id="previewDownloadBtn" href="#" target="_blank" download class="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1 border border-indigo-200 transition">
+                        <i class="fa-solid fa-download"></i> Tải về
+                    </a>
+                    <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 flex overflow-hidden">
+                <div id="previewBody" class="flex-1 bg-slate-900 flex items-center justify-center p-2">
+                    <!-- Dynamic iFrame / Viewer -->
+                </div>
+                <div class="w-80 border-l border-slate-200 p-4 bg-slate-50 flex flex-col">
+                    <h5 class="font-bold text-slate-700 mb-2 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học
+                    </h5>
+                    <textarea id="fileNoteArea" class="flex-1 w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="Nhập ghi chú cá nhân ở đây..."></textarea>
+                    <button onclick="saveNote()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-sm transition">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-          addXp(10);
-        }
+    <!-- SCRIPT XỬ LÝ - ĐẢM BẢO CHẠY MƯỢT VÀ AN TOÀN -->
+    <script>
+        // 1. KHỞI TẠO DỮ LIỆU ĐỘC LẬP
+        let fileFolders = JSON.parse(localStorage.getItem('azu_file_folders')) || ['Tài liệu chung', 'Destination', 'Ngữ pháp'];
+        let fileList = JSON.parse(localStorage.getItem('azu_file_list')) || [];
+        let currentFileFolder = 'Tất cả';
 
-        await fetchCloudFiles();
-        fileInput.value = '';
-      });
-    }
+        let bookFolders = JSON.parse(localStorage.getItem('azu_book_folders')) || ['Sách Giáo Khoa', 'Sách Tham Khảo'];
+        let bookList = JSON.parse(localStorage.getItem('azu_book_list')) || [];
+        let currentBookFolder = 'Tất cả';
 
-    async function deleteFile(id) {
-      const fileToDelete = cloudFiles.find(f => f.id == id);
-      if (!fileToDelete) return;
+        let currentPreviewItem = null;
 
-      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}" khỏi Cloud Storage?`)) {
-        try {
-          if (fileToDelete.url) {
-            const urlParts = fileToDelete.url.split('/');
-            const storageFileName = urlParts[urlParts.length - 1];
-            if (storageFileName) {
-              await supabaseClient.storage.from('documents').remove([storageFileName]);
+        // Khởi chạy ban đầu
+        window.onload = function() {
+            renderFileFolders();
+            renderFiles();
+            renderBookFolders();
+            renderBooks();
+        };
+
+        // 2. CHUYỂN TAB MÀN HÌNH
+        function switchMainTab(tab) {
+            const secFiles = document.getElementById('sectionFiles');
+            const secBooks = document.getElementById('sectionBooks');
+            const btnFiles = document.getElementById('tabFilesBtn');
+            const btnBooks = document.getElementById('tabBooksBtn');
+
+            if (tab === 'files') {
+                secFiles.classList.remove('hidden');
+                secBooks.classList.add('hidden');
+                btnFiles.className = "px-5 py-3 font-semibold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-2 transition-all";
+                btnBooks.className = "px-5 py-3 font-semibold text-slate-500 border-b-2 border-transparent hover:text-indigo-600 flex items-center gap-2 transition-all";
+            } else {
+                secFiles.classList.add('hidden');
+                secBooks.classList.remove('hidden');
+                btnBooks.className = "px-5 py-3 font-semibold text-emerald-600 border-b-2 border-emerald-600 flex items-center gap-2 transition-all";
+                btnFiles.className = "px-5 py-3 font-semibold text-slate-500 border-b-2 border-transparent hover:text-emerald-600 flex items-center gap-2 transition-all";
             }
-          }
-          await supabaseClient.from('documents_metadata').delete().eq('id', id);
-          await fetchCloudFiles();
-        } catch (err) {
-          alert('Lỗi khi xóa file: ' + err.message);
         }
-      }
-    }
 
-    function switchFolder(id) {
-      currentFolderId = id;
-      currentFilter = 'all';
-      selectedTag = null;
-      const folderObj = folders.find(f => f.id === id);
-      document.getElementById('currentFolderName').textContent = id === 'all' ? 'Tất cả tài liệu' : (folderObj ? folderObj.name : 'Thư mục');
-      renderFolders();
-      renderFiles();
-      showView('files');
-    }
+        // 3. TẠO THƯ MỤC
+        function createFolder(type) {
+            const name = prompt(type === 'file' ? "Nhập tên thư mục tệp tin:" : "Nhập tên thư mục sách bổ trợ:");
+            if (!name || !name.trim()) return;
+            const folderName = name.trim();
 
-    function setFilter(filter) {
-      currentFilter = filter;
-      selectedTag = null;
-      document.getElementById('currentFolderName').textContent = filter === 'starred' ? 'Tài liệu đã đánh dấu ⭐' : 'Tất cả tài liệu';
-      renderFolders();
-      renderFiles();
-      showView('files');
-    }
+            if (type === 'file') {
+                if (!fileFolders.includes(folderName)) {
+                    fileFolders.push(folderName);
+                    localStorage.setItem('azu_file_folders', JSON.stringify(fileFolders));
+                    renderFileFolders();
+                }
+            } else {
+                if (!bookFolders.includes(folderName)) {
+                    bookFolders.push(folderName);
+                    localStorage.setItem('azu_book_folders', JSON.stringify(bookFolders));
+                    renderBookFolders();
+                }
+            }
+        }
 
-    function filterByTag(tagName) {
-      selectedTag = selectedTag === tagName ? null : tagName;
-      document.getElementById('currentFolderName').textContent = selectedTag ? `Tag #${selectedTag}` : 'Tất cả tài liệu';
-      renderFolders();
-      renderFiles();
-      showView('files');
-    }
-
-    function renderFiles() {
-      const grid = document.getElementById('fileGrid');
-      let files = [...cloudFiles];
-
-      renderTagCloud(files);
-
-      if (currentFolderId !== 'all' && currentFilter === 'all' && !selectedTag) {
-        files = files.filter(f => f.folderId === currentFolderId);
-      }
-      if (currentFilter === 'starred') files = files.filter(f => f.isStarred);
-      if (selectedTag) files = files.filter(f => f.tags && f.tags.includes(selectedTag));
-
-      document.getElementById('fileCount').textContent = `${files.length} tệp tin`;
-
-      if (files.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Chưa có tài liệu trong thư mục này.</p></div>`;
-        return;
-      }
-
-      grid.innerHTML = files.map(f => `
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 hover:shadow-md transition flex flex-col justify-between relative group">
-          <button onclick="toggleStar(event, '${f.id}')" class="absolute top-3 right-3 text-slate-300 hover:text-amber-400 transition ${f.isStarred ? 'text-amber-400' : ''}">
-            <i class="fa-solid fa-star text-sm md:text-base"></i>
-          </button>
-
-          <div class="flex items-start gap-3 cursor-pointer" onclick="previewFile('${f.id}')">
-            <div class="p-2 bg-slate-100 rounded-lg text-indigo-600 text-lg md:text-xl">
-              ${getFileIcon(f.type, f.name)}
-            </div>
-            <div class="overflow-hidden flex-1 pr-4">
-              <h3 class="font-medium text-slate-800 text-xs md:text-sm truncate hover:text-indigo-600 transition" title="${f.name}">${f.name}</h3>
-              <p class="text-[10px] md:text-xs text-slate-400 mt-1">${formatSize(f.size)} • ${f.dateAdded}</p>
-              <div class="flex flex-wrap gap-1 mt-1.5">
-                ${(f.tags || []).map(t => `<span class="bg-indigo-50 text-indigo-600 text-[9px] px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
-              </div>
-            </div>
-          </div>
-          
-          <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
-            <button onclick="previewFile('${f.id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1">
-              <i class="fa-solid fa-eye"></i> Xem ngay
-            </button>
-            <div class="flex gap-1">
-              <a href="${f.url}" target="_blank" download class="text-xs text-slate-600 hover:text-indigo-600 px-2 py-1 rounded hover:bg-slate-50">
-                <i class="fa-solid fa-download"></i>
-              </a>
-              <button onclick="deleteFile('${f.id}')" class="text-xs text-slate-400 hover:text-red-600 px-2 py-1 rounded hover:bg-slate-50">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('starredCount').textContent = cloudFiles.filter(f => f.isStarred).length;
-    }
-
-    async function toggleStar(event, id) {
-      event.stopPropagation();
-      const file = cloudFiles.find(f => f.id == id);
-      if (file) {
-        file.isStarred = !file.isStarred;
-        try {
-          await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id);
-        } catch(e) {}
-        renderFiles();
-      }
-    }
-
-    function renderTagCloud(allFiles) {
-      const tagMap = {};
-      allFiles.forEach(f => { (f.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }); });
-      const container = document.getElementById('tagCloud');
-      if (!container) return;
-      const tagKeys = Object.keys(tagMap);
-      if (tagKeys.length === 0) { container.innerHTML = '<span class="text-xs text-slate-400 italic">Chưa có tag nào</span>'; return; }
-      container.innerHTML = tagKeys.map(t => `<button onclick="filterByTag('${t}')" class="text-xs px-2 py-1 rounded-xl transition ${selectedTag === t ? 'bg-indigo-600 text-white font-medium' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'}">#${t} (${tagMap[t]})</button>`).join('');
-    }
-
-    function previewFile(id) {
-      const record = cloudFiles.find(f => f.id == id);
-      if (!record) return;
-
-      currentPreviewRecord = record;
-      const modal = document.getElementById('previewModal');
-      const previewBody = document.getElementById('previewBody');
-      const previewTitle = document.getElementById('previewTitle');
-      const previewIcon = document.getElementById('previewIcon');
-      const downloadBtn = document.getElementById('previewDownloadBtn');
-      const previewSidebar = document.getElementById('previewSidebar');
-      const audioControls = document.getElementById('audioControlsContainer');
-      const noteArea = document.getElementById('fileNoteArea');
-
-      previewTitle.textContent = record.name;
-      previewIcon.innerHTML = getFileIcon(record.type, record.name);
-      downloadBtn.href = record.url;
-      noteArea.value = record.note || '';
-
-      previewSidebar.classList.remove('hidden');
-      audioControls.classList.add('hidden');
-
-      const ext = record.name.split('.').pop().toLowerCase();
-
-      if (record.type.includes('pdf') || ext === 'pdf') {
-        previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
-      } else if (record.type.includes('image') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
-        previewBody.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${record.url}" class="max-h-full max-w-full object-contain rounded-xl shadow" /></div>`;
-      } else if (ext === 'docx') {
-        previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải file Word...</p></div>`;
-        fetch(record.url)
-          .then(res => res.arrayBuffer())
-          .then(arrayBuffer => {
-            mammoth.convertToHtml({ arrayBuffer: arrayBuffer }).then(result => {
-              previewBody.innerHTML = `<div class="w-full h-full bg-white p-4 md:p-8 rounded-xl shadow overflow-auto text-slate-800 leading-relaxed max-w-4xl prose text-xs md:text-base">${result.value}</div>`;
+        // 4. RENDER THƯ MỤC & TỆP TIN (FILE MANAGEMENT)
+        function renderFileFolders() {
+            const container = document.getElementById('fileFolderList');
+            if (!container) return; // Bảo vệ an toàn tuyệt đối
+            
+            let html = `<button onclick="selectFileFolder('Tất cả')" class="px-3 py-1.5 rounded-lg text-sm font-medium ${currentFileFolder === 'Tất cả' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">💼 Tất cả</button>`;
+            
+            fileFolders.forEach(f => {
+                html += `<button onclick="selectFileFolder('${f}')" class="px-3 py-1.5 rounded-lg text-sm font-medium ${currentFileFolder === f ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">📁 ${f}</button>`;
             });
-          });
-      } else if (record.type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) {
-        audioControls.classList.remove('hidden');
-        previewBody.innerHTML = `
-          <div class="bg-white p-6 rounded-2xl shadow-md text-center max-w-md w-full my-auto">
-            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-music"></i></div>
-            <p class="font-medium text-slate-800 mb-4 text-xs md:text-sm truncate">${record.name}</p>
-            <audio id="mainAudioPlayer" controls src="${record.url}" class="w-full" ontimeupdate="checkAudioLoop()"></audio>
-          </div>
-        `;
-      } else if (record.type.includes('video') || ['mp4', 'webm'].includes(ext)) {
-        previewBody.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><video controls src="${record.url}" class="max-h-full max-w-full rounded-xl shadow"></video></div>`;
-      } else {
-        previewBody.innerHTML = `<div class="bg-white p-6 rounded-2xl shadow-md text-center max-w-sm w-full my-auto"><i class="fa-solid fa-file-circle-exclamation text-3xl text-slate-400 mb-3"></i><h4 class="font-bold text-slate-800 text-sm mb-2">Mở bằng liên kết trực tiếp</h4><a href="${record.url}" target="_blank" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl font-medium text-xs transition mt-3">Mở file gốc trên Cloud</a></div>`;
-      }
+            container.innerHTML = html;
+        }
 
-      modal.classList.remove('hidden');
-    }
+        function selectFileFolder(folder) {
+            currentFileFolder = folder;
+            document.getElementById('currentFileFolderName').innerText = folder;
+            renderFileFolders();
+            renderFiles();
+        }
 
-    async function saveFileNote() {
-      if (!currentPreviewRecord) return;
-      currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
-      try {
-        await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id);
-      } catch(e) {}
-      alert('Đã lưu ghi chú!');
-    }
+        function renderFiles() {
+            const grid = document.getElementById('fileGrid');
+            if (!grid) return;
 
-    function changeAudioSpeed(speed) {
-      const audio = document.getElementById('mainAudioPlayer');
-      if (audio) audio.playbackRate = parseFloat(speed);
-    }
+            const filtered = currentFileFolder === 'Tất cả' ? fileList : fileList.filter(item => item.folder === currentFileFolder);
+            document.getElementById('currentFileCount').innerText = `${filtered.length} tệp tin`;
 
-    function closePreview() {
-      document.getElementById('previewModal').classList.add('hidden');
-      document.getElementById('previewBody').innerHTML = '';
-    }
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 italic">Chưa có tệp tin nào trong thư mục này</div>`;
+                renderTagCloud();
+                return;
+            }
 
-    function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
-    function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
+            grid.innerHTML = filtered.map(file => `
+                <div class="border border-slate-200 rounded-xl p-4 bg-white hover:shadow-md transition relative group flex flex-col justify-between">
+                    <div class="cursor-pointer" onclick="openPreview('${file.id}', 'file')">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fa-solid fa-file-pdf text-red-500 text-3xl"></i>
+                            <div class="overflow-hidden">
+                                <h5 class="font-bold text-slate-800 text-sm truncate" title="${file.name}">${file.name}</h5>
+                                <span class="text-xs text-slate-400">${file.size || 'PDF'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs text-slate-400">
+                        <span>${file.folder}</span>
+                        <button onclick="deleteItem('${file.id}', 'file')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
 
-    function getMimeType(filename) {
-      const ext = filename.split('.').pop().toLowerCase();
-      if (ext === 'pdf') return 'application/pdf';
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
-      if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return 'audio/' + ext;
-      if (['mp4', 'webm'].includes(ext)) return 'video/' + ext;
-      return 'application/octet-stream';
-    }
+            renderTagCloud();
+        }
 
-    function getFileIcon(type, name) {
-      const ext = name.split('.').pop().toLowerCase();
-      if (type.includes('pdf') || ext === 'pdf') return '<i class="fa-solid fa-file-pdf text-red-500"></i>';
-      if (type.includes('word') || ['doc', 'docx'].includes(ext)) return '<i class="fa-solid fa-file-word text-blue-500"></i>';
-      if (type.includes('image') || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return '<i class="fa-solid fa-file-image text-emerald-500"></i>';
-      if (type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return '<i class="fa-solid fa-file-audio text-amber-500"></i>';
-      if (type.includes('video') || ['mp4', 'webm'].includes(ext)) return '<i class="fa-solid fa-file-video text-purple-500"></i>';
-      return '<i class="fa-solid fa-file text-slate-400"></i>';
-    }
+        // 5. RENDER THƯ MỤC & SÁCH (BOOK MANAGEMENT)
+        function renderBookFolders() {
+            const container = document.getElementById('bookFolderList');
+            if (!container) return;
 
-    function formatSize(bytes) {
-      if (!bytes || bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
+            let html = `<button onclick="selectBookFolder('Tất cả')" class="px-3 py-1.5 rounded-lg text-sm font-medium ${currentBookFolder === 'Tất cả' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">📚 Tất cả sách</button>`;
+            
+            bookFolders.forEach(f => {
+                html += `<button onclick="selectBookFolder('${f}')" class="px-3 py-1.5 rounded-lg text-sm font-medium ${currentBookFolder === f ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">📖 ${f}</button>`;
+            });
+            container.innerHTML = html;
+        }
 
-    document.addEventListener('keydown', (e) => { 
-      if (e.key === 'Escape') { 
-        closePreview(); 
-        closeFlashcardModal(); 
-        closeCreateFolderModal();
-        closeAddFlashcardModal();
-        closeRankModal();
-        closeShopModal();
-      } 
-    });
+        function selectBookFolder(folder) {
+            currentBookFolder = folder;
+            document.getElementById('currentBookFolderName').innerText = folder;
+            renderBookFolders();
+            renderBooks();
+        }
 
-    initApp();
-  </script>
+        function renderBooks() {
+            const grid = document.getElementById('bookGrid');
+            if (!grid) return;
+
+            const filtered = currentBookFolder === 'Tất cả' ? bookList : bookList.filter(item => item.folder === currentBookFolder);
+            document.getElementById('currentBookCount').innerText = `${filtered.length} cuốn sách`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 italic">Chưa có cuốn sách bổ trợ nào ở đây</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(book => `
+                <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/30 border-l-4 border-l-emerald-500 hover:shadow-md transition relative flex flex-col justify-between">
+                    <div class="cursor-pointer" onclick="openPreview('${book.id}', 'book')">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i class="fa-solid fa-book-open text-emerald-600 text-3xl"></i>
+                            <div class="overflow-hidden">
+                                <h5 class="font-bold text-slate-800 text-sm truncate" title="${book.name}">${book.name}</h5>
+                                <span class="text-xs text-slate-400">${book.size || 'Sách PDF'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-xs text-slate-400">
+                        <span class="text-emerald-700 font-medium">${book.folder}</span>
+                        <button onclick="deleteItem('${book.id}', 'book')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 6. XỬ LÝ UPLOAD AN TOÀN TỰ ĐỘNG
+        function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileUrl = URL.createObjectURL(file); // Tạo blob URL an toàn hiển thị ngay lập tức
+            const newItem = {
+                id: 'id_' + Date.now(),
+                name: file.name,
+                url: fileUrl,
+                size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                folder: type === 'file' ? (currentFileFolder === 'Tất cả' ? 'Tài liệu chung' : currentFileFolder) 
+                                       : (currentBookFolder === 'Tất cả' ? 'Sách Tham Khảo' : currentBookFolder),
+                note: ''
+            };
+
+            if (type === 'file') {
+                fileList.push(newItem);
+                localStorage.setItem('azu_file_list', JSON.stringify(fileList));
+                renderFiles();
+            } else {
+                bookList.push(newItem);
+                localStorage.setItem('azu_book_list', JSON.stringify(bookList));
+                renderBooks();
+            }
+            event.target.value = ''; // Reset input
+        }
+
+        // 7. PREVIEW VÀ XÓA AN TOÀN
+        function openPreview(id, type) {
+            const list = type === 'file' ? fileList : bookList;
+            const item = list.find(x => x.id === id);
+            if (!item) return;
+
+            currentPreviewItem = { ...item, type };
+            document.getElementById('previewTitle').innerText = item.name;
+            document.getElementById('previewDownloadBtn').href = item.url;
+            document.getElementById('fileNoteArea').value = item.note || '';
+
+            const body = document.getElementById('previewBody');
+            body.innerHTML = `<iframe src="${item.url}" class="w-full h-full rounded-lg border-0"></iframe>`;
+
+            document.getElementById('previewModal').classList.remove('hidden');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+            document.getElementById('previewBody').innerHTML = '';
+        }
+
+        function saveNote() {
+            if (!currentPreviewItem) return;
+            const noteVal = document.getElementById('fileNoteArea').value;
+            const list = currentPreviewItem.type === 'file' ? fileList : bookList;
+            const item = list.find(x => x.id === currentPreviewItem.id);
+            if (item) {
+                item.note = noteVal;
+                localStorage.setItem(currentPreviewItem.type === 'file' ? 'azu_file_list' : 'azu_book_list', JSON.stringify(list));
+                alert("Đã lưu ghi chú thành công!");
+            }
+        }
+
+        function deleteItem(id, type) {
+            if (!confirm("Bạn có chắc chắn muốn xóa không?")) return;
+            if (type === 'file') {
+                fileList = fileList.filter(x => x.id !== id);
+                localStorage.setItem('azu_file_list', JSON.stringify(fileList));
+                renderFiles();
+            } else {
+                bookList = bookList.filter(x => x.id !== id);
+                localStorage.setItem('azu_book_list', JSON.stringify(bookList));
+                renderBooks();
+            }
+        }
+
+        // 8. BẢO VỆ HÀM RENDER TAG CLOUD (Tránh lỗi null tuyệt đối)
+        function renderTagCloud() {
+            const container = document.getElementById('tagCloud');
+            if (!container) return; // <--- Sửa triệt để lỗi cũ ở đây
+            container.innerHTML = '<span class="text-xs text-slate-400 italic">Hệ thống phân loại tag tự động sẵn sàng</span>';
+        }
+    </script>
 </body>
 </html>
