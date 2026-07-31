@@ -4,158 +4,300 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZU English - Cloud Learning Hub</title>
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-slate-100 font-sans min-h-screen text-slate-800">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti cho hiệu ứng thưởng -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <!-- TOP BAR -->
-    <header class="bg-indigo-700 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-graduation-cap text-2xl text-amber-300"></i>
-                <h1 class="text-xl font-bold tracking-wide">AZU English</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="bg-indigo-800 px-3 py-1 rounded-full text-sm text-amber-300 font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-trophy"></i> 45 XP
-                </span>
-                <span class="bg-indigo-800 px-3 py-1 rounded-full text-sm text-orange-300 font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-fire"></i> 1 Ngày
-                </span>
-                <button class="bg-pink-500 hover:bg-pink-600 text-white text-sm font-bold px-3 py-1 rounded-full flex items-center gap-1 transition">
-                    <i class="fa-solid fa-bag-shopping"></i> Cửa Hàng
-                </button>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg text-slate-900 tracking-tight leading-none">AZU English</h1>
+                        <span class="text-[10px] font-semibold text-indigo-600 tracking-wider uppercase">Cloud Learning Hub</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs / Gamification Bar -->
+                <div class="flex items-center gap-3">
+                    <!-- XP Counter -->
+                    <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200/60 px-3 py-1.5 rounded-full text-xs font-bold text-amber-700 shadow-sm">
+                        <i class="fa-solid fa-trophy text-amber-500"></i>
+                        <span id="userXpDisplay">45 XP</span>
+                    </div>
+
+                    <!-- Streak Counter -->
+                    <div class="flex items-center gap-1.5 bg-orange-50 border border-orange-200/60 px-3 py-1.5 rounded-full text-xs font-bold text-orange-700 shadow-sm">
+                        <i class="fa-solid fa-fire text-orange-500 animate-bounce"></i>
+                        <span id="userStreakDisplay">1 Ngày</span>
+                    </div>
+
+                    <!-- Store Button -->
+                    <button onclick="openShopModal()" class="flex items-center gap-1.5 bg-pink-50 border border-pink-200/60 px-3 py-1.5 rounded-full text-xs font-bold text-pink-600 hover:bg-pink-100 transition shadow-sm">
+                        <i class="fa-solid fa-bag-shopping text-pink-500"></i>
+                        <span>Cửa Hàng</span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
-    <div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <!-- THƯ MỤC BANNER (GIAO DIỆN CŨ GIỮ NGUYÊN) -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <button onclick="switchFolder('Tất cả')" class="text-sm font-semibold text-indigo-600 hover:underline flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
-                </button>
-                <button onclick="createNewFolder()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-1 transition">
-                    <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
-                </button>
-            </div>
-
-            <h2 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-3">DANH SÁCH THƯ MỤC</h2>
+        <!-- LOBBY VIEW (MÀN HÌNH SẢNH CHÍNH) -->
+        <section id="lobbyView" class="space-y-8">
             
-            <!-- Danh sách Thư mục (Bao gồm các thư mục cũ + Thư mục "Sách Bổ Trợ" riêng biệt) -->
-            <div id="folderList" class="flex flex-wrap gap-2 mb-3"></div>
-
-            <!-- Tag Cloud Container (Có bảo vệ an toàn chống lỗi null) -->
-            <div id="tagCloud" class="flex flex-wrap gap-1 mt-2"></div>
-        </div>
-
-        <!-- DANH SÁCH FILE TRONG THƯ MỤC HIỆN TẠI -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h3 id="currentFolderName" class="text-2xl font-bold text-slate-800">Tất cả</h3>
-                    <p id="currentFileCount" class="text-sm text-slate-400">0 tệp tin</p>
-                </div>
-                <div>
-                    <input type="file" id="cloudFileInput" class="hidden" onchange="uploadFileToCurrentFolder(event)">
-                    <button onclick="document.getElementById('cloudFileInput').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> <span id="uploadBtnText">Tải file lên Cloud</span>
-                    </button>
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 p-8 text-white shadow-xl">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-3">
+                    <span class="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-indigo-100">
+                        🚀 Nền tảng lưu trữ & Học tập
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Chào mừng đến với Sảnh Học Tập AZU!</h2>
+                    <p class="text-indigo-100 text-sm sm:text-base font-medium leading-relaxed">
+                        Quản lý tài liệu Tiếng Anh thông minh, lưu trữ ghi chú tự động và khám phá kho sách bổ trợ nâng cao kỹ năng.
+                    </p>
                 </div>
             </div>
 
-            <!-- Khung danh sách File Grid -->
-            <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-        </div>
-
-    </div>
-
-    <!-- PREVIEW MODAL (XEM FILE PDF / GHI CHÚ) -->
-    <div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <div class="flex items-center gap-2 truncate max-w-xl">
-                    <i id="previewIcon" class="fa-solid fa-file-pdf text-red-500 text-xl"></i>
-                    <h4 id="previewTitle" class="font-bold text-slate-800 text-base truncate">Preview</h4>
+            <!-- DASHBOARD CARDS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Card 1: Kho Tài Liệu / Cloud Files -->
+                <div onclick="navigateToModule('cloud')" class="group cursor-pointer bg-white rounded-2xl p-6 border border-slate-200/80 hover:border-indigo-500/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-cloud"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Kho File & Cloud Storage</h3>
+                            <p class="text-xs text-slate-500 mt-1">Lưu trữ tài liệu Grammar, Vocabulary, Bài tập PDF và xem lại ghi chú bài học.</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600">
+                        <span>Truy cập Cloud</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <a id="previewDownloadBtn" href="#" target="_blank" download class="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1 border border-indigo-200 transition">
+
+                <!-- Card 2: Sách Bổ Trợ (Phần mới tách riêng độc lập) -->
+                <div onclick="navigateToModule('books')" class="group cursor-pointer bg-white rounded-2xl p-6 border border-slate-200/80 hover:border-emerald-500/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Kho Sách Bổ Trợ</h3>
+                            <p class="text-xs text-slate-500 mt-1">Khu vực riêng cho các đầu sách tham khảo, giáo trình bổ trợ nâng cao.</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
+                        <span>Mở tủ sách</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3: Thử Thách & Nhiệm Vụ -->
+                <div onclick="openMissionsModal()" class="group cursor-pointer bg-white rounded-2xl p-6 border border-slate-200/80 hover:border-amber-500/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition-colors">Nhiệm Vụ Hàng Ngày</h3>
+                            <p class="text-xs text-slate-500 mt-1">Hoàn thành các mốc tải file, học tập để tích lũy XP đổi quà hấp dẫn.</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-600">
+                        <span>Xem danh sách nhiệm vụ</span>
+                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- CLOUD STORAGE WORKSPACE (GIAO DIỆN QUẢN LÝ FILE CHÍNH) -->
+        <section id="cloudWorkspace" class="space-y-6 hidden">
+            
+            <!-- Breadcrumb Navigation & Top Action -->
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div class="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <button onclick="navigateToModule('lobby')" class="hover:text-indigo-600 flex items-center gap-1 transition">
+                        <i class="fa-solid fa-house"></i> Sảnh chính
+                    </button>
+                    <span class="text-slate-300">/</span>
+                    <span id="workspaceBreadcrumb" class="text-slate-900 font-bold">Tài liệu Cloud</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button onclick="createNewFolder()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
+                    </button>
+                    <button onclick="triggerFileUpload()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Tải file lên Cloud
+                    </button>
+                    <input type="file" id="cloudFileInput" class="hidden" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+
+            <!-- FOLDERS BAR -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">DANH SÁCH THƯ MỤC</h4>
+                <div id="folderList" class="flex flex-wrap gap-2"></div>
+                <!-- Tag Cloud Container -->
+                <div id="tagCloud" class="flex flex-wrap gap-1.5 pt-2"></div>
+            </div>
+
+            <!-- FILES DISPLAY GRID -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 id="currentFolderName" class="text-xl font-extrabold text-slate-900">Tất cả tệp tin</h3>
+                        <p id="currentFileCount" class="text-xs font-medium text-slate-400">0 tệp tin</p>
+                    </div>
+                </div>
+
+                <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- PREVIEW MODAL -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div id="previewIcon" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <h3 id="previewTitle" class="font-bold text-slate-900 text-sm sm:text-base truncate">Document Title</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a id="previewDownloadBtn" href="#" download target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition">
                         <i class="fa-solid fa-download"></i> Tải về
                     </a>
-                    <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-2">
+                    <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg text-lg">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
             </div>
+
+            <!-- Modal Content & Sidebar -->
             <div class="flex-1 flex overflow-hidden">
-                <div id="previewBody" class="flex-1 bg-slate-900 flex items-center justify-center p-2"></div>
-                <div id="previewSidebar" class="w-80 border-l border-slate-200 p-4 bg-slate-50 flex flex-col">
-                    <h5 class="font-bold text-slate-700 mb-2 text-sm flex items-center gap-2">
+                <div id="previewBody" class="flex-1 bg-slate-900 flex items-center justify-center p-2">
+                    <!-- Dynamic iFrame -->
+                </div>
+                
+                <div id="previewSidebar" class="w-80 border-l border-slate-200/80 p-5 bg-slate-50 flex flex-col space-y-4">
+                    <h4 class="font-extrabold text-xs text-slate-400 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học
-                    </h5>
-                    <textarea id="fileNoteArea" class="flex-1 w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="Ghi chú bài học..."></textarea>
-                    <button onclick="saveNote()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-sm transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-lock"></i> Lưu ghi chú
+                    </h4>
+                    <textarea id="fileNoteArea" class="flex-1 w-full p-3 bg-white border border-slate-200 rounded-xl text-xs leading-relaxed focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none custom-scrollbar" placeholder="Nhập ghi chú quan trọng ở đây..."></textarea>
+                    <button onclick="saveNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT XỬ LÝ -->
+    <!-- MAIN APP JAVASCRIPT CODE -->
     <script>
-        // 1. DỮ LIỆU CƠ SỞ (TÁCH BIỆT FILE VÀ SÁCH BỔ TRỢ)
-        let folders = JSON.parse(localStorage.getItem('azu_folders')) || ['Tài liệu chung', 'Destination', 'Ngữ pháp', '📚 Sách bổ trợ'];
-        let cloudFiles = JSON.parse(localStorage.getItem('azu_cloud_files')) || [];
-        
+        // CONFIG & STATE
+        let currentModule = 'lobby'; // 'lobby' | 'cloud' | 'books'
         let currentFolder = 'Tất cả';
+        
+        let folders = JSON.parse(localStorage.getItem('azu_folders')) || ['Tài liệu chung', 'Destination', 'Ngữ pháp', 'Sách bổ trợ'];
+        let cloudFiles = JSON.parse(localStorage.getItem('azu_cloud_files')) || [];
         let currentPreviewRecord = null;
 
-        // Tự động load ban đầu
         window.onload = function() {
-            // Đảm bảo luôn có thư mục "📚 Sách bổ trợ"
-            if (!folders.includes('📚 Sách bổ trợ')) {
-                folders.push('📚 Sách bổ trợ');
-                localStorage.setItem('azu_folders', JSON.stringify(folders));
-            }
-            renderFolders();
-            renderFiles();
+            initApp();
         };
 
-        // 2. HIỂN THỊ DANH SÁCH THƯ MỤC
+        function initApp() {
+            renderFolders();
+            renderFiles();
+        }
+
+        // MODULE SWITCHING (CHUYỂN GIAO DIỆN SẢNH <-> WORKSPACE)
+        function navigateToModule(moduleName) {
+            currentModule = moduleName;
+            const lobbyView = document.getElementById('lobbyView');
+            const cloudWorkspace = document.getElementById('cloudWorkspace');
+            const workspaceBreadcrumb = document.getElementById('workspaceBreadcrumb');
+
+            if (moduleName === 'lobby') {
+                lobbyView.classList.remove('hidden');
+                cloudWorkspace.classList.add('hidden');
+            } else if (moduleName === 'cloud') {
+                lobbyView.classList.add('hidden');
+                cloudWorkspace.classList.remove('hidden');
+                workspaceBreadcrumb.innerText = "Tài liệu Cloud";
+                switchFolder('Tất cả');
+            } else if (moduleName === 'books') {
+                lobbyView.classList.add('hidden');
+                cloudWorkspace.classList.remove('hidden');
+                workspaceBreadcrumb.innerText = "Sách Bổ Trợ";
+                switchFolder('Sách bổ trợ');
+            }
+        }
+
+        // FOLDER MANAGEMENT
         function renderFolders() {
             const container = document.getElementById('folderList');
-            if (!container) return; // Bảo vệ an toàn tuyệt đối
+            if (!container) return;
 
             let html = `
-                <button onclick="switchFolder('Tất cả')" class="px-3 py-1.5 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 ${currentFolder === 'Tất cả' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                    <i class="fa-solid fa-briefcase"></i> Tất cả
+                <button onclick="switchFolder('Tất cả')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${currentFolder === 'Tất cả' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    Tất cả
                 </button>
             `;
 
             folders.forEach(f => {
-                const isBook = f.includes('Sách bổ trợ') || f.includes('Sách');
                 const isSelected = currentFolder === f;
-                
-                let activeClass = isSelected 
-                    ? (isBook ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white')
-                    : (isBook ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
-
                 html += `
-                    <div class="inline-flex items-center rounded-xl ${activeClass} px-3 py-1.5 text-sm font-semibold transition">
+                    <div class="inline-flex items-center rounded-xl ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} px-3 py-1.5 text-xs font-bold transition">
                         <button onclick="switchFolder('${f}')" class="flex items-center gap-1.5">
-                            <i class="fa-solid ${isBook ? 'fa-book' : 'fa-folder'}"></i> ${f}
+                            <i class="fa-solid ${f.includes('Sách') ? 'fa-book' : 'fa-folder'}"></i> ${f}
                         </button>
-                        ${(f !== 'Tài liệu chung' && f !== '📚 Sách bổ trợ') ? `
-                            <button onclick="deleteFolder('${f}')" class="ml-2 text-xs opacity-60 hover:opacity-100">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        ` : ''}
                     </div>
                 `;
             });
@@ -164,22 +306,13 @@
             renderTagCloud();
         }
 
-        // 3. CHUYỂN THƯ MỤC
         function switchFolder(folderName) {
             currentFolder = folderName;
             document.getElementById('currentFolderName').innerText = folderName;
-            
-            // Đổi nhãn nút upload phù hợp
-            const uploadBtnText = document.getElementById('uploadBtnText');
-            if (uploadBtnText) {
-                uploadBtnText.innerText = folderName.includes('Sách') ? 'Tải sách bổ trợ lên' : 'Tải file lên Cloud';
-            }
-
             renderFolders();
             renderFiles();
         }
 
-        // 4. TẠO THƯ MỤC MỚI
         function createNewFolder() {
             const name = prompt("Nhập tên thư mục mới:");
             if (!name || !name.trim()) return;
@@ -192,15 +325,7 @@
             }
         }
 
-        function deleteFolder(folderName) {
-            if (!confirm(`Bạn có chắc muốn xóa thư mục "${folderName}" không?`)) return;
-            folders = folders.filter(f => f !== folderName);
-            localStorage.setItem('azu_folders', JSON.stringify(folders));
-            if (currentFolder === folderName) switchFolder('Tất cả');
-            else renderFolders();
-        }
-
-        // 5. HIỂN THỊ THƯ MỤC FILE / SÁCH
+        // FILE MANAGEMENT
         function renderFiles() {
             const grid = document.getElementById('fileGrid');
             if (!grid) return;
@@ -212,38 +337,40 @@
             document.getElementById('currentFileCount').innerText = `${filtered.length} tệp tin`;
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 italic">Chưa có tệp tin nào trong thư mục này</div>`;
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 italic text-xs">Chưa có tệp tin nào trong thư mục này</div>`;
                 return;
             }
 
-            grid.innerHTML = filtered.map(file => {
-                const isBook = file.folder && file.folder.includes('Sách');
-                return `
-                    <div class="border ${isBook ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-white'} rounded-xl p-4 hover:shadow-md transition relative group flex flex-col justify-between">
-                        <div class="cursor-pointer" onclick="previewFile('${file.id}')">
-                            <div class="flex items-center gap-3 mb-3">
-                                <i class="fa-solid ${isBook ? 'fa-book-open text-emerald-600' : 'fa-file-pdf text-red-500'} text-3xl"></i>
-                                <div class="overflow-hidden">
-                                    <h5 class="font-bold text-slate-800 text-sm truncate" title="${file.name}">${file.name}</h5>
-                                    <span class="text-xs text-slate-400">${file.size || 'PDF'}</span>
-                                </div>
+            grid.innerHTML = filtered.map(file => `
+                <div class="border border-slate-200/80 rounded-2xl p-4 bg-white hover:shadow-lg transition relative group flex flex-col justify-between">
+                    <div class="cursor-pointer" onclick="previewFile('${file.id}')">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h5 class="font-bold text-slate-800 text-xs truncate" title="${file.name}">${file.name}</h5>
+                                <span class="text-[10px] text-slate-400 font-semibold">${file.size || 'PDF'}</span>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs text-slate-400">
-                            <span class="${isBook ? 'text-emerald-700 font-medium' : ''}">${file.folder || 'Tài liệu chung'}</span>
-                            <button onclick="deleteFile('${file.id}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
-                        </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-[10px] font-bold text-slate-400">
+                        <span>${file.folder || 'Tài liệu chung'}</span>
+                        <button onclick="deleteFile('${file.id}')" class="text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // 6. TẢI FILE / SÁCH LÊN (TỰ ĐỘNG LƯU TRỰC TIẾP LÊN BỘ NHỚ LOCAL)
-        function uploadFileToCurrentFolder(event) {
+        function triggerFileUpload() {
+            document.getElementById('cloudFileInput').click();
+        }
+
+        function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            const fileUrl = URL.createObjectURL(file); // Tạo Blob URL hiển thị trực tiếp cực nhanh
+            const fileUrl = URL.createObjectURL(file);
             const targetFolder = currentFolder === 'Tất cả' ? 'Tài liệu chung' : currentFolder;
 
             const newRecord = {
@@ -252,17 +379,16 @@
                 url: fileUrl,
                 size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
                 folder: targetFolder,
-                tags: targetFolder.includes('Sách') ? ['Sách bổ trợ'] : ['Tài liệu'],
+                tags: ['Document'],
                 note: ''
             };
 
             cloudFiles.push(newRecord);
             localStorage.setItem('azu_cloud_files', JSON.stringify(cloudFiles));
             renderFiles();
-            event.target.value = ''; // Clear input
+            event.target.value = '';
         }
 
-        // 7. PREVIEW FILE AN TOÀN
         function previewFile(id) {
             const record = cloudFiles.find(f => f.id == id);
             if (!record) return;
@@ -273,7 +399,7 @@
             document.getElementById('fileNoteArea').value = record.note || '';
 
             const previewBody = document.getElementById('previewBody');
-            previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-lg border-0"></iframe>`;
+            previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
 
             document.getElementById('previewModal').classList.remove('hidden');
         }
@@ -295,21 +421,23 @@
         }
 
         function deleteFile(id) {
-            if (!confirm("Bạn có muốn xóa file này không?")) return;
+            if (!confirm("Xóa file này?")) return;
             cloudFiles = cloudFiles.filter(f => f.id !== id);
             localStorage.setItem('azu_cloud_files', JSON.stringify(cloudFiles));
             renderFiles();
         }
 
-        // 8. BẢO VỆ HÀM RENDER TAG CLOUD (ĐÃ SỬA LỖI NULL 100%)
+        // =========================================================
+        // DÒNG 1245: ĐÃ ĐƯỢC BỌC ĐIỀU KIỆN CHỐNG LỖI NULL
+        // =========================================================
         function renderTagCloud() {
-            const container = document.getElementById('tagCloud');
-            if (!container) return; // Khóa an toàn chống sập script khi không tìm thấy element
-
             const tagMap = {};
             cloudFiles.forEach(f => {
                 (f.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; });
             });
+
+            const container = document.getElementById('tagCloud');
+            if (!container) return; // <--- ĐÂY LÀ DÒNG CHỐNG LỖI NULL GIÚP SẢNH CHẠY BÌNH THƯỜNG
 
             const tagKeys = Object.keys(tagMap);
             if (tagKeys.length === 0) {
@@ -318,9 +446,12 @@
             }
 
             container.innerHTML = tagKeys.map(t => 
-                `<span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">#${t} (${tagMap[t]})</span>`
+                `<button onclick="filterByTag('${t}')" class="text-xs px-2 py-1 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition font-medium">#${t}</button>`
             ).join('');
         }
+
+        function openShopModal() { alert("Cửa hàng sẽ sớm ra mắt!"); }
+        function openMissionsModal() { alert("Danh sách nhiệm vụ đang cập nhật!"); }
     </script>
 </body>
 </html>
