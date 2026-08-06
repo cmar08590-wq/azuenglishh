@@ -1019,13 +1019,44 @@
       renderFolders();
     }
 
-    async function deleteFolder(id) {
-      if (confirm('Xóa thư mục này?')) {
-        folders = folders.filter(f => f.id !== id);
-        if (currentFolderId === id) currentFolderId = 'all';
-        try { await supabaseClient.from('folders').delete().eq('id', id); } catch(e) {}
-        renderFolders();
-        renderFiles();
+   async function deleteFolder(id) {
+      const folderObj = folders.find(f => f.id === id);
+      const folderName = folderObj ? folderObj.name : "thư mục này";
+
+      if (confirm(`Xóa thư mục "${folderName}"? Tất cả các file audio/tài liệu bên trong thư mục này cũng sẽ bị xóa vĩnh viễn khỏi Cloud!`)) {
+        try {
+          // 1. Lấy danh sách các file thuộc thư mục này
+          const filesInFolder = cloudFiles.filter(f => f.folderId === id);
+
+          // 2. Xóa toàn bộ file thực tế trên Storage của thư mục này
+          for (let file of filesInFolder) {
+            if (file.url) {
+              const urlParts = file.url.split('/');
+              const storageFileName = urlParts[urlParts.length - 1];
+              if (storageFileName) {
+                await supabaseClient.storage.from('documents').remove([storageFileName]);
+              }
+            }
+          }
+
+          // 3. Xóa dữ liệu file thuộc thư mục trong Database
+          await supabaseClient.from('documents_metadata').delete().eq('folder_id', id);
+
+          // 4. Xóa thư mục trong bảng 'folders'
+          await supabaseClient.from('folders').delete().eq('id', id);
+
+          // 5. Cập nhật giao diện
+          folders = folders.filter(f => f.id !== id);
+          if (currentFolderId === id) currentFolderId = 'all';
+
+          alert(`Đã xóa thư mục "${folderName}" và tất cả file bên trong khỏi Cloud!`);
+          renderFolders();
+          await fetchCloudFiles();
+
+        } catch (err) {
+          console.error("Lỗi khi xóa thư mục:", err);
+          alert("Có lỗi xảy ra khi xóa thư mục: " + err.message);
+        }
       }
     }
 
