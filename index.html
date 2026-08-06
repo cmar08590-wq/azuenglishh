@@ -1424,6 +1424,34 @@
     function checkAudioLoop() {
       // Hàm trống giúp xử lý sự kiện ontimeupdate của audio player mà không gây lỗi crash
     }
+    // HÀM XÓA FILE TRỰC TIẾP TRÊN SUPABASE CLOUD & METADATA
+    async function deleteFile(fileId) {
+      if (!confirm('Bạn có chắc chắn muốn xóa bài nghe này khỏi Cloud?')) return;
+
+      const file = cloudFiles.find(f => f.id == fileId);
+      if (!file) return;
+
+      try {
+        // 1. Tách lấy tên file từ URL để xóa trên Supabase Storage
+        const fileUrlParts = file.url.split('/');
+        const storageFileName = fileUrlParts[fileUrlParts.length - 1];
+
+        if (storageFileName) {
+          await supabaseClient.storage.from('documents').remove([storageFileName]);
+        }
+
+        // 2. Xóa thông tin file trong bảng database metadata
+        await supabaseClient.from('documents_metadata').delete().eq('id', fileId);
+
+        alert('🗑️ Đã xóa bài nghe thành công!');
+
+        // 3. Tải lại danh sách file mới
+        await fetchCloudFiles();
+        renderDictationLessonsList();
+      } catch (err) {
+        alert('Lỗi khi xóa file: ' + err.message);
+      }
+    }
   </script>
 </body>
 </html>
