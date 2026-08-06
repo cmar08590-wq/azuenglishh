@@ -584,7 +584,7 @@
     }
 
     // --- LUYỆN NGHE CHÉP CHÍNH TẢ TỰ ĐỘNG TỪ TẤT CẢ FILE AUDIO ---
-    function renderDictationLessonsList() {
+  function renderDictationLessonsList() {
       const listContainer = document.getElementById('audioLessonsList');
       const audioFiles = cloudFiles.filter(f => f.type.includes('audio') || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => f.name.toLowerCase().endsWith(ext)));
 
@@ -600,15 +600,19 @@
       }
 
       listContainer.innerHTML = audioFiles.map(file => `
-        <div onclick="selectDictationFile('${file.id}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition flex items-center justify-between group">
-          <div class="flex items-center gap-2 overflow-hidden">
+        <div class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition flex items-center justify-between group">
+          <div onclick="selectDictationFile('${file.id}')" class="flex items-center gap-2 overflow-hidden cursor-pointer flex-1">
             <i class="fa-solid fa-circle-play text-amber-500 text-base group-hover:scale-110 transition"></i>
             <div class="overflow-hidden">
               <h4 class="font-bold text-slate-800 text-xs truncate">${file.name}</h4>
               <p class="text-[10px] text-slate-400">${formatSize(file.size)}</p>
             </div>
           </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+          
+          <!-- NÚT XÓA AUDIO TRỰC TIẾP TẠI MÀN HÌNH DICTATION -->
+          <button onclick="event.stopPropagation(); deleteFile('${file.id}')" class="text-slate-300 hover:text-red-500 p-1.5 rounded-lg transition" title="Xóa file khỏi Cloud">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
         </div>
       `).join('');
     }
