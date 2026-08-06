@@ -600,7 +600,8 @@
     }
 
     // --- LUYỆN NGHE CHÉP CHÍNH TẢ TỰ ĐỘNG TỪ TẤT CẢ FILE AUDIO ---
- function renderDictationLessonsList() {
+// --- LUYỆN NGHE CHÉP CHÍNH TẢ: QUẢN LÝ THƯ MỤC & RENDER DỮ LIỆU ---
+    function renderDictationLessonsList() {
       const listContainer = document.getElementById('audioLessonsList');
       const folderSelect = document.getElementById('dictationFolderSelect');
 
@@ -622,7 +623,7 @@
         audioFiles = audioFiles.filter(f => f.folderId === selectedFolderId);
       }
 
-      // 3. Nếu chưa có audio nào trong thư mục
+      // 3. Nếu chưa có audio nào
       if (audioFiles.length === 0) {
         listContainer.innerHTML = `
           <div class="py-6 text-center text-slate-400 text-xs">
@@ -657,6 +658,7 @@
         `;
       }).join('');
     }
+
     function selectDictationFile(fileId) {
       const file = cloudFiles.find(f => f.id == fileId);
       if (!file) return;
@@ -664,34 +666,10 @@
       currentDictationFile = file;
       document.getElementById('activeAudioTitle').textContent = file.name;
       document.getElementById('activeAudioTag').textContent = "Bài Nghe Đang Chọn";
-      
+
       const player = document.getElementById('dictationAudioPlayer');
       player.src = file.url;
       player.play();
-
-      document.getElementById('dictationTextArea').value = file.note || '';
-    }
-
-    function setDictationSpeed(speed) {
-      const player = document.getElementById('dictationAudioPlayer');
-      if (player) player.playbackRate = speed;
-    }
-
-    async function saveDictationNote() {
-      if (!currentDictationFile) {
-        alert('Vui lòng chọn 1 bài nghe Audio bên trái trước!');
-        return;
-      }
-
-      const noteText = document.getElementById('dictationTextArea').value;
-      currentDictationFile.note = noteText;
-
-      try {
-        await supabaseClient.from('documents_metadata').update({ note: noteText }).eq('id', currentDictationFile.id);
-      } catch(e) {}
-
-      addXp(10);
-      alert('🎉 Đã lưu bài chép chính tả và cộng +10 XP!');
     }
 
     function setupAudioDictationUploadListener() {
@@ -702,7 +680,6 @@
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        // Lấy thư mục đang được chọn ở màn hình Dictation
         const folderSelect = document.getElementById('dictationFolderSelect');
         const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : 'listening';
 
