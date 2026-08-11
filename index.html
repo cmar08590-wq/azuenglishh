@@ -644,8 +644,20 @@
       document.getElementById('activeAudioTag').textContent = "Bài Nghe Đang Chọn";
 
       const player = document.getElementById('dictationAudioPlayer');
-      player.src = file.url;
-      player.play();
+player.preload = 'metadata';
+player.src = file.url;
+
+// Tự động khôi phục vị trí phát khi mạng bị lag/khựng
+player.onstalled = () => {
+  if (!player.paused) {
+    const currentTime = player.currentTime;
+    player.load();
+    player.currentTime = currentTime;
+    player.play().catch(() => {});
+  }
+};
+
+player.play().catch(err => console.log("Lỗi phát audio:", err));
     }
 
     function setDictationSpeed(speed) {
