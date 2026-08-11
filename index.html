@@ -599,7 +599,7 @@
       let audioFiles = cloudFiles.filter(f => (f.type && f.type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => f.name.toLowerCase().endsWith(ext)));
 
       if (selectedFolderId !== 'ALL') {
-        audioFiles = audioFiles.filter(f => String(f.folderId) === String(selectedFolderId));
+        audioFiles = audioFiles.filter(f => String(f.folder_id || f.folderId) === String(selectedFolderId));
       }
 
       if (audioFiles.length === 0) {
@@ -686,8 +686,8 @@ player.play().catch(err => console.log("Lỗi phát audio:", err));
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        const folderSelect = document.getElementById('dictationFolderSelect');
-        const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : 'listening';
+       const folderSelect = document.getElementById('dictationFolderSelect');
+const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : null;
 
         for (let file of files) {
           const fileExt = file.name.split('.').pop();
@@ -702,13 +702,13 @@ player.play().catch(err => console.log("Lỗi phát audio:", err));
 
           const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
 
-          const fileRecord = {
-            id: String(Date.now() + Math.random()),
-            name: file.name,
-            size: file.size,
-            type: file.type || 'audio/mp3',
-            folder_id: selectedFolder,
-            date_added: new Date().toLocaleDateString('vi-VN'),
+         const fileRecord = {
+  id: String(Date.now() + Math.random()),
+  name: file.name,
+  size: file.size,
+  type: file.type || 'audio/mp3',
+  folder_id: selectedFolder,
+  folderId: selectedFolder, // Bổ sung dòng này để đồng bộ cả 2 tên gọi
             is_starred: false,
             tags: ['listening', 'dictation'],
             note: '',
