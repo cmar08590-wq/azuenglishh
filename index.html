@@ -235,7 +235,7 @@
                   + Tạo Thư Mục
                 </button>
               </div>
-              <select id="dictationFolderSelect" onchange="renderDictationLessonsList()" class="w-full text-xs p-1.5 border rounded-xl bg-white font-medium focus:outline-none focus:ring-1 focus:ring-amber-400">
+              <select id="dictationFolderSelect" onchange="if(typeof renderCloudFiles === 'function') renderCloudFiles();" class="...">
                 <option value="ALL">-- Tất cả thư mục --</option>
               </select>
             </div>
@@ -599,7 +599,7 @@
       let audioFiles = cloudFiles.filter(f => (f.type && f.type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => f.name.toLowerCase().endsWith(ext)));
 
       if (selectedFolderId !== 'ALL') {
-        audioFiles = audioFiles.filter(f => String(f.folder_id || f.folderId) === String(selectedFolderId));
+     audioFiles = audioFiles.filter(f => String((f.folder_id || f.folderId || '')) === String(selectedFolderId));
       }
 
       if (audioFiles.length === 0) {
@@ -614,7 +614,7 @@
       }
 
       listContainer.innerHTML = audioFiles.map(file => {
-        const folderObj = folders.find(f => String(f.id) === String(file.folderId));
+        const folderObj = folders.find(f => String(f.id) === String((file.folder_id || file.folderId || '')));
         const folderName = folderObj ? folderObj.name : 'Tài liệu chung';
 
         return `
@@ -687,7 +687,7 @@ player.play().catch(err => console.log("Lỗi phát audio:", err));
         if (!files || files.length === 0) return;
 
        const folderSelect = document.getElementById('dictationFolderSelect');
-const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : null;
+const selectedFolder = (folderSelect && folderSelect.value && folderSelect.value !== 'ALL') ? folderSelect.value : 'ALL';
 
         for (let file of files) {
           const fileExt = file.name.split('.').pop();
@@ -723,7 +723,9 @@ const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSe
         }
 
         await fetchCloudFiles();
-        audioInput.value = '';
+if (typeof renderCloudFiles === 'function') renderCloudFiles();
+if (typeof renderDictationLessonsList === 'function') renderDictationLessonsList();
+audioInput.value = '';
         alert('🎉 Đã tải bài nghe Audio lên thành công!');
       });
     }
