@@ -671,8 +671,9 @@ Tr trình bày kết quả bằng Tiếng Việt gồm các mục:
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            input: promptText
-          })
+        model: "gemini-2.5-flash",
+        input: promptText
+      })
         });
 
         const data = await response.json();
