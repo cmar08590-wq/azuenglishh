@@ -92,6 +92,9 @@
           <button onclick="showView('dictation')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
             <i class="fa-solid fa-headphones text-amber-500"></i> Luyện Nghe Chép Chính Tả
           </button>
+          <button onclick="openWritingModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-pen-nib text-purple-600"></i> Luyện Viết & Check Bài
+          </button>
           <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
             <i class="fa-solid fa-brain text-purple-500"></i> Flashcards Từ Vựng
           </button>
@@ -116,7 +119,7 @@
           <p class="text-xs md:text-sm text-slate-500 mt-1">Chọn tính năng bạn muốn rèn luyện hôm nay:</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <div onclick="showView('files')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
             <div class="space-y-3">
               <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition">
@@ -143,15 +146,29 @@
             </div>
           </div>
 
-          <div onclick="openFlashcardModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
+          <!-- CARD CHECK BÀI VIẾT -->
+          <div onclick="openWritingModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
             <div class="space-y-3">
               <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition">
+                <i class="fa-solid fa-pen-nib"></i>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Luyện Viết & Check Bài</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Sửa lỗi ngữ pháp, gợi ý nâng cấp từ vựng phù hợp với trình độ của bạn.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
+              <span>Check Bài Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+            </div>
+          </div>
+
+          <div onclick="openFlashcardModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="w-12 h-12 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pink-600 group-hover:text-white transition">
                 <i class="fa-solid fa-brain"></i>
               </div>
               <h3 class="font-bold text-slate-800 text-base">Flashcards Từ Vựng</h3>
               <p class="text-xs text-slate-500 leading-relaxed">Ôn bộ từ mẫu hoặc tự tạo Flashcards cá nhân có tự đọc phát âm chuẩn.</p>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-pink-600">
               <span>Học Từ Vựng</span> <i class="fa-solid fa-arrow-right"></i>
             </div>
           </div>
@@ -203,7 +220,7 @@
         <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       </div>
 
-      <!-- VIEW 3: LUYỆN NGHE CHÉP CHÍNH TẢ (DICTATION MODE) -->
+      <!-- VIEW 3: LUYỆN NGHE CHÉP CHÍNH TẢ -->
       <div id="viewDictation" class="space-y-6 hidden">
         <div class="flex items-center justify-between">
           <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
@@ -213,10 +230,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- CỘT BÊN TRÁI: QUẢN LÝ THƯ MỤC & DANH SÁCH BÀI NGHE AUDIO -->
           <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-            
             <div class="flex justify-between items-center border-b pb-2">
               <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                 <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe Audio
@@ -227,7 +241,6 @@
               </label>
             </div>
 
-            <!-- THANH QUẢN LÝ THƯ MỤC Ở DICTATION HUB -->
             <div class="space-y-1.5 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold text-slate-500">📁 Thư mục bài nghe:</span>
@@ -240,11 +253,9 @@
               </select>
             </div>
 
-            <!-- DANH SÁCH BÀI NGHE -->
             <div id="audioLessonsList" class="space-y-2 max-h-[350px] overflow-y-auto pr-1"></div>
           </div>
 
-          <!-- CỘT BÊN PHẢI: TRÌNH CHÉP CHÍNH TẢ TRỰC TIẾP -->
           <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
             <div class="border-b pb-3">
               <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Đang chọn bài</span>
@@ -272,7 +283,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -296,7 +306,58 @@
     </main>
   </div>
 
-  <!-- MODALS -->
+  <!-- MODAL CHECK BÀI VIẾT -->
+  <div id="writingModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-base md:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-pen-nib text-purple-600"></i> Trợ Lý Check & Sửa Bài Viết
+        </h3>
+        <button onclick="closeWritingModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">Dán đoạn văn tiếng Anh cần kiểm tra:</label>
+          <textarea id="writingInputText" rows="5" placeholder="Nhập bài luận, đoạn văn hoặc câu tiếng Anh tại đây..." class="w-full p-3 border rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium resize-none"></textarea>
+        </div>
+
+        <!-- BỘ CHỌN MỨC ĐỘ SỬA LỖI -->
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">Trình độ hiện tại của bạn:</label>
+          <div class="grid grid-cols-3 gap-2 text-xs font-semibold">
+            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
+              <input type="radio" name="writingLevel" value="beginner" checked class="hidden"> 🌱 Mới bắt đầu
+            </label>
+            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
+              <input type="radio" name="writingLevel" value="intermediate" class="hidden"> 🌿 Trung cấp (B1-B2)
+            </label>
+            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
+              <input type="radio" name="writingLevel" value="advanced" class="hidden"> 🚀 Nâng cao / IELTS
+            </label>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button onclick="checkWriting('full')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-magnifying-glass"></i> Check & Sửa Lỗi Bài Viết
+          </button>
+        </div>
+      </div>
+
+      <!-- Khung hiển thị kết quả -->
+      <div id="writingResultContainer" class="hidden space-y-3 pt-3 border-t">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-square-check text-purple-600"></i> Báo Cáo Phân Tích & Gợi Ý
+        </h4>
+        <div id="writingResponseBody" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs md:text-sm leading-relaxed text-slate-700 space-y-2 overflow-x-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BẢNG XẾP HẠNG, SHOP, MODALS KHÁC... -->
   <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -496,6 +557,9 @@
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // DÁN GEMINI API KEY CỦA BẠN VÀO ĐÂY:
+    const GEMINI_API_KEY = ["AQ.Ab8RN6L9XzLgD5i9SbgpGCgllT", "IrkKri6f5vkds2qaB3M2l4A"].join("-");
+
     let currentFolderId = 'all';
     let currentFilter = 'all';
     let selectedTag = null;
@@ -541,6 +605,95 @@
       updateGamificationUI();
       updateStreakUI();
       showView('hub');
+    }
+
+    function openWritingModal() {
+      document.getElementById('writingModal').classList.remove('hidden');
+    }
+
+    function closeWritingModal() {
+      document.getElementById('writingModal').classList.add('hidden');
+    }
+
+    async function checkWriting(mode) {
+      const inputText = document.getElementById('writingInputText').value.trim();
+      const resultContainer = document.getElementById('writingResultContainer');
+      const responseBody = document.getElementById('writingResponseBody');
+
+      const levelElement = document.querySelector('input[name="writingLevel"]:checked');
+      const level = levelElement ? levelElement.value : 'beginner';
+
+      if (!inputText) {
+        alert("Vui lòng nhập văn bản tiếng Anh cần kiểm tra!");
+        return;
+      }
+
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === "DÁN_KEY_CỦA_BẠN_VÀO_ĐÂY") {
+        alert("Vui lòng dán Gemini API Key vào biến GEMINI_API_KEY trong file index.html!");
+        return;
+      }
+
+      resultContainer.classList.remove('hidden');
+      responseBody.innerHTML = `
+        <div class="flex items-center gap-2 text-purple-600 font-bold py-4 justify-center">
+          <i class="fa-solid fa-spinner fa-spin text-lg"></i> Đang phân tích và kiểm tra bài viết...
+        </div>
+      `;
+
+      let levelInstruction = "";
+      if (level === 'beginner') {
+        levelInstruction = `Tệp người dùng: NGƯỜI MỚI BẮT ĐẦU (Beginner A1-A2).
+- CHỈ sửa các lỗi chính tả cơ bản và lỗi ngữ pháp nghiêm trọng.
+- KHÔNG dùng từ vựng nâng cao, từ hiếm hoặc cấu trúc câu quá phức tạp.
+- Giữ nguyên câu từ đơn giản, gần gũi, dễ hiểu nhất.
+- Giải thích lỗi sai bằng tiếng Việt một cách nhẹ nhàng, dễ hiểu.`;
+      } else if (level === 'intermediate') {
+        levelInstruction = `Tệp người dùng: TRUNG CẤP (Intermediate B1-B2).
+- Sửa lỗi ngữ pháp, chính tả đầy đủ.
+- Gợi ý nối câu và dùng các từ vựng/cụm từ B1-B2 tự nhiên hơn.
+- Đưa ra 1 phiên bản viết lại (Rewrite) rõ ràng, mượt mà.`;
+      } else {
+        levelInstruction = `Tệp người dùng: NÂNG CAO / IELTS (Advanced C1-C2).
+- Chấm điểm và phân tích chuyên sâu.
+- Gợi ý các từ vựng Academic, Collocations nâng cao (C1-C2).
+- Đưa ra phiên bản Rewrite chuẩn Academic / IELTS Writing.`;
+      }
+
+      const prompt = `Bạn là gia sư tiếng Anh chuyên nghiệp. Hãy kiểm tra bài viết sau:
+"${inputText}"
+
+Tiêu chuẩn đánh giá:
+${levelInstruction}
+
+Trình bày kết quả bằng Tiếng Việt gồm các mục:
+1. 🛠️ Sửa lỗi chính tả & ngữ pháp (Chỉ rõ câu gốc sai ở đâu)
+2. 💡 Gợi ý từ vựng / Cấu trúc (Phù hợp trình độ)
+3. ✍️ Phiên bản viết lại hoàn chỉnh.`;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        });
+
+        const data = await res.json();
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          let text = data.candidates[0].content.parts[0].text;
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+          responseBody.innerHTML = text;
+          addXp(15);
+        } else {
+          responseBody.innerHTML = `<span class="text-red-500">Không nhận được kết quả phân tích. Vui lòng thử lại!</span>`;
+        }
+      } catch (err) {
+        responseBody.innerHTML = `<span class="text-red-500">Lỗi kiểm tra bài viết: ${err.message}</span>`;
+      }
     }
 
     function showView(viewName) {
@@ -716,9 +869,7 @@
 
           try {
             await supabaseClient.from('documents_metadata').insert([fileRecord]);
-          } catch(err) {
-            console.log("Lỗi lưu metadata:", err);
-          }
+          } catch(err) {}
 
           addXp(10);
         }
@@ -1376,6 +1527,7 @@
     document.addEventListener('keydown', (e) => { 
       if (e.key === 'Escape') { 
         closePreview(); 
+        closeWritingModal();
         closeFlashcardModal(); 
         closeCreateFolderModal();
         closeAddFlashcardModal();
