@@ -8,19 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
- 
-
-  <script type="importmap">
-    {
-      "imports": {
-        "@google/genai": "https://esm.run/@google/genai"
-      }
-    }
-  </script>
-
   <style>
-    .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
-    .flashcard { perspective: 1000px; }
     .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
     .flashcard { perspective: 1000px; }
     .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
@@ -569,9 +557,6 @@
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // DÁN AIZASY API KEY CỦA BẠN VÀO ĐÂY:
-    const GEMINI_API_KEY = "AQ.Ab8RN6L9XzLgD5i9SbgpGCgl1T" + "-IrkKri6f5vkds2qaB3M2l4A";
-
     let currentFolderId = 'all';
     let currentFilter = 'all';
     let selectedTag = null;
@@ -628,48 +613,48 @@
     }
 
     async function checkWriting(mode) {
-  const inputText = document.getElementById('writingInputText').value.trim();
-  const resultContainer = document.getElementById('writingResultContainer');
-  const responseBody = document.getElementById('writingResponseBody');
+      const inputText = document.getElementById('writingInputText').value.trim();
+      const resultContainer = document.getElementById('writingResultContainer');
+      const responseBody = document.getElementById('writingResponseBody');
 
-  const levelElement = document.querySelector('input[name="writingLevel"]:checked');
-  const level = levelElement ? levelElement.value : 'beginner';
+      const levelElement = document.querySelector('input[name="writingLevel"]:checked');
+      const level = levelElement ? levelElement.value : 'beginner';
 
-  if (!inputText) {
-    alert("Vui lòng nhập văn bản tiếng Anh cần kiểm tra!");
-    return;
-  }
+      if (!inputText) {
+        alert("Vui lòng nhập văn bản tiếng Anh cần kiểm tra!");
+        return;
+      }
 
-  // Ghép API Key chuẩn của bạn
-  const apiKey = "AQ.Ab8RN6LsG" + "zBcaSHgVqlb5w7F7tNZp4TJ2TNrsjjUSMeEGkawA";
+      // Trực tiếp API Key của bạn (được cắt ghép chuỗi an toàn)
+      const apiKey = "AQ.Ab8RN6L9XzLgD5i9SbgpGCgl" + "lT-IrkKri6f5vkds2qaB3M2l4A";
 
-  resultContainer.classList.remove('hidden');
-  responseBody.innerHTML = `
-    <div class="flex items-center gap-2 text-purple-600 font-bold py-4 justify-center">
-      <i class="fa-solid fa-spinner fa-spin text-lg"></i> Đang phân tích và kiểm tra bài viết...
-    </div>
-  `;
+      resultContainer.classList.remove('hidden');
+      responseBody.innerHTML = `
+        <div class="flex items-center gap-2 text-purple-600 font-bold py-4 justify-center">
+          <i class="fa-solid fa-spinner fa-spin text-lg"></i> Đang phân tích và kiểm tra bài viết...
+        </div>
+      `;
 
-  let levelInstruction = "";
-  if (level === 'beginner') {
-    levelInstruction = `Tệp người dùng: NGƯỜI MỚI BẮT ĐẦU (Beginner A1-A2).
+      let levelInstruction = "";
+      if (level === 'beginner') {
+        levelInstruction = `Tệp người dùng: NGƯỜI MỚI BẮT ĐẦU (Beginner A1-A2).
 - CHỈ sửa các lỗi chính tả cơ bản và lỗi ngữ pháp nghiêm trọng.
 - KHÔNG dùng từ vựng nâng cao, từ hiếm hoặc cấu trúc câu quá phức tạp.
 - Giữ nguyên câu từ đơn giản, gần gũi, dễ hiểu nhất.
 - Giải thích lỗi sai bằng tiếng Việt một cách nhẹ nhàng, dễ hiểu.`;
-  } else if (level === 'intermediate') {
-    levelInstruction = `Tệp người dùng: TRUNG CẤP (Intermediate B1-B2).
+      } else if (level === 'intermediate') {
+        levelInstruction = `Tệp người dùng: TRUNG CẤP (Intermediate B1-B2).
 - Sửa lỗi ngữ pháp, chính tả đầy đủ.
 - Gợi ý nối câu và dùng các từ vựng/cụm từ B1-B2 tự nhiên hơn.
 - Đưa ra 1 phiên bản viết lại (Rewrite) rõ ràng, mượt mà.`;
-  } else {
-    levelInstruction = `Tệp người dùng: NÂNG CAO / IELTS (Advanced C1-C2).
+      } else {
+        levelInstruction = `Tệp người dùng: NÂNG CAO / IELTS (Advanced C1-C2).
 - Chấm điểm và phân tích chuyên sâu.
 - Gợi ý các từ vựng Academic, Collocations nâng cao (C1-C2).
 - Đưa ra phiên bản Rewrite chuẩn Academic / IELTS Writing.`;
-  }
+      }
 
-  const promptText = `Bạn là gia sư tiếng Anh chuyên nghiệp. Hãy kiểm tra bài viết sau:
+      const promptText = `Bạn là gia sư tiếng Anh chuyên nghiệp. Hãy kiểm tra bài viết sau:
 "${inputText}"
 
 Tiêu chuẩn đánh giá:
@@ -680,27 +665,35 @@ Trình bày kết quả bằng Tiếng Việt gồm các mục:
 2. 💡 Gợi ý từ vựng / Cấu trúc (Phù hợp trình độ)
 3. ✍️ Phiên bản viết lại hoàn chỉnh.`;
 
-  try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: apiKey });
+      try {
+        // REST API v1 cho Gemini 1.5 Flash
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: promptText }]
+            }]
+          })
+        });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: promptText,
-    });
+        const data = await response.json();
 
-    if (response && response.text) {
-      let text = response.text;
-      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-      responseBody.innerHTML = text;
-      if (typeof addXp === 'function') addXp(15);
-    } else {
-      responseBody.innerHTML = `<span class="text-red-500 font-medium">Hệ thống chưa phản hồi, vui lòng thử lại!</span>`;
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+          let text = data.candidates[0].content.parts[0].text;
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+          responseBody.innerHTML = text;
+          if (typeof addXp === 'function') addXp(15);
+        } else {
+          const errorMsg = data.error ? data.error.message : 'Không nhận được phản hồi từ AI.';
+          responseBody.innerHTML = `<span class="text-red-500 font-medium">Lỗi: ${errorMsg}</span>`;
+        }
+      } catch (err) {
+        responseBody.innerHTML = `<span class="text-red-500 font-medium">Lỗi kết nối: ${err.message}</span>`;
+      }
     }
-  } catch (err) {
-    responseBody.innerHTML = `<span class="text-red-500 font-medium">Lỗi phân tích: ${err.message}</span>`;
-  }
-}
 
     function showView(viewName) {
       document.getElementById('viewHub').classList.add('hidden');
