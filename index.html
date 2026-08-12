@@ -557,8 +557,8 @@
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // DÁN GEMINI API KEY CỦA BẠN VÀO ĐÂY:
-    const GEMINI_API_KEY = ["AQ.Ab8RN6L9XzLgD5i9SbgpGCgllT", "IrkKri6f5vkds2qaB3M2l4A"].join("-");
+    // DÁN AIZASY API KEY CỦA BẠN VÀO ĐÂY:
+    const GEMINI_API_KEY = "AQ.Ab8RN6L9XzLgD5i9SbgpGCgl1T" + "-IrkKri6f5vkds2qaB3M2l4A";
 
     let currentFolderId = 'all';
     let currentFilter = 'all';
@@ -628,8 +628,8 @@
         return;
       }
 
-      if (!GEMINI_API_KEY || GEMINI_API_KEY === "DÁN_KEY_CỦA_BẠN_VÀO_ĐÂY") {
-        alert("Vui lòng dán Gemini API Key vào biến GEMINI_API_KEY trong file index.html!");
+      if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("DÁN_KEY")) {
+        alert("Vui lòng dán Gemini API Key chuẩn vào biến GEMINI_API_KEY!");
         return;
       }
 
@@ -674,8 +674,7 @@ Trình bày kết quả bằng Tiếng Việt gồm các mục:
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application/json',
-            'x-goog-api-key': GEMINI_API_KEY
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }]
@@ -683,16 +682,17 @@ Trình bày kết quả bằng Tiếng Việt gồm các mục:
         });
 
         const data = await res.json();
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
           let text = data.candidates[0].content.parts[0].text;
           text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
           responseBody.innerHTML = text;
-          addXp(15);
+          if (typeof addXp === 'function') addXp(15);
         } else {
-          responseBody.innerHTML = `<span class="text-red-500">Không nhận được kết quả phân tích. Vui lòng thử lại!</span>`;
+          const errDetail = data.error ? data.error.message : 'API Key chưa chính xác hoặc hết hạn.';
+          responseBody.innerHTML = `<span class="text-red-500 font-medium">Lỗi kết nối: ${errDetail}</span>`;
         }
       } catch (err) {
-        responseBody.innerHTML = `<span class="text-red-500">Lỗi kiểm tra bài viết: ${err.message}</span>`;
+        responseBody.innerHTML = `<span class="text-red-500 font-medium">Lỗi kiểm tra bài viết: ${err.message}</span>`;
       }
     }
 
