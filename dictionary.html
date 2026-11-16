@@ -310,9 +310,10 @@ Hãy cung cấp một bản phân tích từ vựng toàn diện bằng tiếng 
       aiCard.innerHTML = aiHtml;
       
       results.appendChild(aiCard);
-    } else {
-      const errorMsg = data.error ? data.error.message : 'Không nhận được phản hồi từ AI.';
-      results.innerHTML += `<div class="status error">Lỗi AI: ${errorMsg}</div>`;
+       } else {
+      // Hiển thị toàn bộ dữ liệu lỗi ra màn hình để dễ kiểm tra
+      const errorMsg = data.error ? data.error.message : JSON.stringify(data);
+      results.innerHTML += `<div class="status error">Lỗi: ${errorMsg}</div>`;
     }
   } catch (err) {
     results.innerHTML += `<div class="status error">Lỗi kết nối AI: ${err.message}</div>`;
