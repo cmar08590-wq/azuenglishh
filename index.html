@@ -98,6 +98,12 @@
           <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
             <i class="fa-solid fa-brain text-purple-500"></i> Flashcards Từ Vựng
           </button>
+          
+          <!-- NÚT TRA TỪ ĐIỂN -->
+          <a href="dictionary.html" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-book-open text-teal-500"></i> Tra Từ Điển
+          </a>
+
           <button onclick="showView('books')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
             <i class="fa-solid fa-book-bookmark text-emerald-500"></i> Sách Bổ Trợ
           </button>
@@ -172,6 +178,20 @@
               <span>Học Từ Vựng</span> <i class="fa-solid fa-arrow-right"></i>
             </div>
           </div>
+
+          <!-- CARD TRA TỪ ĐIỂN -->
+          <a href="dictionary.html" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-teal-600 group-hover:text-white transition">
+                <i class="fa-solid fa-book-open"></i>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Tra Từ Điển</h3>
+              <p class="text-xs text-slate-500 leading-relaxed">Tra cứu định nghĩa, phiên âm, phát âm và ví dụ trực tiếp bằng tiếng Anh.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-teal-600">
+              <span>Tra Từ Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+            </div>
+          </a>
 
           <div onclick="showView('books')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
             <div class="space-y-3">
@@ -625,8 +645,15 @@
         return;
       }
 
-      // Trực tiếp API Key chuẩn của bạn
-      const apiKey = "AQ.Ab8RN6LsG" + "zBcaSHgVqlb5w7F7tNZp4TJ2TNrsjjUSMeEGkawA";
+      // ⚠️ ĐÃ XÓA API KEY CỦA BẠN ĐỂ BẢO MẬT
+      // Hãy dán lại API Key của bạn vào giữa 2 dấu ngoặc kép dưới đây nếu muốn tiếp tục sử dụng.
+      const apiKey = "";
+
+      if (!apiKey) {
+        resultContainer.classList.remove('hidden');
+        responseBody.innerHTML = `<div class="text-red-500 font-bold p-4 text-center">Vui lòng mở code ra và điền API Key của bạn để sử dụng tính năng này!</div>`;
+        return;
+      }
 
       resultContainer.classList.remove('hidden');
       responseBody.innerHTML = `
@@ -666,7 +693,6 @@ Trình bày kết quả bằng Tiếng Việt gồm các mục:
 3. ✍️ Phiên bản viết lại hoàn chỉnh.`;
 
       try {
-        // Sử dụng Endpoint gemini-2.0-flash ổn định trên REST API v1beta
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: {
