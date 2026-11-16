@@ -257,35 +257,29 @@ async function callAI(word, dictEntry) {
     });
   }
 
-  const prompt = `Bạn là một từ điển Anh-Việt thông minh và chuyên nghiệp. Dựa vào thông tin gốc sau:
-${context}
-Hãy cung cấp một bản phân tích từ vựng toàn diện bằng tiếng Việt. Trả về kết quả dưới dạng HTML (không dùng markdown) với cấu trúc sau:
+    const prompt = `Bạn là từ điển Anh-Việt. Hãy phân tích từ "${word}". Các định nghĩa gốc: ${context}.
+YÊU CẦU BẮT BUỘC: 
+1. Chỉ trả về mã HTML thô (không dùng markdown, không giải thích).
+2. Sử dụng chính xác cấu trúc HTML sau:
 <div class="section">
-  <span class="section-title">Bản dịch & Nghĩa tiếng Việt</span>
+  <span class="section-title">Nghĩa tiếng Việt</span>
+  <div class="ai-content"><p><strong>Nghĩa chính:</strong> (liệt kê nghĩa Việt)</p></div>
+</div>
+<div class="section">
+  <span class="section-title">Từ đồng / trái nghĩa</span>
   <div class="ai-content">
-    <p><strong>Nghĩa chính:</strong> (liệt kê các nghĩa tiếng Việt phổ biến nhất, phân biệt theo từ loại nếu có)</p>
+    <p><strong>Đồng nghĩa:</strong> (liệt kê từ tiếng Anh + nghĩa Việt)</p>
+    <p><strong>Trái nghĩa:</strong> (liệt kê từ tiếng Anh + nghĩa Việt)</p>
   </div>
 </div>
 <div class="section">
-  <span class="section-title">Từ đồng nghĩa / Trái nghĩa (Tiếng Việt & Anh)</span>
-  <div class="ai-content">
-    <p><strong>Đồng nghĩa:</strong> (liệt kê các từ tiếng Anh đồng nghĩa, kèm nghĩa tiếng Việt tương ứng)</p>
-    <p><strong>Trái nghĩa:</strong> (liệt kê các từ tiếng Anh trái nghĩa, kèm nghĩa tiếng Việt tương ứng)</p>
-  </div>
+  <span class="section-title">Cụm từ & Giới từ</span>
+  <div class="ai-content"><ul><li>(3-5 cụm từ/collocations + giới từ, giải thích ngắn)</li></ul></div>
 </div>
 <div class="section">
-  <span class="section-title">Cụm từ & Giới từ đi kèm</span>
-  <div class="ai-content">
-    <p>(Liệt kê các cụm từ thông dụng, collocations, và đặc biệt là các giới từ thường đi kèm với từ này. Ví dụ: depend ON, look AFTER, interested IN...)</p>
-    <ul>(Dùng thẻ ul, li để liệt kê các cụm từ. Mỗi cụm từ nên có giải thích ngắn gọn bằng tiếng Việt)</ul>
-  </div>
-</div>
-<div class="section">
-  <span class="section-title">Ví dụ & Cách dùng</span>
-  <div class="ai-content">
-    <p>(Đưa ra 2-3 câu ví dụ thực tế, có kèm bản dịch tiếng Việt bên dưới mỗi câu)</p>
-  </div>
-</div>`;
+  <span class="section-title">Ví dụ</span>
+  <div class="ai-content"><p>(1-2 câu ví dụ + dịch nghĩa)</p></div>
+</div>`;`
 
   try {
     // Gọi đến Supabase Edge Function thay vì gọi trực tiếp Google
