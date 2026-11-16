@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tra Từ Điển Thông Minh - AZU English</title>
+<!-- THÊM 2 DÒNG NÀY ĐỂ NÚT LƯU FLASHCARD ĐẸP HƠN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- KẾT THÚC THÊM -->
+
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -287,14 +292,13 @@ YÊU CẦU BẮT BUỘC:
 
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
       let aiHtml = data.candidates[0].content.parts[0].text;
-      // Dọn dẹp các thẻ markdown code block nếu AI tự ý thêm vào
       aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
       
       const aiCard = document.createElement('div');
       aiCard.className = 'card ai-section';
       aiCard.innerHTML = aiHtml;
 
-      // Tạo nút Lưu vào Flashcards
+      // Tạo nút Lưu vào Flashcards (Đã có Tailwind hỗ trợ nên sẽ rất đẹp)
       const saveBtn = document.createElement('button');
       saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
       saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
@@ -311,8 +315,7 @@ YÊU CẦU BẮT BUỘC:
   }
 }
 
- function saveToFlashcard(word, aiHtml) {
-  // Trích xuất nghĩa tiếng Việt tự động từ kết quả của AI
+function saveToFlashcard(word, aiHtml) {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = aiHtml;
   let autoMeaning = "Chưa có nghĩa";
@@ -325,35 +328,31 @@ YÊU CẦU BẮT BUỘC:
     }
   }
 
-  // Hỏi lại người dùng để xác nhận/chỉnh sửa nghĩa trước khi lưu
   const userMeaning = prompt(`Xác nhận nghĩa tiếng Việt cho từ "${word}" (Bạn có thể sửa lại):`, autoMeaning);
   
-  if (userMeaning === null) return; // Người dùng bấm Cancel
+  if (userMeaning === null) return;
   if (userMeaning.trim() === '') {
     alert('Nghĩa không được để trống!');
     return;
   }
 
-  // Lấy danh sách Flashcards hiện tại từ bộ nhớ trình duyệt
   let customCards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [];
 
-  // Kiểm tra xem từ đã tồn tại chưa
   if (customCards.some(c => c.word.toLowerCase() === word.toLowerCase())) {
     alert('Từ này đã có trong Flashcards của bạn rồi!');
     return;
   }
 
-  // Thêm thẻ mới
   customCards.push({
     id: 'c_' + Date.now(),
     word: word,
     meaning: userMeaning.trim()
   });
 
-  // Lưu lại vào bộ nhớ
   localStorage.setItem('azu_public_custom_cards', JSON.stringify(customCards));
   alert(`🎉 Đã lưu "${word}" vào Flashcards cá nhân! Hãy quay lại Trang chủ và mở tính năng Flashcards để ôn tập nhé.`);
 }
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
