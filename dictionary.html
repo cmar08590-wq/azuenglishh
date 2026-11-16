@@ -31,7 +31,6 @@
   .status { text-align: center; padding: 24px; color: #666; font-size: 15px; }
   .status.error { color: #d93025; background: #fff5f5; border-radius: 12px; border: 1px solid #ffcccc; }
 
-  /* Card Styles */
   .card {
     background: white; border-radius: 16px; padding: 28px; margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #eef0f4;
@@ -49,7 +48,6 @@
   }
   .audio-btn:hover { background: #dbe4ff; }
 
-  /* Section Styles */
   .section { margin-bottom: 28px; }
   .section-title {
     font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
@@ -63,7 +61,6 @@
   .english-def strong { color: #1a1a1a; }
   .example { color: #666; font-style: italic; font-size: 15px; margin-top: 6px; display: block; }
 
-  /* Tags & Chips */
   .chip-container { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     display: inline-block; padding: 6px 14px; border-radius: 20px;
@@ -75,9 +72,7 @@
   .chip.synonym:hover { background: #d2e3fc; }
   .chip.antonym { background: #fce8e6; color: #c5221f; border-color: #fad2cf; }
   .chip.antonym:hover { background: #f8d1cd; }
-  .chip.collocation { background: #e6f4ea; color: #137333; border-color: #ceead6; }
 
-  /* AI Section */
   .ai-section { background: #fafbff; border-radius: 12px; padding: 20px; border: 1px solid #eef0f4; }
   .ai-content { line-height: 1.8; font-size: 15px; color: #333; }
   .ai-content p { margin-bottom: 10px; }
@@ -107,7 +102,6 @@
 </div>
 
 <script>
-// Cấu hình Supabase (Đã được tích hợp sẵn, bạn không cần sửa gì ở đây)
 const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
 
@@ -123,7 +117,6 @@ async function lookupWord(word) {
   results.innerHTML = '<div class="status"><span class="loading-spinner"></span> Đang tra cứu từ điển...</div>';
 
   try {
-    // 1. Lấy dữ liệu từ Free Dictionary API
     const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
     
     if (!dictRes.ok) {
@@ -132,16 +125,15 @@ async function lookupWord(word) {
       } else {
         results.innerHTML = `<div class="status error">Lỗi khi tra từ điển (Mã: ${dictRes.status}). Vui lòng thử lại.</div>`;
       }
+      btn.disabled = false;
       return;
     }
 
     const dictData = await dictRes.json();
     const entry = dictData[0];
 
-    // 2. Hiển thị dữ liệu gốc
     renderDictionaryCard(entry);
 
-    // 3. Gọi AI qua Supabase
     results.innerHTML += '<div class="status" id="aiLoading" style="margin-top:20px;"><span class="loading-spinner"></span> AI đang phân tích và dịch nghĩa...</div>';
     
     await callAI(word, entry);
@@ -245,9 +237,8 @@ function renderDictionaryCard(entry) {
 }
 
 async function callAI(word, dictEntry) {
-  let context = `Từ cần tra: "${word}".\n`;
+  let context = `Từ: "${word}".\n`;
   if (dictEntry.meanings) {
-    context += "Các định nghĩa tiếng Anh:\n";
     dictEntry.meanings.forEach(m => {
       if (m.definitions) {
         m.definitions.slice(0, 3).forEach(d => {
@@ -257,7 +248,7 @@ async function callAI(word, dictEntry) {
     });
   }
 
-    const prompt = `Bạn là từ điển Anh-Việt. Hãy phân tích từ "${word}". Các định nghĩa gốc: ${context}.
+  const prompt = `Bạn là từ điển Anh-Việt. Hãy phân tích từ "${word}". Các định nghĩa gốc: ${context}.
 YÊU CẦU BẮT BUỘC: 
 1. Chỉ trả về mã HTML thô (không dùng markdown, không giải thích).
 2. Sử dụng chính xác cấu trúc HTML sau:
@@ -279,10 +270,9 @@ YÊU CẦU BẮT BUỘC:
 <div class="section">
   <span class="section-title">Ví dụ</span>
   <div class="ai-content"><p>(1-2 câu ví dụ + dịch nghĩa)</p></div>
-</div>`;`
+</div>`;
 
   try {
-    // Gọi đến Supabase Edge Function thay vì gọi trực tiếp Google
     const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
       method: 'POST',
       headers: { 
@@ -297,6 +287,7 @@ YÊU CẦU BẮT BUỘC:
 
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
       let aiHtml = data.candidates[0].content.parts[0].text;
+      // Dọn dẹp các thẻ markdown code block nếu AI tự ý thêm vào
       aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
       
       const aiCard = document.createElement('div');
@@ -304,8 +295,7 @@ YÊU CẦU BẮT BUỘC:
       aiCard.innerHTML = aiHtml;
       
       results.appendChild(aiCard);
-       } else {
-      // Hiển thị toàn bộ dữ liệu lỗi ra màn hình để dễ kiểm tra
+    } else {
       const errorMsg = data.error ? data.error.message : JSON.stringify(data);
       results.innerHTML += `<div class="status error">Lỗi: ${errorMsg}</div>`;
     }
