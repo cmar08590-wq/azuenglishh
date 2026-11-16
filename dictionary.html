@@ -293,7 +293,14 @@ YÊU CẦU BẮT BUỘC:
       const aiCard = document.createElement('div');
       aiCard.className = 'card ai-section';
       aiCard.innerHTML = aiHtml;
-      
+
+      // Tạo nút Lưu vào Flashcards
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
+      saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
+      saveBtn.onclick = () => saveToFlashcard(word, aiHtml);
+
+      aiCard.appendChild(saveBtn);
       results.appendChild(aiCard);
     } else {
       const errorMsg = data.error ? data.error.message : JSON.stringify(data);
@@ -304,6 +311,49 @@ YÊU CẦU BẮT BUỘC:
   }
 }
 
+ function saveToFlashcard(word, aiHtml) {
+  // Trích xuất nghĩa tiếng Việt tự động từ kết quả của AI
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = aiHtml;
+  let autoMeaning = "Chưa có nghĩa";
+  
+  const paragraphs = tempDiv.querySelectorAll('p');
+  for (let p of paragraphs) {
+    if (p.innerText.includes('Nghĩa chính:') || p.innerText.includes('Nghĩa tiếng Việt:')) {
+      autoMeaning = p.innerText.replace('Nghĩa chính:', '').replace('Nghĩa tiếng Việt:', '').trim();
+      break;
+    }
+  }
+
+  // Hỏi lại người dùng để xác nhận/chỉnh sửa nghĩa trước khi lưu
+  const userMeaning = prompt(`Xác nhận nghĩa tiếng Việt cho từ "${word}" (Bạn có thể sửa lại):`, autoMeaning);
+  
+  if (userMeaning === null) return; // Người dùng bấm Cancel
+  if (userMeaning.trim() === '') {
+    alert('Nghĩa không được để trống!');
+    return;
+  }
+
+  // Lấy danh sách Flashcards hiện tại từ bộ nhớ trình duyệt
+  let customCards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [];
+
+  // Kiểm tra xem từ đã tồn tại chưa
+  if (customCards.some(c => c.word.toLowerCase() === word.toLowerCase())) {
+    alert('Từ này đã có trong Flashcards của bạn rồi!');
+    return;
+  }
+
+  // Thêm thẻ mới
+  customCards.push({
+    id: 'c_' + Date.now(),
+    word: word,
+    meaning: userMeaning.trim()
+  });
+
+  // Lưu lại vào bộ nhớ
+  localStorage.setItem('azu_public_custom_cards', JSON.stringify(customCards));
+  alert(`🎉 Đã lưu "${word}" vào Flashcards cá nhân! Hãy quay lại Trang chủ và mở tính năng Flashcards để ôn tập nhé.`);
+}
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
