@@ -96,7 +96,7 @@
             <i class="fa-solid fa-pen-nib text-purple-600"></i> Luyện Viết & Check Bài
           </button>
           <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-brain text-purple-500"></i> Flashcards Từ Vựng
+            <i class="fa-solid fa-brain text-pink-500"></i> Flashcards Từ Vựng
           </button>
           
           <!-- NÚT TRA TỪ ĐIỂN -->
@@ -341,24 +341,6 @@
       <div class="space-y-3">
         <div>
           <label class="text-xs font-bold text-slate-600 block mb-1">Dán đoạn văn tiếng Anh cần kiểm tra:</label>
-          <textarea id="writingInputText" rows="5" placeholder="Nhập bài luận, đoạn văn hoặc câu tiếng Anh tại đây..." class="w-full p-3 border rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium resize-none"></textarea>
-        </div>
-
-         <!-- MODAL CHECK BÀI VIẾT -->
-  <div id="writingModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-base md:text-lg flex items-center gap-2">
-          <i class="fa-solid fa-pen-nib text-purple-600"></i> Trợ Lý Check & Sửa Bài Viết
-        </h3>
-        <button onclick="closeWritingModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-bold text-slate-600 block mb-1">Dán đoạn văn tiếng Anh cần kiểm tra:</label>
           <textarea id="writingInputText" rows="6" placeholder="Nhập bài luận, đoạn văn hoặc câu tiếng Anh tại đây..." class="w-full p-3 border rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium resize-none"></textarea>
         </div>
 
@@ -394,17 +376,57 @@
     </div>
   </div>
 
-      <!-- Khung hiển thị kết quả -->
-      <div id="writingResultContainer" class="hidden space-y-3 pt-3 border-t">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-square-check text-purple-600"></i> Báo Cáo Phân Tích & Gợi Ý
-        </h4>
-        <div id="writingResponseBody" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs md:text-sm leading-relaxed text-slate-700 space-y-2 overflow-x-auto"></div>
+  <!-- MODAL FLASHCARDS (GIAO DIỆN MỚI) -->
+  <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 relative">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-brain text-pink-500"></i> Flashcards Từ Vựng
+        </h3>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-lg">
+            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0">
+            <span>Tự động đọc 🔊</span>
+          </label>
+          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-1 text-sm font-bold">
+        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-2 rounded-xl transition bg-white text-pink-600 shadow-sm">
+          📌 Bộ từ mẫu
+        </button>
+        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-2 rounded-xl transition text-slate-500 hover:text-slate-700">
+          👤 Cá nhân (<span id="customCardCount">0</span>)
+        </button>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="w-full bg-slate-100 rounded-full h-2">
+        <div id="flashcardProgress" class="bg-pink-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      </div>
+
+      <!-- Flashcard Container -->
+      <div id="flashcardContainer" class="py-2"></div>
+
+      <!-- Controls -->
+      <div class="flex justify-between items-center pt-3 border-t">
+        <button onclick="openAddFlashcardModal()" class="text-xs text-pink-600 hover:text-pink-700 font-bold flex items-center gap-1 bg-pink-50 px-3 py-2 rounded-xl transition">
+          <i class="fa-solid fa-plus-circle"></i> Tạo thẻ mới
+        </button>
+        <button onclick="nextCard()" class="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm">
+          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- BẢNG XẾP HẠNG, SHOP, MODALS KHÁC... -->
+  <!-- CÁC MODAL KHÁC -->
   <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -560,78 +582,6 @@
     </div>
   </div>
 
-   <!-- MODAL FLASHCARDS (NEW UI) -->
-  <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 relative">
-      
-      <!-- Header -->
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-brain text-pink-500"></i> Flashcards Từ Vựng
-        </h3>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-lg">
-            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0">
-            <span>Tự động đọc 🔊</span>
-          </label>
-          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 transition">
-            <i class="fa-solid fa-xmark text-xl"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-1 text-sm font-bold">
-        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-2 rounded-xl transition bg-white text-pink-600 shadow-sm">
-          📌 Bộ từ mẫu
-        </button>
-        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-2 rounded-xl transition text-slate-500 hover:text-slate-700">
-          👤 Cá nhân (<span id="customCardCount">0</span>)
-        </button>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="w-full bg-slate-100 rounded-full h-2">
-        <div id="flashcardProgress" class="bg-pink-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
-      </div>
-
-      <!-- Flashcard Container -->
-      <div id="flashcardContainer" class="py-2"></div>
-
-      <!-- Controls -->
-      <div class="flex justify-between items-center pt-3 border-t">
-        <button onclick="openAddFlashcardModal()" class="text-xs text-pink-600 hover:text-pink-700 font-bold flex items-center gap-1 bg-pink-50 px-3 py-2 rounded-xl transition">
-          <i class="fa-solid fa-plus-circle"></i> Tạo thẻ mới
-        </button>
-        <button onclick="nextCard()" class="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm">
-          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-      <div class="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-medium">
-        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-1.5 rounded-xl transition bg-white text-indigo-600 shadow-sm font-semibold">
-          📌 Từ vựng có sẵn
-        </button>
-        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-800">
-          👤 Từ vựng cá nhân (<span id="customCardCount">0</span>)
-        </button>
-      </div>
-
-      <div id="flashcardContainer" class="py-1"></div>
-
-      <div class="flex justify-between items-center pt-2 border-t">
-        <button onclick="openAddFlashcardModal()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-plus-circle"></i> + Tạo từ mới
-        </button>
-        <button onclick="nextCard()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1">
-          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
     const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
@@ -692,7 +642,7 @@
       document.getElementById('writingModal').classList.add('hidden');
     }
 
-        async function checkWriting() {
+    async function checkWriting() {
       const inputText = document.getElementById('writingInputText').value.trim();
       const resultContainer = document.getElementById('writingResultContainer');
       const responseBody = document.getElementById('writingResponseBody');
@@ -725,13 +675,12 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 4. <strong>Bản viết lại hoàn chỉnh (Rewrite):</strong> (Viết lại toàn bộ đoạn văn sao cho tự nhiên và đúng ngữ pháp nhất).`;
 
       try {
-        // Gọi qua Supabase Function (An toàn, không lộ key)
-        const response = await fetch(`https://zgkdrxwyylecszxywiqm.supabase.co/functions/v1/ai-dictionary`, {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR`,
-            'apikey': `sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR`
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY
           },
           body: JSON.stringify({ prompt: prompt })
         });
@@ -742,7 +691,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
           let aiHtml = data.candidates[0].content.parts[0].text;
           aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
           responseBody.innerHTML = aiHtml;
-          if (typeof addXp === 'function') addXp(15); // Thưởng XP
+          if (typeof addXp === 'function') addXp(15); 
         } else {
           responseBody.innerHTML = `<span class="text-red-500">Lỗi AI: ${data.error ? data.error.message : 'Không có phản hồi'}</span>`;
         }
@@ -1059,7 +1008,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
     function closeRankModal() { document.getElementById('rankModal').classList.add('hidden'); }
 
-        function switchFlashcardTab(tab) {
+    function switchFlashcardTab(tab) {
       currentFlashcardTab = tab;
       currentCardIndex = 0;
       const tabSys = document.getElementById('tabSystemBtn');
@@ -1075,7 +1024,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       renderFlashcard();
     }
 
-        function renderFlashcard() {
+    function renderFlashcard() {
       const container = document.getElementById('flashcardContainer');
       document.getElementById('customCardCount').textContent = customFlashcards.length;
 
@@ -1094,7 +1043,6 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
       const card = activeList[currentCardIndex];
       
-      // Cập nhật thanh tiến trình
       const progressPercent = ((currentCardIndex + 1) / activeList.length) * 100;
       document.getElementById('flashcardProgress').style.width = `${progressPercent}%`;
 
@@ -1102,7 +1050,6 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         <div class="flashcard cursor-pointer h-56 w-full" onclick="this.classList.toggle('flipped')">
           <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 bg-gradient-to-br from-pink-50 to-white shadow-lg flex items-center justify-center p-6 text-center">
             
-            <!-- Mặt trước -->
             <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
               <span class="text-[11px] font-bold text-pink-400 uppercase tracking-widest mb-3">
                 ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Từ của bạn'} • ${currentCardIndex + 1}/${activeList.length}
@@ -1116,7 +1063,6 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
               <span class="text-[11px] text-slate-400 mt-6 absolute bottom-4"><i class="fa-solid fa-hand-pointer"></i> Nhấp để lật thẻ</span>
             </div>
 
-            <!-- Mặt sau -->
             <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative">
               ${currentFlashcardTab === 'custom' ? `
                 <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-4 right-4 text-pink-200 hover:text-white bg-black/20 p-2 rounded-full transition" title="Xóa từ này">
