@@ -103,17 +103,17 @@
             <!-- Khung Avatar -->
 <div class="relative cursor-pointer" onclick="openAvatarPicker()" title="Nhấn để đổi linh vật">
   <div class="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-500 animate-spin-slow"></div>
-  <div id="userAvatarContainer" class="w-20 h-20 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-lg relative overflow-hidden animate-avatar">
+ <div id="userAvatarContainer" class="w-20 h-20 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-lg relative overflow-hidden animate-avatar">
   <!-- Lớp Nền -->
-  <span id="avatarBgEmoji" class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 z-0"></span>
+  <img id="avatarBgImg" src="" class="absolute inset-0 w-full h-full object-cover z-0 opacity-60 hidden">
   <!-- Nhân vật chính -->
   <img id="avatarImg" src="" alt="Avatar" class="w-16 h-16 object-contain p-0.5 z-10 relative">
   <!-- Phụ kiện cổ -->
-  <span id="avatarNeckEmoji" class="absolute bottom-1 text-xl z-20 drop-shadow-md"></span>
+  <img id="avatarNeckImg" src="" class="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-8 h-8 object-contain z-20 drop-shadow-md hidden">
   <!-- Kính -->
-  <span id="avatarGlassesEmoji" class="absolute top-6 text-xl z-20 drop-shadow-md"></span>
+  <img id="avatarGlassesImg" src="" class="absolute top-[30%] left-1/2 -translate-x-1/2 w-10 h-6 object-contain z-20 drop-shadow-md hidden">
   <!-- Mũ -->
-  <span id="avatarHatEmoji" class="absolute top-0 right-2 text-2xl z-30 drop-shadow-md"></span>
+  <img id="avatarHatImg" src="" class="absolute -top-[5%] left-1/2 -translate-x-1/2 w-10 h-10 object-contain z-30 drop-shadow-md hidden">
 </div>
 </div>
 
@@ -642,24 +642,24 @@
       streakCount: 0, lastCheckIn: null
     };
 
-        let currentShopTab = 'hat';
+            let currentShopTab = 'hat';
     const shopItems = [
       // Mũ
-      { id: 'hat_grad', name: 'Mũ Cử Nhân', emoji: '🎓', price: 20, slot: 'hat' },
-      { id: 'hat_crown', name: 'Vương Miện', emoji: '👑', price: 50, slot: 'hat' },
-      { id: 'hat_wizard', name: 'Mũ Phù Thủy', emoji: '🧙‍♂️', price: 30, slot: 'hat' },
+      { id: 'hat_grad', name: 'Mũ Cử Nhân', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f393.svg', price: 20, slot: 'hat' },
+      { id: 'hat_crown', name: 'Vương Miện', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f451.svg', price: 50, slot: 'hat' },
+      { id: 'hat_wizard', name: 'Mũ Phù Thủy', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9d9-200d-2642-fe0f.svg', price: 30, slot: 'hat' },
       // Kính
-      { id: 'glasses_sun', name: 'Kính Râm', emoji: '🕶️', price: 15, slot: 'glasses' },
-      { id: 'glasses_normal', name: 'Kính Cận', emoji: '👓', price: 10, slot: 'glasses' },
-      { id: 'glasses_mask', name: 'Mặt Nạ', emoji: '😷', price: 25, slot: 'glasses' },
+      { id: 'glasses_sun', name: 'Kính Râm', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f576.svg', price: 15, slot: 'glasses' },
+      { id: 'glasses_normal', name: 'Kính Cận', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f453.svg', price: 10, slot: 'glasses' },
+      { id: 'glasses_mask', name: 'Mặt Nạ', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f637.svg', price: 25, slot: 'glasses' },
       // Phụ kiện cổ
-      { id: 'neck_bow', name: 'Nơ Cổ', emoji: '🎀', price: 15, slot: 'neck' },
-      { id: 'neck_scarf', name: 'Khăn Quàng', emoji: '🧣', price: 25, slot: 'neck' },
-      { id: 'neck_tie', name: 'Cà Vạt', emoji: '👔', price: 20, slot: 'neck' },
+      { id: 'neck_bow', name: 'Nơ Cổ', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f380.svg', price: 15, slot: 'neck' },
+      { id: 'neck_scarf', name: 'Khăn Quàng', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9e3.svg', price: 25, slot: 'neck' },
+      { id: 'neck_tie', name: 'Cà Vạt', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f454.svg', price: 20, slot: 'neck' },
       // Nền
-      { id: 'bg_rainbow', name: 'Cầu Vồng', emoji: '🌈', price: 40, slot: 'bg' },
-      { id: 'bg_space', name: 'Vũ Trụ', emoji: '🌌', price: 60, slot: 'bg' },
-      { id: 'bg_fire', name: 'Rực Lửa', emoji: '🔥', price: 45, slot: 'bg' }
+      { id: 'bg_rainbow', name: 'Cầu Vồng', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f308.svg', price: 40, slot: 'bg' },
+      { id: 'bg_space', name: 'Vũ Trụ', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f30c.svg', price: 60, slot: 'bg' },
+      { id: 'bg_fire', name: 'Rực Lửa', img: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f525.svg', price: 45, slot: 'bg' }
     ];
 
     const systemFlashcards = [
@@ -1020,12 +1020,20 @@ function updateGamificationUI() {
   document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500 glow-gem"></i> ${userData.gems}`;
   document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi';
   
-    // Render các layer Avatar
+      // Render các layer Avatar bằng ảnh SVG
   const eq = userData.equipped || { hat: '', glasses: '', neck: '', bg: '' };
-  document.getElementById('avatarBgEmoji').textContent = eq.bg || '';
-  document.getElementById('avatarNeckEmoji').textContent = eq.neck || '';
-  document.getElementById('avatarGlassesEmoji').textContent = eq.glasses || '';
-  document.getElementById('avatarHatEmoji').textContent = eq.hat || '';
+  
+  const bgImg = document.getElementById('avatarBgImg');
+  if (eq.bg) { bgImg.src = eq.bg; bgImg.classList.remove('hidden'); } else { bgImg.classList.add('hidden'); }
+  
+  const neckImg = document.getElementById('avatarNeckImg');
+  if (eq.neck) { neckImg.src = eq.neck; neckImg.classList.remove('hidden'); } else { neckImg.classList.add('hidden'); }
+  
+  const glassesImg = document.getElementById('avatarGlassesImg');
+  if (eq.glasses) { glassesImg.src = eq.glasses; glassesImg.classList.remove('hidden'); } else { glassesImg.classList.add('hidden'); }
+  
+  const hatImg = document.getElementById('avatarHatImg');
+  if (eq.hat) { hatImg.src = eq.hat; hatImg.classList.remove('hidden'); } else { hatImg.classList.add('hidden'); }
   
   const avatarImg = document.getElementById('avatarImg');
   if (avatarImg) avatarImg.src = userData.avatarUrl || avatarOptions[0].url;
@@ -1042,8 +1050,7 @@ function updateGamificationUI() {
       renderShopUI();
     }
 
-    function renderShopUI() {
-      // 1. Cập nhật giao diện các nút Tab
+        function renderShopUI() {
       ['hat', 'glasses', 'neck', 'bg'].forEach(slot => {
         const btn = document.getElementById(`tabShop-${slot}`);
         if (slot === currentShopTab) {
@@ -1053,38 +1060,37 @@ function updateGamificationUI() {
         }
       });
 
-      // 2. Lọc và hiển thị đồ của Tab hiện tại
       const container = document.getElementById('shopItemsContainer');
       const filteredItems = shopItems.filter(item => item.slot === currentShopTab);
       
       container.innerHTML = filteredItems.map(item => {
         const isBought = (userData.inventory || []).includes(item.id);
-        const isEquipped = userData.equipped && userData.equipped[item.slot] === item.emoji;
+        const isEquipped = userData.equipped && userData.equipped[item.slot] === item.img;
         
         return `
           <div class="shop-card bg-white dark:bg-slate-700 border-2 ${isEquipped ? 'border-pink-500 shadow-pink-200' : 'border-slate-100 dark:border-slate-600'} rounded-2xl p-3 flex flex-col items-center justify-between text-center gap-2 relative overflow-hidden">
-            ${isEquipped ? '<div class="absolute top-0 right-0 bg-pink-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">Đang dùng</div>' : ''}
-            <span class="text-3xl drop-shadow-md mt-1">${item.emoji}</span>
+            ${isEquipped ? '<div class="absolute top-0 right-0 bg-pink-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg z-10">Đang dùng</div>' : ''}
+            <img src="${item.img}" class="w-10 h-10 object-contain drop-shadow-md mt-1">
             <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 w-full truncate">${item.name}</span>
             
             ${isEquipped ? `
-              <button onclick="equipItem('${item.slot}', '${item.emoji}')" class="w-full py-1 text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Tháo ra</button>
+              <button onclick="equipItem('${item.slot}', '${item.img}')" class="w-full py-1 text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Tháo ra</button>
             ` : isBought ? `
-              <button onclick="equipItem('${item.slot}', '${item.emoji}')" class="w-full py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200">Mặc vào</button>
+              <button onclick="equipItem('${item.slot}', '${item.img}')" class="w-full py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200">Mặc vào</button>
             ` : `
-              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.emoji}', '${item.slot}')" class="w-full py-1 text-[10px] font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-lg transition shadow-md active:scale-95 flex items-center justify-center gap-1"><i class="fa-solid fa-gem text-[9px]"></i> ${item.price}</button>
+              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.img}', '${item.slot}')" class="w-full py-1 text-[10px] font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-lg transition shadow-md active:scale-95 flex items-center justify-center gap-1"><i class="fa-solid fa-gem text-[9px]"></i> ${item.price}</button>
             `}
           </div>
         `;
       }).join('');
     }
 
-    function buyShopItem(id, price, emoji, slot) {
+    function buyShopItem(id, price, img, slot) {
       if (userData.gems >= price) {
         userData.gems -= price;
         if (!userData.inventory) userData.inventory = [];
         userData.inventory.push(id);
-        userData.equipped[slot] = emoji;
+        userData.equipped[slot] = img;
         saveUserDataLocal();
         renderShopUI();
         updateGamificationUI();
@@ -1094,9 +1100,9 @@ function updateGamificationUI() {
       }
     }
 
-    function equipItem(slot, emoji) {
+    function equipItem(slot, img) {
       if (!userData.equipped) userData.equipped = { hat: '', glasses: '', neck: '', bg: '' };
-      userData.equipped[slot] = userData.equipped[slot] === emoji ? '' : emoji;
+      userData.equipped[slot] = userData.equipped[slot] === img ? '' : img;
       saveUserDataLocal();
       renderShopUI();
       updateGamificationUI();
