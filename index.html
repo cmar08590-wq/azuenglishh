@@ -1077,7 +1077,8 @@ function updateGamificationUI() {
   
   const avatarImg = document.getElementById('avatarImg');
   if (avatarImg) avatarImg.src = userData.avatarUrl || avatarOptions[0].url;
-  
+  } 
+    
     // SHOP MỚI (Giao diện đẹp)
         function openShopModal() {
       document.getElementById('shopGemText').innerHTML = `<i class="fa-solid fa-gem text-pink-200 glow-gem"></i> ${userData.gems} Gems`;
@@ -1543,7 +1544,7 @@ document.addEventListener('keydown', (e) => {
     updateThemeIcon();
     initApp();
   </script>
-    <!-- MODAL TẠO THƯ MỤC MỚI (Đã sửa lỗi vị trí) -->
+      <!-- MODAL TẠO THƯ MỤC MỚI (Đã sửa lỗi vị trí) -->
   <div id="createFolderModal2" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
@@ -1559,21 +1560,6 @@ document.addEventListener('keydown', (e) => {
         <button onclick="closeCreateFolderModal()" class="px-4 py-2 text-sm font-bold text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Hủy</button>
         <button onclick="submitCreateFolder()" class="px-5 py-2 text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow-md transition active:scale-95">Tạo mới</button>
       </div>
-    </div>
-  </div>
-
-  <!-- CỬA SỔ TỪ ĐIỂN NỔI (Giao diện popup xem file vừa tra từ) -->
-  <div id="dictionaryModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full h-[90vh] shadow-2xl flex flex-col overflow-hidden relative">
-      <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-        <h3 class="font-extrabold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-          <i class="fa-solid fa-book-open text-teal-500"></i> Từ Điển AI
-        </h3>
-        <button onclick="closeDictionaryModal()" class="text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 p-2 rounded-xl transition active:scale-95">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <iframe id="dictionaryIframe" src="" class="w-full flex-1 border-0 bg-white"></iframe>
     </div>
   </div>
 
