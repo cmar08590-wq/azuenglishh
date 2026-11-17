@@ -9,45 +9,67 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <style>
-    .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
+    .modal-backdrop { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
     .flashcard { perspective: 1000px; }
     .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
     .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
     .flashcard-front, .flashcard-back { backface-visibility: hidden; }
     .flashcard-back { transform: rotateY(180deg); }
     
-    @keyframes pulse-subtle {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
+    /* Hiệu ứng Avatar */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
     }
-    .animate-avatar { animation: pulse-subtle 3s infinite ease-in-out; }
-    .hover-rotate:hover { transform: rotate(6deg) scale(1.03); transition: transform 0.2s ease; }
+    .animate-avatar { animation: float 4s ease-in-out infinite; }
+    
+    /* Hiệu ứng phát sáng cho Gems */
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 2px #ec4899); }
+      50% { filter: drop-shadow(0 0 8px #ec4899); }
+    }
+    .glow-gem { animation: pulse-glow 2s infinite; }
+    
+    /* Hiệu ứng hover cho thẻ Shop */
+    .shop-card { transition: all 0.3s ease; }
+    .shop-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4); }
+
+    /* Toast Notification */
+    .toast { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col relative">
+
+  <!-- Toast Container -->
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+    <span id="toastMsg" class="font-semibold text-sm">Thành công!</span>
+  </div>
 
   <!-- Header -->
-  <header class="bg-indigo-600 text-white shadow-md px-4 py-3 flex justify-between items-center gap-2">
+  <header class="bg-indigo-600 text-white shadow-lg px-4 py-3 flex justify-between items-center gap-2 z-10 sticky top-0">
     <div class="flex items-center gap-2 cursor-pointer" onclick="showView('hub')">
-      <div class="w-8 h-8 flex items-center justify-center bg-indigo-500 rounded-xl">
+      <div class="w-9 h-9 flex items-center justify-center bg-indigo-500 rounded-xl shadow-inner">
         <i class="fa-solid fa-graduation-cap text-xl text-amber-300 animate-bounce"></i>
       </div>
-      <h1 class="text-base md:text-xl font-bold tracking-wide">AZU English</h1>
+      <h1 class="text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm">AZU English</h1>
     </div>
     
-    <div class="flex items-center gap-2 md:gap-2.5">
-      <button onclick="openRankModal()" id="rankBtn" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-bold px-2.5 py-1 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-trophy text-amber-800 text-sm animate-pulse"></i>
+    <div class="flex items-center gap-2 md:gap-3">
+      <button onclick="openRankModal()" id="rankBtn" class="bg-gradient-to-r from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 text-indigo-950 font-extrabold px-3 py-1.5 rounded-xl text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 border border-amber-200">
+        <i class="fa-solid fa-trophy text-amber-900 text-sm animate-pulse"></i>
         <span id="userXpText">0 XP</span>
       </button>
 
-      <button onclick="checkInStreak()" id="streakBtn" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 px-2.5 py-1 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-        <i class="fa-solid fa-fire text-amber-400 text-sm animate-bounce"></i>
+      <button onclick="checkInStreak()" id="streakBtn" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-100 border border-orange-400/50 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 backdrop-blur-sm">
+        <i class="fa-solid fa-fire text-orange-400 text-sm animate-bounce"></i>
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <button onclick="openShopModal()" class="bg-pink-500 hover:bg-pink-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-bag-shopping text-pink-200 text-sm hover-rotate"></i> 
+      <button onclick="openShopModal()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-bag-shopping text-pink-100 text-sm"></i> 
         <span class="hidden sm:inline">Cửa Hàng</span>
       </button>
     </div>
@@ -57,533 +79,506 @@
   <div class="flex-1 flex relative overflow-hidden">
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shadow-sm hidden md:flex">
-      <div class="space-y-5">
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shadow-sm hidden md:flex z-10">
+      <div class="space-y-6">
         
-        <!-- LINH VẬT -->
-        <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-3 rounded-2xl border border-indigo-100/80 flex items-center gap-3 relative shadow-sm">
-          <div id="userAvatarContainer" class="w-14 h-14 bg-white rounded-2xl border-2 border-indigo-400 flex items-center justify-center shadow-md relative overflow-hidden animate-avatar">
-            <i class="fa-solid fa-cat text-2xl text-indigo-500"></i>
-            <span id="avatarHatEmoji" class="absolute -top-1 right-1 text-xs"></span>
-          </div>
-          <div class="flex-1 overflow-hidden">
-            <div class="flex items-center gap-1.5">
-              <h4 id="avatarNameText" class="font-bold text-xs text-slate-800 truncate">Mochi Ham Học</h4>
-              <button onclick="changeAvatarName()" class="text-slate-400 hover:text-indigo-600 text-[10px]" title="Đổi tên linh vật">
-                <i class="fa-solid fa-pen"></i>
-              </button>
+        <!-- LINH VẬT (GIAO DIỆN MỚI) -->
+        <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 rounded-3xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+          <div class="absolute -right-4 -top-4 w-20 h-20 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 group-hover:animate-pulse"></div>
+          
+          <div class="flex flex-col items-center gap-3 relative z-10">
+            <!-- Khung Avatar -->
+            <div class="relative cursor-pointer" onclick="openShopModal()">
+              <div class="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-500 animate-spin-slow"></div>
+              <div id="userAvatarContainer" class="w-20 h-20 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-lg relative overflow-hidden animate-avatar">
+                <i class="fa-solid fa-cat text-4xl text-indigo-500"></i>
+                <span id="avatarHatEmoji" class="absolute -top-1 -right-1 text-2xl drop-shadow-md"></span>
+              </div>
             </div>
-            <span id="rankTitleText" class="inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full mt-1">🥉 Hạng Đồng</span>
-            <p id="gemBalanceText" class="text-[11px] text-pink-600 font-bold mt-1 flex items-center gap-1">
-              <i class="fa-solid fa-gem text-pink-500"></i> <span>0 Gems</span>
-            </p>
+
+            <!-- Tên và Cấp bậc -->
+            <div class="text-center w-full">
+              <div class="flex items-center justify-center gap-1.5">
+                <h4 id="avatarNameText" class="font-extrabold text-sm text-slate-800 truncate max-w-[120px]">Mochi Ham Học</h4>
+                <button onclick="changeAvatarName()" class="text-slate-400 hover:text-indigo-600 transition" title="Đổi tên linh vật">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+              </div>
+              <span id="rankTitleText" class="inline-block text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full mt-1 border border-amber-200 shadow-sm">🥉 Hạng Đồng</span>
+            </div>
+
+            <!-- Gems -->
+            <div class="w-full bg-white rounded-xl py-1.5 px-3 flex items-center justify-between border border-slate-100 shadow-sm mt-1">
+              <span class="text-[11px] font-bold text-slate-500">Tài sản:</span>
+              <p id="gemBalanceText" class="text-xs text-pink-600 font-extrabold flex items-center gap-1.5">
+                <i class="fa-solid fa-gem text-pink-500 glow-gem"></i> <span>0</span>
+              </p>
+            </div>
           </div>
         </div>
 
         <!-- MENU ĐIỀU HƯỚNG SẢNH -->
         <nav class="space-y-1">
-          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menu Trung Tâm</h2>
-          <button onclick="showView('hub')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-house text-indigo-600"></i> Trang Chủ Sảnh
+          <h2 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 pl-2">Menu Trung Tâm</h2>
+          <button onclick="showView('hub')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200">
+            <i class="fa-solid fa-house w-5 text-center text-indigo-500"></i> Trang Chủ Sảnh
           </button>
-          <button onclick="showView('files')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-folder-open text-blue-500"></i> Kho File & Tài Liệu
+          <button onclick="showView('files')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200">
+            <i class="fa-solid fa-folder-open w-5 text-center text-blue-500"></i> Kho File & Tài Liệu
           </button>
-          <button onclick="showView('dictation')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-headphones text-amber-500"></i> Luyện Nghe Chép Chính Tả
+          <button onclick="showView('dictation')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-amber-50 hover:text-amber-600 transition-all duration-200">
+            <i class="fa-solid fa-headphones w-5 text-center text-amber-500"></i> Nghe Chép Chính Tả
           </button>
-          <button onclick="openWritingModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-pen-nib text-purple-600"></i> Luyện Viết & Check Bài
+          <button onclick="openWritingModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-purple-50 hover:text-purple-600 transition-all duration-200">
+            <i class="fa-solid fa-pen-nib w-5 text-center text-purple-500"></i> Luyện Viết & Check Bài
           </button>
-          <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-brain text-pink-500"></i> Flashcards Từ Vựng
+          <button onclick="openFlashcardModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-pink-50 hover:text-pink-600 transition-all duration-200">
+            <i class="fa-solid fa-brain w-5 text-center text-pink-500"></i> Flashcards Từ Vựng
           </button>
           
-          <!-- NÚT TRA TỪ ĐIỂN -->
-          <a href="dictionary.html" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-book-open text-teal-500"></i> Tra Từ Điển
+          <a href="dictionary.html" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-teal-50 hover:text-teal-600 transition-all duration-200">
+            <i class="fa-solid fa-book-open w-5 text-center text-teal-500"></i> Tra Từ Điển AI
           </a>
 
-          <button onclick="showView('books')" class="w-full text-left px-3 py-2 rounded-xl text-xs md:text-sm font-medium flex items-center gap-2.5 text-slate-700 hover:bg-slate-100">
-            <i class="fa-solid fa-book-bookmark text-emerald-500"></i> Sách Bổ Trợ
+          <button onclick="showView('books')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200">
+            <i class="fa-solid fa-book-bookmark w-5 text-center text-emerald-500"></i> Sách Bổ Trợ
           </button>
         </nav>
       </div>
 
-      <div class="text-xs text-slate-400 border-t pt-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> AZU System Active
+      <div class="text-xs font-medium text-slate-400 border-t pt-4 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Hệ thống ổn định
       </div>
     </aside>
 
-    <!-- CONTENT AREA -->
-    <main class="flex-1 p-4 md:p-6 overflow-y-auto w-full">
-
-      <!-- VIEW 1: SẢNH TRUNG TÂM (HUB DASHBOARD) -->
-      <div id="viewHub" class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-extrabold text-slate-800">Sảnh Học Tập AZU English 🚀</h2>
-          <p class="text-xs md:text-sm text-slate-500 mt-1">Chọn tính năng bạn muốn rèn luyện hôm nay:</p>
+    <!-- CONTENT AREA (Giữ nguyên logic) -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto w-full">
+      
+      <!-- VIEW 1: SẢNH TRUNG TÂM -->
+      <div id="viewHub" class="space-y-8 max-w-7xl mx-auto">
+        <div class="text-center md:text-left">
+          <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Sảnh Học Tập <span class="text-indigo-600">AZU English</span> 🚀</h2>
+          <p class="text-sm text-slate-500 mt-2 font-medium">Hôm nay bạn muốn chinh phục thử thách nào?</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          <div onclick="showView('files')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          <div onclick="showView('files')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-folder-open"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-base">Kho File & Thư Mục</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tạo thư mục phân loại, lưu trữ PDF, Word, Audio và tải tài liệu dễ dàng.</p>
+              <div>
+                <h3 class="font-bold text-slate-800 text-lg">Kho Tài Liệu</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Lưu trữ PDF, Word, Audio và tìm kiếm tài liệu nhanh chóng.</p>
+              </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
-              <span>Mở Kho File</span> <i class="fa-solid fa-arrow-right"></i>
+            <div class="mt-6 flex items-center text-xs font-bold text-blue-600">
+              <span>Mở thư mục</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
 
-          <div onclick="showView('dictation')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition">
+          <div onclick="showView('dictation')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-headphones"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-base">Nghe Chép Chính Tả</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tải audio MP3 lên để tự động tạo thành bài nghe chép chính tả trực tiếp!</p>
+              <div>
+                <h3 class="font-bold text-slate-800 text-lg">Nghe Chép Chính Tả</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Luyện tai nghe với audio MP3 và gõ lại từng câu chính xác.</p>
+              </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-600">
-              <span>Luyện Nghe Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+            <div class="mt-6 flex items-center text-xs font-bold text-amber-600">
+              <span>Luyện ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
 
-          <!-- CARD CHECK BÀI VIẾT -->
-          <div onclick="openWritingModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition">
+          <div onclick="openWritingModal()" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-pen-nib"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-base">Luyện Viết & Check Bài</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Sửa lỗi ngữ pháp, gợi ý nâng cấp từ vựng phù hợp với trình độ của bạn.</p>
+              <div>
+                <h3 class="font-bold text-slate-800 text-lg">Check Bài Viết</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">AI sửa lỗi ngữ pháp, gợi ý từ vựng theo chuẩn IELTS.</p>
+              </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-600">
-              <span>Check Bài Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+            <div class="mt-6 flex items-center text-xs font-bold text-purple-600">
+              <span>Check ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
 
-          <div onclick="openFlashcardModal()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pink-600 group-hover:text-white transition">
+          <div onclick="openFlashcardModal()" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pink-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-brain"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-base">Flashcards Từ Vựng</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Ôn bộ từ mẫu hoặc tự tạo Flashcards cá nhân có tự đọc phát âm chuẩn.</p>
+              <div>
+                <h3 class="font-bold text-slate-800 text-lg">Flashcards</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Ôn tập từ vựng cá nhân với giao diện lật thẻ 3D sinh động.</p>
+              </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-pink-600">
-              <span>Học Từ Vựng</span> <i class="fa-solid fa-arrow-right"></i>
+            <div class="mt-6 flex items-center text-xs font-bold text-pink-600">
+              <span>Học từ vựng</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
 
-          <!-- CARD TRA TỪ ĐIỂN -->
-          <a href="dictionary.html" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-teal-600 group-hover:text-white transition">
+          <a href="dictionary.html" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-book-open"></i>
               </div>
-              <h3 class="font-bold text-slate-800 text-base">Tra Từ Điển</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tra cứu định nghĩa, phiên âm, phát âm và ví dụ trực tiếp bằng tiếng Anh.</p>
+              <div>
+                <h3 class="font-bold text-slate-800 text-lg">Từ Điển AI</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">Tra nghĩa, phiên âm, giới từ đi kèm và lưu thẳng vào Flashcards.</p>
+              </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-teal-600">
-              <span>Tra Từ Ngay</span> <i class="fa-solid fa-arrow-right"></i>
+            <div class="mt-6 flex items-center text-xs font-bold text-teal-600">
+              <span>Tra từ ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </a>
-
-          <div onclick="showView('books')" class="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl transition cursor-pointer hover-rotate group flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition">
-                <i class="fa-solid fa-book-bookmark"></i>
-              </div>
-              <h3 class="font-bold text-slate-800 text-base">Sách Bổ Trợ</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">Tổng hợp sách giáo trình PDF/Word chọn lọc để tra cứu và đọc trực tiếp.</p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600">
-              <span>Đọc Sách Ngay</span> <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </div>
         </div>
       </div>
 
-      <!-- VIEW 2: KHO FILE & THƯ MỤC -->
-      <div id="viewFiles" class="space-y-6 hidden">
+      <!-- VIEW 2: KHO FILE & THƯ MỤC (Giữ nguyên logic HTML) -->
+      <div id="viewFiles" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
+          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
           </button>
           
-          <button onclick="openCreateFolderModal()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-folder-plus"></i> + Tạo Thư Mục Mới
+          <button onclick="openCreateFolderModal()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md">
+            <i class="fa-solid fa-folder-plus"></i> Tạo Thư Mục
           </button>
         </div>
 
-        <div class="space-y-2">
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh Sách Thư Mục</h3>
+        <div class="space-y-3">
+          <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Phân loại thư mục</h3>
           <div id="folderNavHorizontal" class="flex flex-wrap gap-2"></div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-slate-200">
           <div>
-            <h2 id="currentFolderName" class="text-xl font-bold text-slate-800">Tất cả tài liệu</h2>
-            <p id="fileCount" class="text-xs text-slate-500 mt-0.5">0 tệp tin</p>
+            <h2 id="currentFolderName" class="text-2xl font-extrabold text-slate-800">Tất cả tài liệu</h2>
+            <p id="fileCount" class="text-xs font-medium text-slate-500 mt-1">0 tệp tin</p>
           </div>
           
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <!-- Thanh Tìm Kiếm -->
-            <div class="relative flex-1 sm:w-64">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <input type="text" id="searchFileInput" placeholder="Tìm tên tài liệu..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="relative flex-1 sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="searchFileInput" placeholder="Tìm tên tài liệu..." class="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition shadow-sm bg-white">
             </div>
             
-            <!-- Nút Tải File -->
-            <label class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl cursor-pointer text-xs md:text-sm font-medium shadow-sm transition flex items-center justify-center gap-2 whitespace-nowrap">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Tải file
+            <label class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl cursor-pointer text-sm font-bold shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap active:scale-95">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Tải file lên
               <input type="file" id="fileInput" multiple class="hidden">
             </label>
           </div>
         </div>
 
-        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
       </div>
 
-      <!-- VIEW 3: LUYỆN NGHE CHÉP CHÍNH TẢ -->
-      <div id="viewDictation" class="space-y-6 hidden">
+      <!-- VIEW 3 & 4 (Giữ nguyên) -->
+      <div id="viewDictation" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
+          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
           </button>
-          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">🎧 Dictation Hub</span>
+          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full shadow-sm">🎧 Dictation Hub</span>
         </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe Audio
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe
               </h3>
-              <label class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg cursor-pointer font-bold transition">
-                + Up File Audio
+              <label class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg cursor-pointer font-bold transition shadow-sm">
+                + Thêm Audio
                 <input type="file" id="audioUploadInput" accept="audio/*" class="hidden">
               </label>
             </div>
-
-            <div class="space-y-1.5 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+            <div class="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-slate-500">📁 Thư mục bài nghe:</span>
-                <button onclick="openCreateFolderModal()" class="text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200 transition">
-                  + Tạo Thư Mục
+                <span class="text-[11px] font-bold text-slate-500">📁 Thư mục:</span>
+                <button onclick="openCreateFolderModal()" class="text-[10px] font-bold text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded-lg transition">
+                  + Tạo mới
                 </button>
               </div>
-              <select id="dictationFolderSelect" onchange="renderDictationLessonsList()" class="w-full text-xs p-2 border border-slate-200 rounded-xl bg-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                <option value="ALL">-- Tất cả thư mục --</option>
-              </select>
+              <select id="dictationFolderSelect" onchange="renderDictationLessonsList()" class="w-full text-xs p-2.5 border border-slate-300 rounded-xl bg-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
             </div>
-
-            <div id="audioLessonsList" class="space-y-2 max-h-[350px] overflow-y-auto pr-1"></div>
+            <div id="audioLessonsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"></div>
           </div>
 
-          <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
-            <div class="border-b pb-3">
-              <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Đang chọn bài</span>
-              <h3 id="activeAudioTitle" class="text-lg font-bold text-slate-800 mt-1">Vui lòng chọn bài nghe bên trái</h3>
+          <div class="lg:col-span-2 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div class="border-b pb-4">
+              <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full">Đang chọn bài</span>
+              <h3 id="activeAudioTitle" class="text-xl font-bold text-slate-800 mt-2">Vui lòng chọn bài nghe bên trái</h3>
             </div>
-
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center gap-3">
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center gap-4">
               <audio id="dictationAudioPlayer" controls class="w-full" preload="metadata"></audio>
-              <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+              <div class="flex items-center gap-3 text-xs font-bold text-slate-600">
                 <span>Tốc độ:</span>
-                <button onclick="setDictationSpeed(0.75)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">0.75x (Chậm)</button>
-                <button onclick="setDictationSpeed(1.0)" class="px-2 py-1 bg-white border rounded hover:bg-amber-50 text-[11px]">1.0x (Chuẩn)</button>
+                <button onclick="setDictationSpeed(0.75)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg hover:bg-amber-50 transition shadow-sm">0.75x</button>
+                <button onclick="setDictationSpeed(1.0)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg hover:bg-amber-50 transition shadow-sm">1.0x</button>
               </div>
             </div>
-
             <div class="space-y-3">
-              <label class="text-xs font-bold text-slate-600 block">Gõ lại những gì bạn nghe được vào đây:</label>
-              <textarea id="dictationTextArea" rows="5" placeholder="Nghe audio và gõ bài chép chính tả tại đây..." class="w-full p-3 border-2 border-indigo-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none"></textarea>
-              
-              <div class="flex justify-between items-center pt-1">
-                <button onclick="saveDictationNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+              <label class="text-sm font-bold text-slate-700 block">Gõ lại những gì bạn nghe được:</label>
+              <textarea id="dictationTextArea" rows="6" placeholder="Bắt đầu gõ..." class="w-full p-4 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none shadow-inner bg-slate-50 focus:bg-white transition"></textarea>
+              <div class="flex justify-between items-center pt-2">
+                <button onclick="saveDictationNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-md flex items-center gap-2 active:scale-95">
                   <i class="fa-solid fa-floppy-disk"></i> Lưu Bài Chép (+10 XP)
                 </button>
-                <p class="text-[11px] text-slate-400 italic">Bài chép sẽ được tự động lưu lại vào ghi chú bài nghe này!</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- VIEW 4: SÁCH BỔ TRỢ -->
-      <div id="viewBooks" class="space-y-6 hidden">
+      <div id="viewBooks" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại Sảnh
+          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
           </button>
-          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">📚 Sách bổ trợ</span>
+          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-sm">📚 Sách bổ trợ</span>
         </div>
-
         <div>
-          <h2 class="text-xl font-bold text-slate-800">Thư Viện Sách & Giáo Trình 📚</h2>
-          <p class="text-xs text-slate-500 mt-1">Các đầu sách PDF / Word chọn lọc cho bạn tra cứu:</p>
+          <h2 class="text-2xl font-extrabold text-slate-800">Thư Viện Sách 📚</h2>
+          <p class="text-sm font-medium text-slate-500 mt-1">Các đầu sách PDF / Word chọn lọc:</p>
         </div>
-
-        <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
       </div>
 
     </main>
   </div>
 
-  <!-- MODAL CHECK BÀI VIẾT -->
+  <!-- MODAL CHECK BÀI VIẾT (Giao diện mới) -->
   <div id="writingModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-base md:text-lg flex items-center gap-2">
-          <i class="fa-solid fa-pen-nib text-purple-600"></i> Trợ Lý Check & Sửa Bài Viết
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300" id="writingModalContent">
+      <div class="flex justify-between items-center border-b pb-4">
+        <h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2">
+          <i class="fa-solid fa-pen-nib text-purple-600"></i> Trợ Lý Check Bài Viết
         </h3>
-        <button onclick="closeWritingModal()" class="text-slate-400 hover:text-slate-600">
+        <button onclick="closeWritingModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div>
-          <label class="text-xs font-bold text-slate-600 block mb-1">Dán đoạn văn tiếng Anh cần kiểm tra:</label>
-          <textarea id="writingInputText" rows="6" placeholder="Nhập bài luận, đoạn văn hoặc câu tiếng Anh tại đây..." class="w-full p-3 border rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium resize-none"></textarea>
+          <label class="text-sm font-bold text-slate-700 block mb-2">Dán đoạn văn tiếng Anh của bạn:</label>
+          <textarea id="writingInputText" rows="6" placeholder="Nhập bài viết..." class="w-full p-4 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 font-medium resize-none shadow-inner bg-slate-50 focus:bg-white transition"></textarea>
         </div>
 
         <div>
-          <label class="text-xs font-bold text-slate-600 block mb-1">Trình độ hiện tại của bạn:</label>
-          <div class="grid grid-cols-3 gap-2 text-xs font-semibold">
-            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
-              <input type="radio" name="writingLevel" value="beginner" checked class="hidden"> 🌱 Mới bắt đầu (A1-A2)
+          <label class="text-sm font-bold text-slate-700 block mb-2">Trình độ của bạn:</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm font-bold">
+            <label class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-purple-300 hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition-all">
+              <input type="radio" name="writingLevel" value="beginner" checked class="hidden"> 🌱 Cơ bản
             </label>
-            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
-              <input type="radio" name="writingLevel" value="intermediate" class="hidden"> 🌿 Trung cấp (B1-B2)
+            <label class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-purple-300 hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition-all">
+              <input type="radio" name="writingLevel" value="intermediate" class="hidden"> 🌿 Trung cấp
             </label>
-            <label class="flex items-center justify-center p-2 border rounded-xl cursor-pointer hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition">
-              <input type="radio" name="writingLevel" value="advanced" class="hidden"> 🚀 Nâng cao / IELTS
+            <label class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-purple-300 hover:bg-purple-50 has-[:checked]:bg-purple-600 has-[:checked]:text-white has-[:checked]:border-purple-600 transition-all">
+              <input type="radio" name="writingLevel" value="advanced" class="hidden"> 🚀 Nâng cao
             </label>
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 pt-1">
-          <button onclick="checkWriting()" id="btnCheckWriting" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-magnifying-glass"></i> Check & Sửa Lỗi Bài Viết
-          </button>
-        </div>
+        <button onclick="checkWriting()" id="btnCheckWriting" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích & Sửa Lỗi
+        </button>
       </div>
 
-      <!-- Khung hiển thị kết quả -->
-      <div id="writingResultContainer" class="hidden space-y-3 pt-3 border-t">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-square-check text-purple-600"></i> Báo Cáo Phân Tích Từ AI
+      <div id="writingResultContainer" class="hidden space-y-4 pt-4 border-t">
+        <h4 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-square-check text-emerald-500"></i> Kết quả từ AI
         </h4>
-        <div id="writingResponseBody" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs md:text-sm leading-relaxed text-slate-700 space-y-2 overflow-x-auto"></div>
+        <div id="writingResponseBody" class="p-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm leading-relaxed text-slate-700 space-y-3 overflow-x-auto shadow-inner"></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL FLASHCARDS -->
+  <!-- MODAL FLASHCARDS (Giao diện mới) -->
   <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 relative">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative">
       
-      <!-- Header -->
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-brain text-pink-500"></i> Flashcards Từ Vựng
+      <div class="flex justify-between items-center">
+        <h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2">
+          <i class="fa-solid fa-brain text-pink-500"></i> Flashcards
         </h3>
         <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer bg-slate-100 px-2.5 py-1 rounded-lg">
-            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0">
-            <span>Tự động đọc 🔊</span>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition">
+            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0 w-4 h-4">
+            <span>Tự đọc</span>
           </label>
-          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 transition">
-            <i class="fa-solid fa-xmark text-xl"></i>
+          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
           </button>
         </div>
       </div>
 
-      <!-- Tabs -->
       <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-1 text-sm font-bold">
-        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-2 rounded-xl transition bg-white text-pink-600 shadow-sm">
-          📌 Bộ từ mẫu
+        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-2.5 rounded-xl transition bg-white text-pink-600 shadow-sm">
+          📌 Từ mẫu
         </button>
-        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-2 rounded-xl transition text-slate-500 hover:text-slate-700">
+        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700">
           👤 Cá nhân (<span id="customCardCount">0</span>)
         </button>
       </div>
 
-      <!-- Progress Bar -->
-      <div class="w-full bg-slate-100 rounded-full h-2">
-        <div id="flashcardProgress" class="bg-pink-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner">
+        <div id="flashcardProgress" class="bg-gradient-to-r from-pink-400 to-pink-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
       </div>
 
-      <!-- Flashcard Container -->
       <div id="flashcardContainer" class="py-2"></div>
 
-      <!-- Controls -->
-      <div class="flex justify-between items-center pt-3 border-t">
-        <button onclick="openAddFlashcardModal()" class="text-xs text-pink-600 hover:text-pink-700 font-bold flex items-center gap-1 bg-pink-50 px-3 py-2 rounded-xl transition">
+      <div class="flex justify-between items-center pt-4 border-t">
+        <button onclick="openAddFlashcardModal()" class="text-xs text-pink-600 hover:text-white font-bold flex items-center gap-2 bg-pink-50 hover:bg-pink-500 px-4 py-2.5 rounded-xl transition-all border border-pink-200 hover:border-pink-500 shadow-sm">
           <i class="fa-solid fa-plus-circle"></i> Tạo thẻ mới
         </button>
-        <button onclick="nextCard()" class="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm">
-          Thẻ tiếp theo <i class="fa-solid fa-arrow-right"></i>
+        <button onclick="nextCard()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 flex items-center gap-2">
+          Tiếp theo <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- CÁC MODAL KHÁC -->
-  <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-trophy text-amber-500 animate-bounce"></i> Bảng Xếp Hạng Leagues
+  <!-- SHOP MODAL (GIAO DIỆN CỰC XỊN) -->
+  <div id="shopModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+      
+      <!-- Nền mờ ảo -->
+      <div class="absolute top-0 right-0 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 z-0"></div>
+      <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50 z-0"></div>
+
+      <div class="flex justify-between items-center border-b pb-4 relative z-10">
+        <h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2">
+          <i class="fa-solid fa-bag-shopping text-pink-500"></i> Cửa Hàng Đồ Dùng
         </h3>
-        <button onclick="closeRankModal()" class="text-slate-400 hover:text-slate-600">
+        <button onclick="closeShopModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-center">
-        <p class="text-xs text-amber-800 font-semibold">Cấp bậc hiện tại của bạn:</p>
-        <h2 id="modalRankTitle" class="text-xl font-extrabold text-amber-600 mt-1">🥉 Hạng Đồng (0 XP)</h2>
-        <div class="w-full bg-amber-200 h-2 rounded-full mt-2 overflow-hidden">
-          <div id="modalXpBar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
-        </div>
-        <p id="modalXpNext" class="text-[10px] text-amber-700 mt-1">Cần thêm 50 XP để lên Hạng Bạc 🥈</p>
+      <div class="flex justify-between items-center bg-gradient-to-r from-pink-500 to-rose-500 p-4 rounded-2xl shadow-md relative z-10 text-white">
+        <span class="text-sm font-bold">Số dư của bạn:</span>
+        <span id="shopGemText" class="text-lg font-extrabold flex items-center gap-2"><i class="fa-solid fa-gem text-pink-200 glow-gem"></i> 0 Gems</span>
       </div>
 
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Học Viên</h4>
-        <div class="space-y-2 text-xs">
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200 font-semibold text-slate-800">
-            <span class="flex items-center gap-2">🥇 1. <span id="rankUserDisplayName">Mochi</span> (Bạn)</span>
-            <span class="text-indigo-600" id="topUserXp">0 XP</span>
+      <div class="space-y-4 relative z-10">
+        <h4 class="text-sm font-extrabold text-slate-600 uppercase tracking-wider">Phụ kiện cho linh vật</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="shopItemsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RANK MODAL -->
+  <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl space-y-6">
+      <div class="flex justify-between items-center border-b pb-4">
+        <h3 class="font-extrabold text-slate-800 text-xl flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-500"></i> Bảng Xếp Hạng
+        </h3>
+        <button onclick="closeRankModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-1 rounded-2xl shadow-lg">
+        <div class="bg-white p-5 rounded-xl text-center space-y-3">
+          <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Cấp bậc hiện tại</p>
+          <h2 id="modalRankTitle" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">Hạng Đồng</h2>
+          <div class="w-full bg-slate-100 h-3 rounded-full mt-2 overflow-hidden shadow-inner">
+            <div id="modalXpBar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-0 transition-all duration-500 ease-out"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="shopModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+  <!-- CÁC MODAL KHÁC (Giữ nguyên logic) -->
+  <div id="createFolderModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-          <i class="fa-solid fa-bag-shopping text-pink-500 hover-rotate"></i> Cửa Hàng Trang Phục
+          <i class="fa-solid fa-folder-plus text-indigo-600"></i> Tạo Thư Mục
         </h3>
-        <button onclick="closeShopModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div class="flex justify-between items-center bg-pink-50 p-3 rounded-xl border border-pink-200">
-        <span class="text-xs font-semibold text-pink-800">Số dư Gems của bạn:</span>
-        <span id="shopGemText" class="text-sm font-bold text-pink-600">💎 0 Gems</span>
-      </div>
-
-      <div class="space-y-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mũ & Phụ kiện Đáng Yêu</h4>
-        <div class="grid grid-cols-3 gap-2" id="shopItemsContainer"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="createFolderModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-folder-plus text-indigo-600"></i> Tạo Thư Mục Mới
-        </h3>
-        <button onclick="closeCreateFolderModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closeCreateFolderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div>
-        <label class="text-xs font-semibold text-slate-500 block mb-1">Tên thư mục:</label>
-        <input type="text" id="folderNameInput" placeholder="VD: IELTS Listening, Grammar..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+        <input type="text" id="folderNameInput" placeholder="VD: IELTS Listening..." class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white transition">
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeCreateFolderModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">Hủy</button>
-        <button onclick="submitCreateFolder()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow">Tạo ngay</button>
+        <button onclick="closeCreateFolderModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition">Hủy</button>
+        <button onclick="submitCreateFolder()" class="px-5 py-2 text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow-md transition active:scale-95">Tạo mới</button>
       </div>
     </div>
   </div>
 
   <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i class="fa-solid fa-plus text-indigo-600"></i> Tạo Thẻ Từ Vựng Cá Nhân
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-plus text-pink-600"></i> Tạo Thẻ Mới
         </h3>
-        <button onclick="closeAddFlashcardModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closeAddFlashcardModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Từ / Cụm từ tiếng Anh:</label>
-          <input type="text" id="wordInput" placeholder="VD: Metaphor..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <label class="text-xs font-bold text-slate-600 block mb-1">Từ tiếng Anh:</label>
+          <input type="text" id="wordInput" placeholder="VD: Metaphor..." class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-slate-50 focus:bg-white transition">
         </div>
         <div>
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Ý nghĩa tiếng Việt:</label>
-          <input type="text" id="meaningInput" placeholder="VD: Phép ẩn dụ..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <label class="text-xs font-bold text-slate-600 block mb-1">Nghĩa tiếng Việt:</label>
+          <input type="text" id="meaningInput" placeholder="VD: Phép ẩn dụ..." class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-slate-50 focus:bg-white transition">
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeAddFlashcardModal()" class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">Hủy</button>
-        <button onclick="submitAddFlashcard()" class="px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl shadow">Lưu thẻ</button>
+        <button onclick="closeAddFlashcardModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition">Hủy</button>
+        <button onclick="submitAddFlashcard()" class="px-5 py-2 text-sm font-bold bg-pink-500 text-white hover:bg-pink-600 rounded-xl shadow-md transition active:scale-95">Lưu thẻ</button>
       </div>
     </div>
   </div>
 
   <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-2 md:p-6">
-    <div class="bg-white rounded-t-xl px-4 py-3 flex justify-between items-center shadow-lg border-b border-slate-200">
-      <div class="flex items-center gap-2 overflow-hidden">
-        <span id="previewIcon" class="text-lg"></span>
-        <h3 id="previewTitle" class="font-bold text-slate-800 text-sm md:text-base truncate">Xem tài liệu</h3>
+    <div class="bg-white rounded-t-2xl px-5 py-4 flex justify-between items-center shadow-lg border-b border-slate-200">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <span id="previewIcon" class="text-xl"></span>
+        <h3 id="previewTitle" class="font-bold text-slate-800 text-base md:text-lg truncate">Xem tài liệu</h3>
       </div>
-      <div class="flex items-center gap-2">
-        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1">
+      <div class="flex items-center gap-3">
+        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
           <i class="fa-solid fa-download"></i> Tải về
         </a>
-        <button onclick="closePreview()" class="text-slate-400 hover:text-slate-600 p-1 rounded-xl text-lg">
+        <button onclick="closePreview()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition text-xl">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
     </div>
     
-    <div class="bg-slate-100 flex-1 overflow-hidden rounded-b-xl flex flex-col md:flex-row p-2 gap-2 relative">
-      <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-1"></div>
+    <div class="bg-slate-100 flex-1 overflow-hidden rounded-b-2xl flex flex-col md:flex-row p-3 gap-3 relative">
+      <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-2 bg-white rounded-xl shadow-inner border border-slate-200"></div>
       
-      <div id="previewSidebar" class="w-full md:w-80 bg-white rounded-xl p-3 border border-slate-200 flex flex-col justify-between hidden">
+      <div id="previewSidebar" class="w-full md:w-80 bg-white rounded-xl p-4 border border-slate-200 flex flex-col justify-between hidden shadow-sm">
         <div id="audioControlsContainer" class="hidden border-b pb-3 mb-3">
-          <h4 class="font-bold text-slate-700 text-xs mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-indigo-600"></i> Lingo Player
-          </h4>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center justify-between">
-              <span>Tốc độ:</span>
-              <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border rounded px-2 py-1 text-slate-700">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1.0" selected>1.0x</option>
-                <option value="1.25">1.25x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2.0">2.0x</option>
-              </select>
-            </div>
+          <h4 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-sliders text-indigo-600"></i> Điều khiển</h4>
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium">Tốc độ:</span>
+            <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
           </div>
         </div>
-
-        <div class="flex-1 flex flex-col min-h-[100px]">
-          <h4 class="font-bold text-slate-700 text-xs mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học
-          </h4>
-          <textarea id="fileNoteArea" placeholder="Ghi chú bài học..." class="w-full flex-1 p-2 border rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none mb-2"></textarea>
-          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-xl text-xs font-medium transition">
+        <div class="flex-1 flex flex-col min-h-[150px]">
+          <h4 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học</h4>
+          <textarea id="fileNoteArea" placeholder="Viết ghi chú..." class="w-full flex-1 p-3 border border-slate-300 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-3 bg-slate-50 focus:bg-white transition"></textarea>
+          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-bold transition shadow-md active:scale-95">
             <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
           </button>
         </div>
@@ -604,12 +599,7 @@
     let currentDictationFile = null;
 
     let userData = {
-      xp: 0,
-      gems: 50,
-      avatarName: 'Mochi Ham Học',
-      equippedHat: '',
-      streakCount: 0,
-      lastCheckIn: null
+      xp: 0, gems: 100, avatarName: 'Mochi Ham Học', equippedHat: '', streakCount: 0, lastCheckIn: null
     };
 
     const shopItems = [
@@ -619,12 +609,11 @@
     ];
 
     const systemFlashcards = [
-      { id: 's1', word: 'Metaphor', meaning: 'Phép ẩn dụ (so sánh ngầm)' },
-      { id: 's2', word: 'Curiosity', meaning: 'Sự tò mò, ham học hỏi' },
-      { id: 's3', word: 'Fluency', meaning: 'Sự lưu khoát, trôi chảy' },
-      { id: 's4', word: 'Vocabulary', meaning: 'Vốn từ vựng' },
-      { id: 's5', word: 'Pronunciation', meaning: 'Sự phát âm' },
-      { id: 's6', word: 'Comprehension', meaning: 'Khả năng hiểu, sự lĩnh hội' }
+      { id: 's1', word: 'Metaphor', meaning: 'Phép ẩn dụ' },
+      { id: 's2', word: 'Curiosity', meaning: 'Sự tò mò' },
+      { id: 's3', word: 'Fluency', meaning: 'Sự lưu loát' },
+      { id: 's4', word: 'Vocabulary', meaning: 'Từ vựng' },
+      { id: 's5', word: 'Pronunciation', meaning: 'Phát âm' }
     ];
 
     let customFlashcards = [];
@@ -632,17 +621,31 @@
     let currentCardIndex = 0;
     let currentPreviewRecord = null;
 
+    // Hàm hiển thị thông báo (Toast) thay cho alert
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const icon = toast.querySelector('i');
+      
+      toastMsg.textContent = msg;
+      if (type === 'success') {
+        icon.className = 'fa-solid fa-circle-check text-emerald-400 text-xl';
+      } else if (type === 'error') {
+        icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-xl';
+      }
+      
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
     async function initApp() {
       loadUserDataLocal();
       await fetchFolders();
       await fetchCloudFiles();
       setupUploadListener();
       setupAudioDictationUploadListener();
-      
-      // Kết nối thanh tìm kiếm
       const searchInp = document.getElementById('searchFileInput');
       if (searchInp) searchInp.addEventListener('input', renderFiles);
-      
       updateGamificationUI();
       updateStreakUI();
       showView('hub');
@@ -650,6 +653,10 @@
 
     function openWritingModal() {
       document.getElementById('writingModal').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('writingModalContent').classList.remove('scale-95');
+        document.getElementById('writingModalContent').classList.add('scale-100');
+      }, 10);
     }
 
     function closeWritingModal() {
@@ -663,57 +670,39 @@
       const btn = document.getElementById('btnCheckWriting');
       const level = document.querySelector('input[name="writingLevel"]:checked').value;
 
-      if (!inputText) {
-        alert("Vui lòng nhập văn bản tiếng Anh cần kiểm tra!");
-        return;
-      }
+      if (!inputText) return showToast("Vui lòng nhập văn bản!", "error");
 
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
       resultContainer.classList.remove('hidden');
-      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-4 text-center">Gia sư AI đang chấm bài, vui lòng đợi trong giây lát...</div>';
+      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-6 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3"></i><br>Gia sư AI đang chấm bài...</div>';
 
-      let levelInstruction = level === 'beginner' ? "Người mới (A1-A2): Chỉ sửa lỗi chính tả, ngữ pháp cơ bản. Không dùng từ quá khó." 
-                         : level === 'intermediate' ? "Trung cấp (B1-B2): Sửa ngữ pháp, gợi ý từ vựng tự nhiên hơn, cách nối câu." 
-                         : "Nâng cao/IELTS (C1-C2): Chấm điểm, gợi ý từ vựng học thuật (Academic), cấu trúc phức tạp.";
+      let levelInstruction = level === 'beginner' ? "Sửa lỗi cơ bản." : level === 'intermediate' ? "Sửa ngữ pháp, gợi ý từ vựng B1-B2." : "Chấm điểm IELTS, gợi ý từ Academic.";
 
-      const prompt = `Bạn là một gia sư tiếng Anh chuyên nghiệp. Hãy kiểm tra bài viết sau:
-"${inputText}"
-
-Yêu cầu dành cho trình độ: ${levelInstruction}
-
-Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không dùng markdown), chia thành các mục rõ ràng:
-1. <strong>Đánh giá chung:</strong> (Ước lượng trình độ CEFR hoặc điểm IELTS tương đương, nhận xét độ mạch lạc).
-2. <strong>Sửa lỗi chi tiết:</strong> (Chỉ rõ lỗi sai, giải thích tại sao sai và đưa ra từ/cụm từ sửa lại).
-3. <strong>Nâng cấp từ vựng:</strong> (Gợi ý các từ đồng nghĩa "xịn" hơn để thay thế các từ cơ bản trong bài).
-4. <strong>Bản viết lại hoàn chỉnh (Rewrite):</strong> (Viết lại toàn bộ đoạn văn sao cho tự nhiên và đúng ngữ pháp nhất).`;
+      const prompt = `Gia sư tiếng Anh. Kiểm tra bài viết: "${inputText}". Trình độ: ${levelInstruction}. Trả về HTML gồm: Đánh giá chung, Sửa lỗi chi tiết, Nâng cấp từ vựng, Bản viết lại.`;
 
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'apikey': SUPABASE_KEY
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
           body: JSON.stringify({ prompt: prompt })
         });
 
         const data = await response.json();
         
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-          let aiHtml = data.candidates[0].content.parts[0].text;
-          aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          let aiHtml = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
           responseBody.innerHTML = aiHtml;
-          if (typeof addXp === 'function') addXp(15); 
+          addXp(15); 
+          showToast("Đã chấm bài xong! +15 XP");
         } else {
-          responseBody.innerHTML = `<span class="text-red-500">Lỗi AI: ${data.error ? data.error.message : 'Không có phản hồi'}</span>`;
+          responseBody.innerHTML = `<span class="text-red-500">Lỗi AI: Không có phản hồi</span>`;
         }
       } catch (err) {
-        responseBody.innerHTML = `<span class="text-red-500">Lỗi kết nối: ${err.message}</span>`;
+        responseBody.innerHTML = `<span class="text-red-500">Lỗi kết nối AI</span>`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Check & Sửa Lỗi Bài Viết';
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích & Sửa Lỗi';
       }
     }
 
@@ -738,16 +727,10 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
     function loadUserDataLocal() {
       userData = JSON.parse(localStorage.getItem('azu_public_user_profile')) || {
-        xp: 0,
-        gems: 50,
-        avatarName: 'Mochi Ham Học',
-        equippedHat: '',
-        streakCount: 0,
-        lastCheckIn: null
+        xp: 0, gems: 100, avatarName: 'Mochi Ham Học', equippedHat: '', streakCount: 0, lastCheckIn: null
       };
-
       customFlashcards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [
-        { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ chuyên ngành' }
+        { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ' }
       ];
     }
 
@@ -759,51 +742,33 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     function renderDictationLessonsList() {
       const listContainer = document.getElementById('audioLessonsList');
       const folderSelect = document.getElementById('dictationFolderSelect');
-
       if (folderSelect) {
         const currentSelected = folderSelect.value || 'ALL';
-        let folderOptions = `<option value="ALL">-- Tất cả thư mục --</option>`;
-        folders.forEach(f => {
-          folderOptions += `<option value="${f.id}" ${String(f.id) === String(currentSelected) ? 'selected' : ''}>📁 ${f.name}</option>`;
-        });
+        let folderOptions = `<option value="ALL">-- Tất cả --</option>`;
+        folders.forEach(f => { folderOptions += `<option value="${f.id}" ${String(f.id) === String(currentSelected) ? 'selected' : ''}>📁 ${f.name}</option>`; });
         folderSelect.innerHTML = folderOptions;
       }
-
       const selectedFolderId = folderSelect ? folderSelect.value : 'ALL';
       let audioFiles = cloudFiles.filter(f => (f.type && f.type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].some(ext => (f.name || '').toLowerCase().endsWith(ext)));
-
-      if (selectedFolderId !== 'ALL') {
-        audioFiles = audioFiles.filter(f => String(f.folderId || f.folder_id || '') === String(selectedFolderId));
-      }
+      if (selectedFolderId !== 'ALL') audioFiles = audioFiles.filter(f => String(f.folderId || f.folder_id || '') === String(selectedFolderId));
 
       if (audioFiles.length === 0) {
-        listContainer.innerHTML = `
-          <div class="py-6 text-center text-slate-400 text-xs">
-            <i class="fa-solid fa-music text-2xl mb-2"></i>
-            <p>Chưa có file Audio nào trong thư mục này.</p>
-            <p class="text-[10px] text-amber-600 mt-1 font-bold">Hãy bấm "+ Up File Audio" để tải lên!</p>
-          </div>
-        `;
+        listContainer.innerHTML = `<div class="py-6 text-center text-slate-400 text-xs font-medium"><i class="fa-solid fa-music text-3xl mb-3 text-slate-300"></i><p>Chưa có audio nào.</p></div>`;
         return;
       }
-
       listContainer.innerHTML = audioFiles.map(file => {
         const folderObj = folders.find(f => String(f.id) === String(file.folderId || file.folder_id || ''));
-        const folderName = folderObj ? folderObj.name : 'Tài liệu chung';
-
+        const folderName = folderObj ? folderObj.name : 'Chung';
         return `
-          <div class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition flex items-center justify-between group">
-            <div onclick="selectDictationFile('${file.id}')" class="flex items-center gap-2 overflow-hidden cursor-pointer flex-1">
-              <i class="fa-solid fa-circle-play text-amber-500 text-base group-hover:scale-110 transition"></i>
+          <div class="p-3 rounded-2xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition-all duration-200 flex items-center justify-between group cursor-pointer" onclick="selectDictationFile('${file.id}')">
+            <div class="flex items-center gap-3 overflow-hidden flex-1">
+              <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-play text-xs"></i></div>
               <div class="overflow-hidden">
-                <h4 class="font-bold text-slate-800 text-xs truncate" title="${file.name}">${file.name}</h4>
-                <p class="text-[10px] text-slate-400">${formatSize(file.size)} • <span class="text-indigo-600 font-medium">${folderName}</span></p>
+                <h4 class="font-bold text-slate-700 text-sm truncate">${file.name}</h4>
+                <p class="text-[10px] text-slate-400 font-medium mt-0.5">${formatSize(file.size)} • ${folderName}</p>
               </div>
             </div>
-            
-            <button onclick="event.stopPropagation(); deleteFile('${file.id}')" class="text-slate-300 hover:text-red-500 p-1.5 rounded-lg transition" title="Xóa vĩnh viễn file khỏi Cloud">
-              <i class="fa-solid fa-trash text-xs"></i>
-            </button>
+            <button onclick="event.stopPropagation(); deleteFile('${file.id}')" class="text-slate-300 hover:text-red-500 p-2 rounded-xl transition"><i class="fa-solid fa-trash text-xs"></i></button>
           </div>
         `;
       }).join('');
@@ -812,128 +777,66 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     function selectDictationFile(fileId) {
       const file = cloudFiles.find(f => String(f.id) === String(fileId));
       if (!file) return;
-
       currentDictationFile = file;
       document.getElementById('activeAudioTitle').textContent = file.name;
-      document.getElementById('activeAudioTag').textContent = "Bài Nghe Đang Chọn";
-
       const player = document.getElementById('dictationAudioPlayer');
-      player.preload = 'metadata';
       player.src = file.url;
-
-      player.addEventListener('stalled', () => {
-        if (!player.paused) {
-          const currentTime = player.currentTime;
-          player.load();
-          player.currentTime = currentTime;
-          player.play().catch(() => {});
-        }
-      });
-
-      player.play().catch(err => console.log("Lỗi phát audio:", err));
+      player.play().catch(() => {});
     }
 
-    function setDictationSpeed(speed) {
-      const player = document.getElementById('dictationAudioPlayer');
-      if (player) player.playbackRate = parseFloat(speed);
-    }
+    function setDictationSpeed(speed) { document.getElementById('dictationAudioPlayer').playbackRate = parseFloat(speed); }
 
     function saveDictationNote() {
-      if (!currentDictationFile) {
-        alert("Vui lòng chọn bài nghe bên trái trước khi lưu bài chép!");
-        return;
-      }
+      if (!currentDictationFile) return showToast("Chưa chọn bài nghe!", "error");
       const text = document.getElementById('dictationTextArea').value;
       currentDictationFile.note = text;
       supabaseClient.from('documents_metadata').update({ note: text }).eq('id', currentDictationFile.id).then(() => {
         addXp(10);
-        alert('🎉 Đã lưu bài chép chính tả vào ghi chú!');
+        showToast('Đã lưu bài chép! +10 XP');
       });
     }
 
     function setupAudioDictationUploadListener() {
       const audioInput = document.getElementById('audioUploadInput');
       if (!audioInput) return;
-
       audioInput.addEventListener('change', async function(e) {
         const files = e.target.files;
-        if (!files || files.length === 0) return;
-
+        if (!files) return;
         const folderSelect = document.getElementById('dictationFolderSelect');
-        const selectedFolder = (folderSelect && folderSelect.value && folderSelect.value !== 'ALL') ? folderSelect.value : null;
-
+        const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : null;
         for (let file of files) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-          const { data, error } = await supabaseClient.storage.from('documents').upload(fileName, file);
-
-          if (error) {
-            alert('Lỗi tải file: ' + error.message);
-            continue;
-          }
-
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+          const { error } = await supabaseClient.storage.from('documents').upload(fileName, file);
+          if (error) { showToast('Lỗi tải file', 'error'); continue; }
           const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
-
-          const fileRecord = {
-            id: String(Date.now() + Math.random()),
-            name: file.name,
-            size: file.size,
-            type: file.type || getMimeType(file.name),
-            folder_id: selectedFolder,
-            date_added: new Date().toLocaleDateString('vi-VN'),
-            is_starred: false,
-            tags: ['listening', 'dictation'],
-            note: '',
-            url: publicUrlData.publicUrl
-          };
-
-          try {
-            await supabaseClient.from('documents_metadata').insert([fileRecord]);
-          } catch(err) {}
-
+          await supabaseClient.from('documents_metadata').insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type, folder_id: selectedFolder, date_added: new Date().toLocaleDateString('vi-VN'), url: publicUrlData.publicUrl }]);
           addXp(10);
         }
-
         await fetchCloudFiles();
         renderDictationLessonsList();
         audioInput.value = '';
-        alert('🎉 Đã tải bài nghe Audio lên thành công!');
+        showToast('Đã tải audio lên!');
       });
     }
 
     function renderBooksView() {
       const grid = document.getElementById('bookGrid');
       const books = cloudFiles.filter(f => (f.name || '').toLowerCase().endsWith('.pdf') || (f.name || '').toLowerCase().endsWith('.docx'));
-
-      if (books.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-book-open text-3xl mb-2"></i><p>Chưa có sách bổ trợ nào trên Cloud.</p></div>`;
-        return;
-      }
-
+      if (books.length === 0) return grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p class="font-medium">Chưa có sách.</p></div>`;
       grid.innerHTML = books.map(b => `
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition">
           <div class="flex items-center gap-3 overflow-hidden">
-            <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-xl">
-              <i class="fa-solid fa-book"></i>
-            </div>
-            <div class="overflow-hidden">
-              <h4 class="font-bold text-slate-800 text-xs truncate">${b.name}</h4>
-              <p class="text-[10px] text-slate-400 mt-0.5">${formatSize(b.size)}</p>
-            </div>
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl"><i class="fa-solid fa-book"></i></div>
+            <div class="overflow-hidden"><h4 class="font-bold text-slate-700 text-sm truncate">${b.name}</h4><p class="text-[10px] font-medium text-slate-400 mt-0.5">${formatSize(b.size)}</p></div>
           </div>
-          <button onclick="previewFile('${b.id}')" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-700 transition">Đọc sách</button>
+          <button onclick="previewFile('${b.id}')" class="text-xs bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 shadow-sm">Đọc</button>
         </div>
       `).join('');
     }
 
     function changeAvatarName() {
-      const newName = prompt('Nhập tên mới cho linh vật:', userData.avatarName || 'Mochi');
-      if (newName && newName.trim()) {
-        userData.avatarName = newName.trim();
-        saveUserDataLocal();
-        updateGamificationUI();
-      }
+      const newName = prompt('Nhập tên mới:', userData.avatarName);
+      if (newName && newName.trim()) { userData.avatarName = newName.trim(); saveUserDataLocal(); updateGamificationUI(); }
     }
 
     function addXp(amount) {
@@ -944,48 +847,45 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
 
     function getRankInfo(xp) {
-      if (xp >= 500) return { title: '👑 Hạng Huyền Thoại', icon: '👑', max: 1000 };
-      if (xp >= 300) return { title: '💎 Hạng Kim Cương', icon: '💎', max: 500 };
-      if (xp >= 150) return { title: '🥇 Hạng Vàng', icon: '🥇', max: 300 };
-      if (xp >= 50) return { title: '🥈 Hạng Bạc', icon: '🥈', max: 150 };
-      return { title: '🥉 Hạng Đồng', icon: '🥉', max: 50 };
+      if (xp >= 500) return { title: '👑 Huyền Thoại', max: 1000 };
+      if (xp >= 300) return { title: '💎 Kim Cương', max: 500 };
+      if (xp >= 150) return { title: '🥇 Vàng', max: 300 };
+      if (xp >= 50) return { title: '🥈 Bạc', max: 150 };
+      return { title: '🥉 Đồng', max: 50 };
     }
 
     function updateGamificationUI() {
       const rank = getRankInfo(userData.xp);
       document.getElementById('userXpText').textContent = `${userData.xp} XP`;
       document.getElementById('rankTitleText').textContent = rank.title;
-      document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500"></i> ${userData.gems} Gems`;
-
-      document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi Ham Học';
-      document.getElementById('rankUserDisplayName').textContent = userData.avatarName || 'Mochi';
+      document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500 glow-gem"></i> ${userData.gems}`;
+      document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi';
       document.getElementById('avatarHatEmoji').textContent = userData.equippedHat || '';
-      document.getElementById('topUserXp').textContent = `${userData.xp} XP`;
     }
 
+    // SHOP MỚI (Giao diện đẹp)
     function openShopModal() {
-      document.getElementById('shopGemText').textContent = `💎 ${userData.gems} Gems`;
+      document.getElementById('shopGemText').innerHTML = `<i class="fa-solid fa-gem text-pink-200 glow-gem"></i> ${userData.gems} Gems`;
       const container = document.getElementById('shopItemsContainer');
-
       container.innerHTML = shopItems.map(item => {
         const isBought = (userData.inventory || []).includes(item.id);
         const isEquipped = userData.equippedHat === item.emoji;
-
         return `
-          <div class="p-3 bg-slate-50 border rounded-xl flex flex-col items-center text-center gap-1">
-            <span class="text-2xl">${item.emoji}</span>
-            <span class="text-[11px] font-bold text-slate-800">${item.name}</span>
+          <div class="shop-card bg-white border-2 ${isEquipped ? 'border-pink-500 shadow-pink-200' : 'border-slate-100'} rounded-2xl p-4 flex flex-col items-center justify-between text-center gap-3 relative overflow-hidden">
+            ${isEquipped ? '<div class="absolute top-0 right-0 bg-pink-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">Đang dùng</div>' : ''}
+            <span class="text-4xl drop-shadow-md">${item.emoji}</span>
+            <span class="text-xs font-bold text-slate-700 w-full truncate">${item.name}</span>
+            
             ${isEquipped ? `
-              <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">Đang mặc</span>
+              <button onclick="equipHat('${item.emoji}')" class="w-full py-1.5 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Tháo ra</button>
             ` : isBought ? `
-              <button onclick="equipHat('${item.emoji}')" class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">Mặc vào</button>
+              <button onclick="equipHat('${item.emoji}')" class="w-full py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200">Mặc vào</button>
             ` : `
-              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.emoji}')" class="text-[10px] bg-pink-500 hover:bg-pink-600 text-white px-2 py-0.5 rounded font-bold">💎 ${item.price}</button>
+              <button onclick="buyShopItem('${item.id}', ${item.price}, '${item.emoji}')" class="w-full py-1.5 text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-lg transition shadow-md active:scale-95 flex items-center justify-center gap-1"><i class="fa-solid fa-gem text-[10px]"></i> ${item.price}</button>
             `}
           </div>
         `;
       }).join('');
-
       document.getElementById('shopModal').classList.remove('hidden');
     }
 
@@ -998,9 +898,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         saveUserDataLocal();
         openShopModal();
         updateGamificationUI();
-        alert('🎉 Mua trang phục thành công!');
+        showToast('Mua thành công! Đã trang bị.');
       } else {
-        alert('Bạn không đủ Gems! Hãy học thêm Flashcard để tích lũy Gems nhé 💎');
+        showToast('Không đủ Gems! Hãy học thêm nhé.', 'error');
       }
     }
 
@@ -1015,11 +915,10 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
     function openRankModal() {
       const rank = getRankInfo(userData.xp);
-      document.getElementById('modalRankTitle').textContent = `${rank.title} (${userData.xp} XP)`;
+      document.getElementById('modalRankTitle').textContent = rank.title;
       document.getElementById('modalXpBar').style.width = `${Math.min(100, (userData.xp / rank.max) * 100)}%`;
       document.getElementById('rankModal').classList.remove('hidden');
     }
-
     function closeRankModal() { document.getElementById('rankModal').classList.add('hidden'); }
 
     function switchFlashcardTab(tab) {
@@ -1027,13 +926,12 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       currentCardIndex = 0;
       const tabSys = document.getElementById('tabSystemBtn');
       const tabCus = document.getElementById('tabCustomBtn');
-
       if (tab === 'system') {
-        tabSys.className = "flex-1 py-2 rounded-xl transition bg-white text-pink-600 shadow-sm";
-        tabCus.className = "flex-1 py-2 rounded-xl transition text-slate-500 hover:text-slate-700";
+        tabSys.className = "flex-1 py-2.5 rounded-xl transition bg-white text-pink-600 shadow-sm";
+        tabCus.className = "flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700";
       } else {
-        tabCus.className = "flex-1 py-2 rounded-xl transition bg-white text-pink-600 shadow-sm";
-        tabSys.className = "flex-1 py-2 rounded-xl transition text-slate-500 hover:text-slate-700";
+        tabCus.className = "flex-1 py-2.5 rounded-xl transition bg-white text-pink-600 shadow-sm";
+        tabSys.className = "flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700";
       }
       renderFlashcard();
     }
@@ -1041,59 +939,50 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     function renderFlashcard() {
       const container = document.getElementById('flashcardContainer');
       document.getElementById('customCardCount').textContent = customFlashcards.length;
-
       const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
 
       if (activeList.length === 0) {
-        container.innerHTML = `
-          <div class="h-56 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-            <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
-            <p>Chưa có từ vựng nào.</p>
-          </div>
-        `;
+        container.innerHTML = `<div class="h-56 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Chưa có từ vựng nào.</p></div>`;
         document.getElementById('flashcardProgress').style.width = '0%';
         return;
       }
 
       const card = activeList[currentCardIndex];
-      
       const progressPercent = ((currentCardIndex + 1) / activeList.length) * 100;
       document.getElementById('flashcardProgress').style.width = `${progressPercent}%`;
 
       container.innerHTML = `
-        <div class="flashcard cursor-pointer h-56 w-full" onclick="this.classList.toggle('flipped')">
-          <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 bg-gradient-to-br from-pink-50 to-white shadow-lg flex items-center justify-center p-6 text-center">
+        <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 bg-gradient-to-br from-pink-50 to-white shadow-xl flex items-center justify-center p-6 text-center">
             
             <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
-              <span class="text-[11px] font-bold text-pink-400 uppercase tracking-widest mb-3">
+              <span class="text-[11px] font-bold text-pink-400 uppercase tracking-widest mb-4">
                 ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Từ của bạn'} • ${currentCardIndex + 1}/${activeList.length}
               </span>
               <div class="flex items-center gap-3">
-                <h2 class="text-3xl font-extrabold text-slate-800">${card.word}</h2>
-                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-pink-500 hover:text-pink-700 bg-pink-100 p-2.5 rounded-full transition shadow-sm" title="Nghe phát âm">
+                <h2 class="text-4xl font-extrabold text-slate-800 drop-shadow-sm">${card.word}</h2>
+                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-pink-500 hover:text-pink-700 bg-white border border-pink-200 p-3 rounded-full transition shadow-sm hover:scale-110" title="Nghe phát âm">
                   <i class="fa-solid fa-volume-high text-lg"></i>
                 </button>
               </div>
-              <span class="text-[11px] text-slate-400 mt-6 absolute bottom-4"><i class="fa-solid fa-hand-pointer"></i> Nhấp để lật thẻ</span>
+              <span class="text-[10px] font-bold text-slate-400 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400"></i> Chạm để lật thẻ</span>
             </div>
 
-            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative">
+            <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative shadow-inner">
               ${currentFlashcardTab === 'custom' ? `
-                <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-4 right-4 text-pink-200 hover:text-white bg-black/20 p-2 rounded-full transition" title="Xóa từ này">
+                <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-2.5 rounded-full transition" title="Xóa từ này">
                   <i class="fa-solid fa-trash text-sm"></i>
                 </button>
               ` : ''}
-              <span class="text-[11px] font-bold text-pink-200 uppercase tracking-widest mb-3">Ý nghĩa</span>
-              <p class="text-xl font-bold leading-relaxed">${card.meaning}</p>
+              <span class="text-[11px] font-bold text-pink-200 uppercase tracking-widest mb-4">Ý nghĩa</span>
+              <p class="text-2xl font-bold leading-relaxed drop-shadow-md">${card.meaning}</p>
             </div>
 
           </div>
         </div>
       `;
 
-      if (document.getElementById('autoSpeechToggle').checked) {
-        speakText(card.word);
-      }
+      if (document.getElementById('autoSpeechToggle').checked) speakText(card.word);
     }
 
     function nextCard() {
@@ -1105,11 +994,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       }
     }
 
-    function openAddFlashcardModal() {
-      document.getElementById('wordInput').value = '';
-      document.getElementById('meaningInput').value = '';
-      document.getElementById('addFlashcardModal').classList.remove('hidden');
-    }
+    function openAddFlashcardModal() { document.getElementById('wordInput').value = ''; document.getElementById('meaningInput').value = ''; document.getElementById('addFlashcardModal').classList.remove('hidden'); }
     function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
 
     function submitAddFlashcard() {
@@ -1121,11 +1006,14 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         addXp(5);
         switchFlashcardTab('custom');
         closeAddFlashcardModal();
+        showToast('Đã thêm thẻ mới!');
+      } else {
+        showToast('Vui lòng nhập đủ từ và nghĩa!', 'error');
       }
     }
 
     function deleteCustomCard(id) {
-      if (confirm('Xóa từ vựng cá nhân này?')) {
+      if (confirm('Xóa từ vựng này?')) {
         customFlashcards = customFlashcards.filter(c => c.id !== id);
         saveUserDataLocal();
         if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
@@ -1137,8 +1025,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.9;
+        utterance.lang = 'en-US'; utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
       }
     }
@@ -1147,38 +1034,25 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       const today = new Date().toDateString();
       const streakBtn = document.getElementById('streakBtn');
       const streakText = document.getElementById('streakCountText');
-
       if (userData.lastCheckIn) {
-        const lastDate = new Date(userData.lastCheckIn);
-        const diffTime = Math.abs(new Date(today) - new Date(lastDate.toDateString()));
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 1) {
-          userData.streakCount = 0;
-          saveUserDataLocal();
-        }
+        const diffDays = Math.ceil(Math.abs(new Date(today) - new Date(new Date(userData.lastCheckIn).toDateString())) / (1000 * 60 * 60 * 24));
+        if (diffDays > 1) { userData.streakCount = 0; saveUserDataLocal(); }
       }
-
       streakText.textContent = `${userData.streakCount || 0} Ngày`;
-
       if (userData.lastCheckIn === today) {
-        streakBtn.classList.remove('bg-amber-500/20', 'border-amber-400/40');
-        streakBtn.classList.add('bg-emerald-500/20', 'border-emerald-400/40', 'text-emerald-300');
+        streakBtn.classList.remove('bg-orange-500/20', 'border-orange-400/50', 'text-orange-100');
+        streakBtn.classList.add('bg-emerald-500', 'border-emerald-400', 'text-white');
       }
     }
 
     function checkInStreak() {
       const today = new Date().toDateString();
-
-      if (userData.lastCheckIn === today) {
-        alert("Hôm nay bạn đã điểm danh Streak rồi! Hãy giữ vững phong độ vào ngày mai nhé 🔥");
-        return;
-      }
-
+      if (userData.lastCheckIn === today) return showToast("Hôm nay đã điểm danh rồi!", "error");
       userData.streakCount = (userData.streakCount || 0) + 1;
       userData.lastCheckIn = today;
       addXp(15);
       updateStreakUI();
-      alert(`🎉 Xuất sắc! Bạn nhận +15 XP và tăng Streak lên ${userData.streakCount} ngày liên tiếp!`);
+      showToast(`Điểm danh thành công! Chuỗi ${userData.streakCount} ngày.`);
     }
 
     function openCreateFolderModal() { document.getElementById('folderNameInput').value = ''; document.getElementById('createFolderModal').classList.remove('hidden'); }
@@ -1194,84 +1068,53 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         renderFolders();
         renderDictationLessonsList();
         closeCreateFolderModal();
+        showToast('Đã tạo thư mục!');
       }
     }
 
     async function fetchFolders() {
       try {
         const { data, error } = await supabaseClient.from('folders').select('*');
-        if (!error && data && data.length > 0) {
-          folders = data;
-        } else {
-          folders = [
-            { id: 'general', name: 'Tài liệu chung' },
-            { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
-            { id: 'listening', name: 'Luyện nghe (Audio)' }
-          ];
-        }
+        if (!error && data && data.length > 0) folders = data;
+        else folders = [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ];
       } catch(e) {
-        folders = [
-          { id: 'general', name: 'Tài liệu chung' },
-          { id: 'grammar', name: 'Ngữ pháp & Từ vựng' },
-          { id: 'listening', name: 'Luyện nghe (Audio)' }
-        ];
+        folders = [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ];
       }
       renderFolders();
     }
 
     async function deleteFolder(id) {
       const folderObj = folders.find(f => String(f.id) === String(id));
-      const folderName = folderObj ? folderObj.name : "thư mục này";
-
-      if (confirm(`Xóa thư mục "${folderName}"? Tất cả các file audio/tài liệu bên trong thư mục này cũng sẽ bị xóa vĩnh viễn khỏi Cloud!`)) {
+      if (confirm(`Xóa thư mục "${folderObj ? folderObj.name : ''}" và toàn bộ file bên trong?`)) {
         try {
           const filesInFolder = cloudFiles.filter(f => String(f.folderId || f.folder_id) === String(id));
-
           for (let file of filesInFolder) {
             if (file.url) {
               const urlParts = file.url.split('/');
-              const storageFileName = urlParts[urlParts.length - 1];
-              if (storageFileName) {
-                await supabaseClient.storage.from('documents').remove([storageFileName]);
-              }
+              if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from('documents').remove([urlParts[urlParts.length - 1]]);
             }
           }
-
           await supabaseClient.from('documents_metadata').delete().eq('folder_id', id);
           await supabaseClient.from('folders').delete().eq('id', id);
-
           folders = folders.filter(f => String(f.id) !== String(id));
           if (currentFolderId === id) currentFolderId = 'all';
-
-          alert(`Đã xóa thư mục "${folderName}" và tất cả file bên trong khỏi Cloud!`);
+          showToast('Đã xóa thư mục!');
           renderFolders();
           await fetchCloudFiles();
-
-        } catch (err) {
-          alert("Có lỗi xảy ra khi xóa thư mục: " + err.message);
-        }
+        } catch (err) { showToast("Lỗi khi xóa thư mục", "error"); }
       }
     }
 
     function renderFolders() {
       const navHorizontal = document.getElementById('folderNavHorizontal');
       if (!navHorizontal) return;
-      let html = `
-        <button onclick="switchFolder('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          📂 Tất cả
-        </button>
-      `;
-
+      let html = `<button onclick="switchFolder('all')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'} border">📂 Tất cả</button>`;
       folders.forEach(f => {
         const isActive = currentFolderId === f.id && currentFilter === 'all' && !selectedTag;
         html += `
-          <div class="inline-flex items-center rounded-xl border ${isActive ? 'bg-indigo-600 text-white font-bold border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
-            <button onclick="switchFolder('${f.id}')" class="px-3 py-1.5 text-xs">
-              📁 ${f.name}
-            </button>
-            <button onclick="deleteFolder('${f.id}')" class="pr-2 text-slate-400 hover:text-red-500 text-[10px]">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
+          <div class="inline-flex items-center rounded-xl border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}">
+            <button onclick="switchFolder('${f.id}')" class="px-4 py-2 text-xs font-bold transition-all">📁 ${f.name}</button>
+            <button onclick="deleteFolder('${f.id}')" class="pr-3 pl-1 text-slate-400 hover:text-red-500 text-[10px] transition"><i class="fa-solid fa-xmark"></i></button>
           </div>
         `;
       });
@@ -1283,17 +1126,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         const { data, error } = await supabaseClient.from('documents_metadata').select('*');
         if (!error && data) {
           cloudFiles = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            size: item.size,
-            type: item.type,
-            folderId: item.folder_id,
-            folder_id: item.folder_id,
-            dateAdded: item.date_added,
-            isStarred: item.is_starred,
-            tags: item.tags || [],
-            note: item.note || '',
-            url: item.url
+            id: item.id, name: item.name, size: item.size, type: item.type,
+            folderId: item.folder_id, folder_id: item.folder_id,
+            dateAdded: item.date_added, isStarred: item.is_starred, tags: item.tags || [], note: item.note || '', url: item.url
           }));
           renderFiles();
           renderDictationLessonsList();
@@ -1307,139 +1142,81 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       fileInput.addEventListener('change', async function(e) {
         const files = e.target.files;
         if (!files || files.length === 0) return;
-
         const targetFolder = currentFolderId === 'all' ? null : currentFolderId;
-
         for (let file of files) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-          const { data, error } = await supabaseClient.storage.from('documents').upload(fileName, file);
-
-          if (error) {
-            alert('Lỗi tải file: ' + error.message);
-            continue;
-          }
-
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+          const { error } = await supabaseClient.storage.from('documents').upload(fileName, file);
+          if (error) { showToast('Lỗi tải file: ' + error.message, 'error'); continue; }
           const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
-
-          const fileRecord = {
-            id: String(Date.now() + Math.random()),
-            name: file.name,
-            size: file.size,
-            type: file.type || getMimeType(file.name),
-            folder_id: targetFolder,
-            date_added: new Date().toLocaleDateString('vi-VN'),
-            is_starred: false,
-            tags: [],
-            note: '',
-            url: publicUrlData.publicUrl
-          };
-
-          try {
-            await supabaseClient.from('documents_metadata').insert([fileRecord]);
-          } catch(err) {}
-
+          await supabaseClient.from('documents_metadata').insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type || getMimeType(file.name), folder_id: targetFolder, date_added: new Date().toLocaleDateString('vi-VN'), is_starred: false, tags: [], note: '', url: publicUrlData.publicUrl }]);
           addXp(10);
         }
-
         await fetchCloudFiles();
         fileInput.value = '';
+        showToast('Tải file lên thành công!');
       });
     }
 
     async function deleteFile(id) {
       const fileToDelete = cloudFiles.find(f => String(f.id) === String(id));
       if (!fileToDelete) return;
-
-      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}" khỏi Cloud Storage?`)) {
+      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}"?`)) {
         try {
           if (fileToDelete.url) {
             const urlParts = fileToDelete.url.split('/');
-            const storageFileName = urlParts[urlParts.length - 1];
-            if (storageFileName) {
-              await supabaseClient.storage.from('documents').remove([storageFileName]);
-            }
+            if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from('documents').remove([urlParts[urlParts.length - 1]]);
           }
           await supabaseClient.from('documents_metadata').delete().eq('id', id);
           await fetchCloudFiles();
-        } catch (err) {
-          alert('Lỗi khi xóa file: ' + err.message);
-        }
+          showToast('Đã xóa file!');
+        } catch (err) { showToast('Lỗi khi xóa file', 'error'); }
       }
     }
 
     function switchFolder(id) {
-      currentFolderId = id;
-      currentFilter = 'all';
-      selectedTag = null;
+      currentFolderId = id; currentFilter = 'all'; selectedTag = null;
       const folderObj = folders.find(f => String(f.id) === String(id));
       document.getElementById('currentFolderName').textContent = id === 'all' ? 'Tất cả tài liệu' : (folderObj ? folderObj.name : 'Thư mục');
-      
-      // Xóa thanh tìm kiếm khi đổi thư mục để tránh bị kẹt kết quả cũ
       const searchInp = document.getElementById('searchFileInput');
       if (searchInp) searchInp.value = '';
-
-      renderFolders();
-      renderFiles();
-      showView('files');
+      renderFolders(); renderFiles(); showView('files');
     }
 
-    // Hàm renderFiles đã được sửa lỗi hoàn toàn
     function renderFiles() {
       const grid = document.getElementById('fileGrid');
       if (!grid) return;
       let files = [...cloudFiles];
-
-      // 1. Lọc theo từ khóa tìm kiếm
       const searchInput = document.getElementById('searchFileInput');
       const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
-      if (searchQuery) {
-        files = files.filter(f => (f.name || '').toLowerCase().includes(searchQuery));
-      }
-
-      // 2. Lọc theo thư mục hiện tại
-      if (currentFolderId !== 'all' && currentFilter === 'all' && !selectedTag) {
-        files = files.filter(f => String(f.folderId || f.folder_id) === String(currentFolderId));
-      }
-      // 3. Lọc theo sao hoặc tag
+      if (searchQuery) files = files.filter(f => (f.name || '').toLowerCase().includes(searchQuery));
+      if (currentFolderId !== 'all' && currentFilter === 'all' && !selectedTag) files = files.filter(f => String(f.folderId || f.folder_id) === String(currentFolderId));
       if (currentFilter === 'starred') files = files.filter(f => f.isStarred);
       if (selectedTag) files = files.filter(f => f.tags && f.tags.includes(selectedTag));
 
       document.getElementById('fileCount').textContent = `${files.length} tệp tin`;
 
       if (files.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Không tìm thấy tài liệu nào phù hợp.</p></div>`;
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-400 bg-white rounded-3xl border border-dashed border-slate-300"><i class="fa-regular fa-folder-open text-5xl mb-4 text-slate-300"></i><p class="font-bold text-lg text-slate-500">Không tìm thấy tài liệu nào</p></div>`;
         return;
       }
 
       grid.innerHTML = files.map(f => `
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 hover:shadow-md transition flex flex-col justify-between relative group">
-          <button onclick="toggleStar(event, '${f.id}')" class="absolute top-3 right-3 text-slate-300 hover:text-amber-400 transition ${f.isStarred ? 'text-amber-400' : ''}">
-            <i class="fa-solid fa-star text-sm md:text-base"></i>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 hover:shadow-lg transition-all duration-200 flex flex-col justify-between relative group">
+          <button onclick="toggleStar(event, '${f.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-amber-400 transition ${f.isStarred ? 'text-amber-400' : ''}">
+            <i class="fa-solid fa-star text-lg"></i>
           </button>
-
           <div class="flex items-start gap-3 cursor-pointer" onclick="previewFile('${f.id}')">
-            <div class="p-2 bg-slate-100 rounded-lg text-indigo-600 text-lg md:text-xl">
-              ${getFileIcon(f.type, f.name)}
-            </div>
-            <div class="overflow-hidden flex-1 pr-4">
-              <h3 class="font-medium text-slate-800 text-xs md:text-sm truncate hover:text-indigo-600 transition" title="${f.name}">${f.name}</h3>
-              <p class="text-[10px] md:text-xs text-slate-400 mt-1">${formatSize(f.size)} • ${f.dateAdded}</p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-indigo-500 text-2xl shadow-sm group-hover:scale-110 transition-transform">${getFileIcon(f.type, f.name)}</div>
+            <div class="overflow-hidden flex-1 pr-6">
+              <h3 class="font-bold text-slate-700 text-sm truncate hover:text-indigo-600 transition" title="${f.name}">${f.name}</h3>
+              <p class="text-[10px] font-medium text-slate-400 mt-1">${formatSize(f.size)} • ${f.dateAdded}</p>
             </div>
           </div>
-          
-          <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
-            <button onclick="previewFile('${f.id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1">
-              <i class="fa-solid fa-eye"></i> Xem ngay
-            </button>
+          <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-100">
+            <button onclick="previewFile('${f.id}')" class="text-xs text-indigo-600 hover:bg-indigo-50 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-eye"></i> Xem</button>
             <div class="flex gap-1">
-              <a href="${f.url}" target="_blank" download class="text-xs text-slate-600 hover:text-indigo-600 px-2 py-1 rounded hover:bg-slate-50">
-                <i class="fa-solid fa-download"></i>
-              </a>
-              <button onclick="deleteFile('${f.id}')" class="text-xs text-slate-400 hover:text-red-600 px-2 py-1 rounded hover:bg-slate-50">
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              <a href="${f.url}" target="_blank" download class="text-xs text-slate-500 hover:text-indigo-600 p-2 rounded-lg hover:bg-slate-50 transition"><i class="fa-solid fa-download"></i></a>
+              <button onclick="deleteFile('${f.id}')" class="text-xs text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
         </div>
@@ -1451,9 +1228,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       const file = cloudFiles.find(f => String(f.id) === String(id));
       if (file) {
         file.isStarred = !file.isStarred;
-        try {
-          await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id);
-        } catch(e) {}
+        try { await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id); } catch(e) {}
         renderFiles();
       }
     }
@@ -1461,86 +1236,45 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     function previewFile(id) {
       const record = cloudFiles.find(f => String(f.id) === String(id));
       if (!record) return;
-
       currentPreviewRecord = record;
-      const modal = document.getElementById('previewModal');
-      const previewBody = document.getElementById('previewBody');
-      const previewTitle = document.getElementById('previewTitle');
-      const previewIcon = document.getElementById('previewIcon');
-      const downloadBtn = document.getElementById('previewDownloadBtn');
-      const previewSidebar = document.getElementById('previewSidebar');
-      const audioControls = document.getElementById('audioControlsContainer');
-      const noteArea = document.getElementById('fileNoteArea');
-
-      previewTitle.textContent = record.name;
-      previewIcon.innerHTML = getFileIcon(record.type, record.name);
-      downloadBtn.href = record.url;
-      noteArea.value = record.note || '';
-
-      previewSidebar.classList.remove('hidden');
-      audioControls.classList.add('hidden');
-
+      document.getElementById('previewTitle').textContent = record.name;
+      document.getElementById('previewIcon').innerHTML = getFileIcon(record.type, record.name);
+      document.getElementById('previewDownloadBtn').href = record.url;
+      document.getElementById('fileNoteArea').value = record.note || '';
+      document.getElementById('previewSidebar').classList.remove('hidden');
+      document.getElementById('audioControlsContainer').classList.add('hidden');
       const ext = (record.name || '').split('.').pop().toLowerCase();
+      const previewBody = document.getElementById('previewBody');
 
-      if ((record.type && record.type.includes('pdf')) || ext === 'pdf') {
-        previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
-      } else if ((record.type && record.type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
-        previewBody.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${record.url}" class="max-h-full max-w-full object-contain rounded-xl shadow" /></div>`;
-      } else if (ext === 'docx') {
-        previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p>Đang tải file Word...</p></div>`;
-        fetch(record.url)
-          .then(res => res.arrayBuffer())
-          .then(arrayBuffer => {
-            mammoth.convertToHtml({ arrayBuffer: arrayBuffer }).then(result => {
-              previewBody.innerHTML = `<div class="w-full h-full bg-white p-4 md:p-8 rounded-xl shadow overflow-auto text-slate-800 leading-relaxed max-w-4xl prose text-xs md:text-base">${result.value}</div>`;
-            });
-          });
+      if ((record.type && record.type.includes('pdf')) || ext === 'pdf') previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+      else if ((record.type && record.type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) previewBody.innerHTML = `<img src="${record.url}" class="max-h-full max-w-full object-contain rounded-xl" />`;
+      else if (ext === 'docx') {
+        previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center font-bold"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Đang tải...</p></div>`;
+        fetch(record.url).then(res => res.arrayBuffer()).then(ab => mammoth.convertToHtml({ arrayBuffer: ab }).then(r => previewBody.innerHTML = `<div class="w-full h-full bg-white p-8 rounded-xl overflow-auto text-slate-800 leading-relaxed text-base">${r.value}</div>`));
       } else if ((record.type && record.type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) {
-        audioControls.classList.remove('hidden');
-        previewBody.innerHTML = `
-          <div class="bg-white p-6 rounded-2xl shadow-md text-center max-w-md w-full my-auto">
-            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"><i class="fa-solid fa-music"></i></div>
-            <p class="font-medium text-slate-800 mb-4 text-xs md:text-sm truncate">${record.name}</p>
-            <audio id="mainAudioPlayer" controls src="${record.url}" class="w-full" ontimeupdate="checkAudioLoop()"></audio>
-          </div>
-        `;
-      } else if ((record.type && record.type.includes('video')) || ['mp4', 'webm'].includes(ext)) {
-        previewBody.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><video controls src="${record.url}" class="max-h-full max-w-full rounded-xl shadow"></video></div>`;
-      } else {
-        previewBody.innerHTML = `<div class="bg-white p-6 rounded-2xl shadow-md text-center max-w-sm w-full my-auto"><i class="fa-solid fa-file-circle-exclamation text-3xl text-slate-400 mb-3"></i><h4 class="font-bold text-slate-800 text-sm mb-2">Mở bằng liên kết trực tiếp</h4><a href="${record.url}" target="_blank" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl font-medium text-xs transition mt-3">Mở file gốc trên Cloud</a></div>`;
-      }
-
-      modal.classList.remove('hidden');
+        document.getElementById('audioControlsContainer').classList.remove('hidden');
+        previewBody.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl text-center max-w-sm w-full mx-auto border border-slate-100"><div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-5"><i class="fa-solid fa-music animate-pulse"></i></div><p class="font-bold text-slate-800 mb-5 text-lg truncate px-2">${record.name}</p><audio id="mainAudioPlayer" controls src="${record.url}" class="w-full"></audio></div>`;
+      } else if ((record.type && record.type.includes('video')) || ['mp4', 'webm'].includes(ext)) previewBody.innerHTML = `<video controls src="${record.url}" class="max-h-full max-w-full rounded-xl shadow-lg"></video>`;
+      else previewBody.innerHTML = `<div class="text-center p-8 bg-white rounded-2xl shadow-sm"><p class="font-bold text-slate-700 mb-4">Không hỗ trợ xem trước</p><a href="${record.url}" target="_blank" class="inline-block bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm">Mở file gốc</a></div>`;
+      
+      document.getElementById('previewModal').classList.remove('hidden');
     }
 
     async function saveFileNote() {
       if (!currentPreviewRecord) return;
       currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
-      try {
-        await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id);
-      } catch(e) {}
-      alert('Đã lưu ghi chú!');
+      try { await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id); showToast('Đã lưu ghi chú!'); } catch(e) {}
     }
 
-    function changeAudioSpeed(speed) {
-      const audio = document.getElementById('mainAudioPlayer');
-      if (audio) audio.playbackRate = parseFloat(speed);
-    }
-
-    function closePreview() {
-      document.getElementById('previewModal').classList.add('hidden');
-      document.getElementById('previewBody').innerHTML = '';
-    }
-
+    function changeAudioSpeed(speed) { const audio = document.getElementById('mainAudioPlayer'); if (audio) audio.playbackRate = parseFloat(speed); }
+    function closePreview() { document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewBody').innerHTML = ''; }
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
     function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
 
     function getMimeType(filename) {
       const ext = (filename || '').split('.').pop().toLowerCase();
-      if (ext === 'pdf') return 'application/pdf';
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
-      if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return 'audio/' + ext;
-      if (['mp4', 'webm'].includes(ext)) return 'video/' + ext;
+      if (ext === 'pdf') return 'application/pdf'; if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
+      if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return 'audio/' + ext; if (['mp4', 'webm'].includes(ext)) return 'video/' + ext;
       return 'application/octet-stream';
     }
 
@@ -1556,23 +1290,15 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
     function formatSize(bytes) {
       if (!bytes || bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    function checkAudioLoop() {}
-
     document.addEventListener('keydown', (e) => { 
       if (e.key === 'Escape') { 
-        closePreview(); 
-        closeWritingModal();
-        closeFlashcardModal(); 
-        closeCreateFolderModal();
-        closeAddFlashcardModal();
-        closeRankModal();
-        closeShopModal();
+        closePreview(); closeWritingModal(); closeFlashcardModal(); 
+        closeCreateFolderModal(); closeAddFlashcardModal(); closeRankModal(); closeShopModal();
       } 
     });
 
