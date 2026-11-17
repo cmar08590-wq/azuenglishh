@@ -1765,7 +1765,7 @@ function updateGamificationUI() {
       document.getElementById('quizModal').classList.add('hidden');
     }
 
-        // ==========================================
+            // ==========================================
     // LOGIC CỦA READING COMPREHENSION
     // ==========================================
     function openReadingModal() {
@@ -1773,7 +1773,7 @@ function updateGamificationUI() {
       document.getElementById('readingModal').classList.remove('hidden');
     }
 
-    function closeReadingModal() {
+        function closeReadingModal() {
       document.getElementById('readingModal').classList.add('hidden');
     }
 
@@ -1783,15 +1783,113 @@ function updateGamificationUI() {
       document.getElementById('readingLoadingArea').classList.add('hidden');
       document.getElementById('readingQuizArea').classList.add('hidden');
       document.getElementById('readingResultArea').classList.add('hidden');
+      readingQuestions = [];
+      currentReadingScore = 0;
     }
 
-    // Tạm thời để trống hàm này, Bước 2 sẽ viết code gọi AI
     async function generateReadingQuiz() {
-      showToast('Tính năng gọi AI sẽ được cập nhật ở bước sau!', 'error');
+      const text = document.getElementById('readingInputText').value.trim();
+      if (text.length < 50) return showToast("Vui lòng dán đoạn văn dài hơn (ít nhất 50 chữ)!", "error");
+
+      // Đổi trạng thái giao diện
+      document.getElementById('readingInputArea').classList.add('hidden');
+      document.getElementById('readingLoadingArea').classList.remove('hidden');
+      document.getElementById('readingResultArea').classList.add('hidden');
+      document.getElementById('readingQuizArea').classList.add('hidden');
+
+      const prompt = `Read the following English text:\n\n"${text}"\n\nCreate exactly 3 multiple-choice questions based on this text to test reading comprehension. 
+      Return ONLY a valid JSON array in this exact format, with no other text or markdown:
+      [
+        {
+          "question": "Question text here?",
+          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "correct": 0 
+        }
+      ]
+      Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct option.`;
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ prompt: prompt })
+        });
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          let jsonString = data.candidates[0].content.parts[0].text;
+          // Dọn dẹp các ký tự thừa của AI (nếu có)
+          jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+          
+          // Tìm mảng JSON trong chuỗi trả về
+          const startIndex = jsonString.indexOf('[');
+          const endIndex = jsonString.lastIndexOf(']') + 1;
+          if (startIndex !== -1 && endIndex !== -1) {
+            jsonString = jsonString.substring(startIndex, endIndex);
+          }
+
+          readingQuestions = JSON.parse(jsonString);
+          renderReadingQuestions();
+        } else {
+          showToast("AI không thể tạo câu hỏi lúc này!", "error");
+          resetReadingModal();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Lỗi phân tích dữ liệu từ AI. Vui lòng thử lại!", "error");
+        resetReadingModal();
+      }
     }
-    
+
+    function renderReadingQuestions() {
+      document.getElementById('readingLoadingArea').classList.add('hidden');
+      document.getElementById('readingQuizArea').classList.remove('hidden');
+      
+      const container = document.getElementById('readingQuestionsContainer');
+      container.innerHTML = readingQuestions.map((q, qIndex) => `
+        <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <h4 class="font-bold text-slate-800 dark:text-white mb-3">Câu ${qIndex + 1}: ${q.question}</h4>
+          <div class="space-y-2">
+            ${q.options.map((opt, oIndex) => `
+              <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-rose-50 dark:hover:bg-slate-700 transition">
+                <input type="radio" name="q_${qIndex}" value="${oIndex}" class="w-4 h-4 text-rose-500 focus:ring-rose-500">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
     function submitReadingQuiz() {
-        // Sẽ viết ở Bước 3
+      let score = 0;
+      let allAnswered = true;
+
+      readingQuestions.forEach((q, qIndex) => {
+        const selected = document.querySelector(`input[name="q_${qIndex}"]:checked`);
+        if (!selected) {
+          allAnswered = false;
+        } else if (parseInt(selected.value) === q.correct) {
+          score++;
+        }
+      });
+
+      if (!allAnswered) {
+        return showToast("Vui lòng trả lời tất cả các câu hỏi!", "error");
+      }
+
+      // Hiển thị kết quả
+      document.getElementById('readingQuizArea').classList.add('hidden');
+      document.getElementById('readingResultArea').classList.remove('hidden');
+      
+      document.getElementById('readingScoreText').textContent = score;
+      const xpEarned = score * 5; // Mỗi câu đúng được 5 XP
+      document.getElementById('readingXpText').textContent = xpEarned;
+
+      if (xpEarned > 0) {
+        addXp(xpEarned);
+      }
     }
     
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
@@ -1825,7 +1923,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { 
     closePreview(); closeWritingModal(); closeFlashcardModal(); 
     closeCreateFolderModal(); closeAddFlashcardModal(); closeRankModal(); closeShopModal();
-    closeAvatarPicker(); closeQuizModal();
+    closeAvatarPicker(); closeQuizModal(); closeReadingModal();
   } 
 });
 
