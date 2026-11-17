@@ -65,34 +65,42 @@
   </div>
 
   <!-- Header -->
-  <header class="bg-indigo-600 dark:bg-slate-800 dark:border-b dark:border-slate-700 text-white shadow-lg px-4 py-3 flex justify-between items-center gap-2 z-10 sticky top-0 transition-colors duration-300">
-    <div class="flex items-center gap-2 cursor-pointer" onclick="showView('hub')">
-      <div class="w-9 h-9 flex items-center justify-center bg-indigo-500 rounded-xl shadow-inner">
-        <i class="fa-solid fa-graduation-cap text-xl text-amber-300 animate-bounce"></i>
+    <header class="bg-indigo-600 dark:bg-slate-800 dark:border-b dark:border-slate-700 text-white shadow-lg px-4 py-3 flex justify-between items-center gap-2 z-40 sticky top-0 transition-colors duration-300">
+    <div class="flex items-center gap-3">
+      <!-- Nút Menu cho Mobile -->
+      <button onclick="toggleMobileSidebar()" class="md:hidden text-white hover:bg-white/20 p-1.5 rounded-lg transition">
+        <i class="fa-solid fa-bars text-xl"></i>
+      </button>
+      
+      <div class="flex items-center gap-2 cursor-pointer" onclick="showView('hub')">
+        <div class="w-9 h-9 flex items-center justify-center bg-indigo-500 rounded-xl shadow-inner">
+          <i class="fa-solid fa-graduation-cap text-xl text-amber-300 animate-bounce"></i>
+        </div>
+        <h1 class="text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm hidden sm:block">AZU English</h1>
       </div>
-      <h1 class="text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm">AZU English</h1>
     </div>
     
-        <div class="flex items-center gap-2 md:gap-3">
-      <button onclick="toggleDarkMode()" id="themeToggleBtn" class="bg-indigo-500/50 hover:bg-indigo-500 text-white p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center w-8 h-8 md:w-9 md:h-9" title="Đổi giao diện">
+    <div class="flex items-center gap-1.5 md:gap-3">
+      <button onclick="toggleDarkMode()" id="themeToggleBtn" class="bg-indigo-500/50 hover:bg-indigo-500 text-white p-1.5 md:p-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center w-8 h-8 md:w-9 md:h-9" title="Đổi giao diện">
         <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
       </button>
 
-      <button onclick="openRankModal()" id="rankBtn" class="bg-gradient-to-r from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 text-indigo-950 font-extrabold px-3 py-1.5 rounded-xl text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 border border-amber-200">
-        <i class="fa-solid fa-trophy text-amber-900 text-sm animate-pulse"></i>
+      <button onclick="openRankModal()" id="rankBtn" class="bg-gradient-to-r from-amber-300 to-amber-500 hover:from-amber-400 hover:to-amber-600 text-indigo-950 font-extrabold px-2 md:px-3 py-1.5 rounded-xl text-[10px] md:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 border border-amber-200">
+        <i class="fa-solid fa-trophy text-amber-900 text-xs md:text-sm animate-pulse"></i>
         <span id="userXpText">0 XP</span>
       </button>
 
-      <button onclick="checkInStreak()" id="streakBtn" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-100 border border-orange-400/50 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 backdrop-blur-sm">
-        <i class="fa-solid fa-fire text-orange-400 text-sm animate-bounce"></i>
+      <button onclick="checkInStreak()" id="streakBtn" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-100 border border-orange-400/50 px-2 md:px-3 py-1.5 rounded-xl text-[10px] md:text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1 backdrop-blur-sm">
+        <i class="fa-solid fa-fire text-orange-400 text-xs md:text-sm animate-bounce"></i>
         <span id="streakCountText">0 Ngày</span>
       </button>
 
-      <button onclick="openShopModal()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+      <button onclick="openShopModal()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white p-1.5 md:px-3 md:py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
         <i class="fa-solid fa-bag-shopping text-pink-100 text-sm"></i> 
-        <span class="hidden sm:inline">Cửa Hàng</span>
+        <span class="hidden md:inline">Cửa Hàng</span>
       </button>
-                <button onclick="openAuthModal()" id="authBtn" class="bg-slate-700/50 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+      
+      <button onclick="openAuthModal()" id="authBtn" class="bg-slate-700/50 hover:bg-slate-700 text-white p-1.5 md:px-3 md:py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
         <i class="fa-solid fa-user text-slate-200 text-sm"></i> 
         <span class="hidden sm:inline" id="authBtnText">Đăng nhập</span>
       </button>
@@ -103,7 +111,11 @@
   <div class="flex-1 flex relative overflow-hidden">
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-sm hidden md:flex z-10 transition-colors duration-300">
+        <!-- Lớp nền mờ khi mở menu trên mobile -->
+    <div id="mobileMenuOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:sticky top-0 md:top-[60px] left-0 w-64 h-full md:h-[calc(100vh-60px)] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-2xl md:shadow-sm -translate-x-full md:translate-x-0 z-50 md:z-10 transition-transform duration-300 overflow-y-auto">
       <div class="space-y-6">
         
         <!-- LINH VẬT (GIAO DIỆN MỚI) -->
@@ -192,7 +204,7 @@
     </aside>
 
     <!-- CONTENT AREA (Giữ nguyên logic) -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto w-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+    <main class="flex-1 p-4 pb-24 md:p-8 overflow-y-auto w-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
       
       <!-- VIEW 1: SẢNH TRUNG TÂM -->
       <div id="viewHub" class="space-y-8 max-w-7xl mx-auto">
@@ -423,6 +435,33 @@
       </div>
 
     </main>
+        <!-- BOTTOM NAVIGATION BAR (Chỉ hiện trên Mobile) -->
+    <nav class="fixed bottom-0 w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 flex justify-around items-center h-16 z-40 md:hidden pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <button onclick="showView('hub')" class="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+        <i class="fa-solid fa-house text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Trang chủ</span>
+      </button>
+      
+      <button onclick="showView('files')" class="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        <i class="fa-solid fa-folder-open text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Tài liệu</span>
+      </button>
+      
+      <button onclick="openFlashcardModal()" class="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">
+        <i class="fa-solid fa-brain text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Flashcard</span>
+      </button>
+      
+      <button onclick="openDictionaryModal()" class="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+        <i class="fa-solid fa-book-open text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Từ điển</span>
+      </button>
+      
+      <button onclick="toggleMobileSidebar()" class="flex flex-col items-center justify-center w-full h-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+        <i class="fa-solid fa-bars-staggered text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Menu</span>
+      </button>
+    </nav>
   </div>
 
   <!-- MODAL CHECK BÀI VIẾT (Giao diện mới) -->
@@ -889,6 +928,20 @@
     let isLoginMode = true;
     let currentUserSession = null;
 
+        // Logic mở/đóng menu trên Mobile
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileMenuOverlay');
+      
+      if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+    
     function openAuthModal() {
       if (currentUserSession) {
         if(confirm('Bạn có muốn đăng xuất không?')) {
@@ -1175,7 +1228,13 @@
       document.getElementById('dictionaryIframe').src = '';
     }
     
-    function showView(viewName) {
+    function showView(viewName) { 
+      // Tự động đóng mobile menu nếu đang mở
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
+        toggleMobileSidebar();
+      }
+      
       document.getElementById('viewHub').classList.add('hidden');
       document.getElementById('viewFiles').classList.add('hidden');
       document.getElementById('viewDictation').classList.add('hidden');
