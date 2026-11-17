@@ -302,15 +302,15 @@
       <!-- VIEW 3 & 4 (Giữ nguyên) -->
       <div id="viewDictation" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
-            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
-          </button>
-          <span class="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full shadow-sm">🎧 Dictation Hub</span>
+          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+  <i class="fa-solid fa-arrow-left"></i> Về Sảnh
+</button>
+<span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-full shadow-sm">🎧 Dictation Hub</span>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-              <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+  <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
                 <i class="fa-solid fa-list-ul text-amber-500"></i> Bài Nghe
               </h3>
               <label class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg cursor-pointer font-bold transition shadow-sm">
@@ -318,34 +318,34 @@
                 <input type="file" id="audioUploadInput" accept="audio/*" class="hidden">
               </label>
             </div>
-            <div class="space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-slate-500">📁 Thư mục:</span>
-                <button onclick="openCreateFolderModal()" class="text-[10px] font-bold text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded-lg transition">
+            <div class="space-y-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
+  <div class="flex items-center justify-between">
+    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">📁 Thư mục:</span>
+    <button onclick="openCreateFolderModal()" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition">
                   + Tạo mới
                 </button>
               </div>
-              <select id="dictationFolderSelect" onchange="renderDictationLessonsList()" class="w-full text-xs p-2.5 border border-slate-300 rounded-xl bg-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
+              <select id="dictationFolderSelect" onchange="renderDictationLessonsList()" class="w-full text-xs p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
             </div>
             <div id="audioLessonsList" class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"></div>
           </div>
 
-          <div class="lg:col-span-2 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-            <div class="border-b pb-4">
-              <span id="activeAudioTag" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full">Đang chọn bài</span>
-              <h3 id="activeAudioTitle" class="text-xl font-bold text-slate-800 mt-2">Vui lòng chọn bài nghe bên trái</h3>
-            </div>
-            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center gap-4">
-              <audio id="dictationAudioPlayer" controls class="w-full" preload="metadata"></audio>
-              <div class="flex items-center gap-3 text-xs font-bold text-slate-600">
+          <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+  <div class="border-b dark:border-slate-700 pb-4">
+    <span id="activeAudioTag" class="text-[10px] bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-bold px-2.5 py-1 rounded-full">Đang chọn bài</span>
+    <h3 id="activeAudioTitle" class="text-xl font-bold text-slate-800 dark:text-white mt-2">Vui lòng chọn bài nghe bên trái</h3>
+  </div>
+            <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-4">
+  <audio id="dictationAudioPlayer" controls class="w-full" preload="metadata"></audio>
+  <div class="flex items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span>Tốc độ:</span>
-                <button onclick="setDictationSpeed(0.75)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg hover:bg-amber-50 transition shadow-sm">0.75x</button>
-                <button onclick="setDictationSpeed(1.0)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg hover:bg-amber-50 transition shadow-sm">1.0x</button>
+                <button onclick="setDictationSpeed(0.75)" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-amber-50 dark:hover:bg-slate-700 transition shadow-sm">0.75x</button>
+                <button onclick="setDictationSpeed(1.0)" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-amber-50 dark:hover:bg-slate-700 transition shadow-sm">1.0x</button>
               </div>
             </div>
             <div class="space-y-3">
-              <label class="text-sm font-bold text-slate-700 block">Gõ lại những gì bạn nghe được:</label>
-              <textarea id="dictationTextArea" rows="6" placeholder="Bắt đầu gõ..." class="w-full p-4 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none shadow-inner bg-slate-50 focus:bg-white transition"></textarea>
+              <label class="text-sm font-bold text-slate-700 dark:text-slate-200 block">Gõ lại những gì bạn nghe được:</label>
+<textarea id="dictationTextArea" rows="6" placeholder="Bắt đầu gõ..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
               <div class="flex justify-between items-center pt-2">
                 <button onclick="saveDictationNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-md flex items-center gap-2 active:scale-95">
                   <i class="fa-solid fa-floppy-disk"></i> Lưu Bài Chép (+10 XP)
@@ -358,14 +358,14 @@
 
       <div id="viewBooks" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between">
-          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
-            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
-          </button>
-          <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-sm">📚 Sách bổ trợ</span>
+          <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+  <i class="fa-solid fa-arrow-left"></i> Về Sảnh
+</button>
+<span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full shadow-sm">📚 Sách bổ trợ</span>
         </div>
         <div>
-          <h2 class="text-2xl font-extrabold text-slate-800">Thư Viện Sách 📚</h2>
-          <p class="text-sm font-medium text-slate-500 mt-1">Các đầu sách PDF / Word chọn lọc:</p>
+          <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white">Thư Viện Sách 📚</h2>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Các đầu sách PDF / Word chọn lọc:</p>
         </div>
         <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
       </div>
@@ -825,12 +825,12 @@
         const folderObj = folders.find(f => String(f.id) === String(file.folderId || file.folder_id || ''));
         const folderName = folderObj ? folderObj.name : 'Chung';
         return `
-          <div class="p-3 rounded-2xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition-all duration-200 flex items-center justify-between group cursor-pointer" onclick="selectDictationFile('${file.id}')">
-            <div class="flex items-center gap-3 overflow-hidden flex-1">
-              <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-play text-xs"></i></div>
-              <div class="overflow-hidden">
-                <h4 class="font-bold text-slate-700 text-sm truncate">${file.name}</h4>
-                <p class="text-[10px] text-slate-400 font-medium mt-0.5">${formatSize(file.size)} • ${folderName}</p>
+  <div class="p-3 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-slate-700 transition-all duration-200 flex items-center justify-between group cursor-pointer" onclick="selectDictationFile('${file.id}')">
+    <div class="flex items-center gap-3 overflow-hidden flex-1">
+      <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-500 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-play text-xs"></i></div>
+      <div class="overflow-hidden">
+        <h4 class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate">${file.name}</h4>
+        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">${formatSize(file.size)} • ${folderName}</p>
               </div>
             </div>
             <button onclick="event.stopPropagation(); deleteFile('${file.id}')" class="text-slate-300 hover:text-red-500 p-2 rounded-xl transition"><i class="fa-solid fa-trash text-xs"></i></button>
@@ -889,10 +889,10 @@
       const books = cloudFiles.filter(f => (f.name || '').toLowerCase().endsWith('.pdf') || (f.name || '').toLowerCase().endsWith('.docx'));
       if (books.length === 0) return grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p class="font-medium">Chưa có sách.</p></div>`;
       grid.innerHTML = books.map(b => `
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm hover:shadow-md transition">
-          <div class="flex items-center gap-3 overflow-hidden">
-            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl"><i class="fa-solid fa-book"></i></div>
-            <div class="overflow-hidden"><h4 class="font-bold text-slate-700 text-sm truncate">${b.name}</h4><p class="text-[10px] font-medium text-slate-400 mt-0.5">${formatSize(b.size)}</p></div>
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm hover:shadow-md transition">
+    <div class="flex items-center gap-3 overflow-hidden">
+      <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xl"><i class="fa-solid fa-book"></i></div>
+      <div class="overflow-hidden"><h4 class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate">${b.name}</h4><p class="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">${formatSize(b.size)}</p></div>
           </div>
           <button onclick="previewFile('${b.id}')" class="text-xs bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 shadow-sm">Đọc</button>
         </div>
