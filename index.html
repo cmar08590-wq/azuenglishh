@@ -731,6 +731,11 @@
     let currentCardIndex = 0;
     let currentPreviewRecord = null;
 
+        // Biến cho Quiz
+    let quizQuestions = [];
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+
     // Hàm hiển thị thông báo (Toast) thay cho alert
     function showToast(msg, type = 'success') {
       const toast = document.getElementById('toast');
@@ -1562,6 +1567,125 @@ function updateGamificationUI() {
 
     function changeAudioSpeed(speed) { const audio = document.getElementById('mainAudioPlayer'); if (audio) audio.playbackRate = parseFloat(speed); }
     function closePreview() { document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewBody').innerHTML = ''; }
+    
+        // ==========================================
+    // LOGIC CỦA QUIZ FLASHCARD
+    // ==========================================
+    function startQuiz() {
+      // Lấy danh sách thẻ đang dùng (Hệ thống hoặc Cá nhân)
+      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
+      
+      if (activeList.length < 4) {
+        return showToast('Cần ít nhất 4 từ vựng để tạo Quiz!', 'error');
+      }
+
+      // Trộn ngẫu nhiên danh sách và lấy tối đa 10 câu
+      const shuffled = [...activeList].sort(() => 0.5 - Math.random());
+      const selectedCards = shuffled.slice(0, 10);
+      
+      quizQuestions = selectedCards.map(card => {
+        // Tạo 3 đáp án sai từ các từ khác trong bộ thẻ
+        let wrongAnswers = activeList.filter(c => c.meaning !== card.meaning)
+                                     .sort(() => 0.5 - Math.random())
+                                     .slice(0, 3)
+                                     .map(c => c.meaning);
+        
+        // Trộn đáp án đúng và 3 đáp án sai
+        const allOptions = [...wrongAnswers, card.meaning].sort(() => 0.5 - Math.random());
+        
+        return {
+          word: card.word,
+          correctAnswer: card.meaning,
+          options: allOptions
+        };
+      });
+
+      currentQuizIndex = 0;
+      quizScore = 0;
+
+      // Đổi giao diện
+      document.getElementById('quizQuestionArea').classList.remove('hidden');
+      document.getElementById('quizResultArea').classList.add('hidden');
+      document.getElementById('quizModal').classList.remove('hidden');
+      
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      if (currentQuizIndex >= quizQuestions.length) return finishQuiz();
+
+      const q = quizQuestions[currentQuizIndex];
+      
+      // Cập nhật thanh tiến trình
+      document.getElementById('quizProgressBar').style.width = `${((currentQuizIndex) / quizQuestions.length) * 100}%`;
+      document.getElementById('quizProgressText').textContent = `${currentQuizIndex + 1}/${quizQuestions.length}`;
+      
+      // Hiển thị câu hỏi
+      document.getElementById('quizQuestionText').textContent = q.word;
+
+      // Hiển thị 4 đáp án
+      const optionsContainer = document.getElementById('quizOptionsContainer');
+      optionsContainer.innerHTML = q.options.map(opt => `
+        <button onclick="checkQuizAnswer('${opt.replace(/'/g, "\\'")}', this)" 
+                class="w-full text-left px-5 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl font-bold text-slate-700 dark:text-slate-200 transition-all active:scale-[0.98]">
+          ${opt}
+        </button>
+      `).join('');
+    }
+
+    function checkQuizAnswer(selectedText, btnElement) {
+      const q = quizQuestions[currentQuizIndex];
+      const allBtns = document.querySelectorAll('#quizOptionsContainer button');
+      
+      // Vô hiệu hóa tất cả các nút để không bấm được nữa
+      allBtns.forEach(btn => {
+        btn.disabled = true;
+        btn.classList.remove('hover:border-indigo-400', 'active:scale-[0.98]');
+      });
+
+      if (selectedText === q.correctAnswer) {
+        // Nếu chọn đúng
+        btnElement.className = "w-full text-left px-5 py-4 bg-emerald-500 border-2 border-emerald-600 text-white rounded-xl font-bold transition-all";
+        quizScore++;
+      } else {
+        // Nếu chọn sai
+        btnElement.className = "w-full text-left px-5 py-4 bg-red-500 border-2 border-red-600 text-white rounded-xl font-bold transition-all";
+        
+        // Tìm và tô xanh đáp án đúng
+        allBtns.forEach(btn => {
+          if (btn.textContent.trim() === q.correctAnswer) {
+            btn.className = "w-full text-left px-5 py-4 bg-emerald-500 border-2 border-emerald-600 text-white rounded-xl font-bold transition-all";
+          }
+        });
+      }
+
+      // Đợi 1.5 giây rồi tự động chuyển câu tiếp theo
+      setTimeout(() => {
+        currentQuizIndex++;
+        renderQuizQuestion();
+      }, 1500);
+    }
+
+    function finishQuiz() {
+      // Ẩn khu vực câu hỏi, hiện khu vực kết quả
+      document.getElementById('quizQuestionArea').classList.add('hidden');
+      document.getElementById('quizResultArea').classList.remove('hidden');
+      document.getElementById('quizProgressBar').style.width = '100%';
+      
+      // Tính điểm và XP (Mỗi câu đúng được 3 XP)
+      document.getElementById('quizScoreText').textContent = quizScore;
+      const xpEarned = quizScore * 3;
+      document.getElementById('quizXpText').textContent = xpEarned;
+      
+      if (xpEarned > 0) {
+        addXp(xpEarned);
+      }
+    }
+
+    function closeQuizModal() {
+      document.getElementById('quizModal').classList.add('hidden');
+    }
+    
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
     function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
 
@@ -1593,7 +1717,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { 
     closePreview(); closeWritingModal(); closeFlashcardModal(); 
     closeCreateFolderModal(); closeAddFlashcardModal(); closeRankModal(); closeShopModal();
-    closeAvatarPicker();
+    closeAvatarPicker(); closeQuizModal();
   } 
 });
 
