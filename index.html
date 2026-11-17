@@ -119,14 +119,7 @@
               </div>
               <span id="rankTitleText" class="inline-block text-[10px] bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-bold px-2.5 py-0.5 rounded-full mt-1 border border-amber-200 dark:border-amber-700 shadow-sm transition-colors">🥉 Hạng Đồng</span>
             </div>
-
-            <!-- Gems -->
-            <div class="w-full bg-white dark:bg-slate-700 rounded-xl py-1.5 px-3 flex items-center justify-between border border-slate-100 dark:border-slate-600 shadow-sm mt-1 transition-colors">
-              <span class="text-[11px] font-bold text-slate-500 dark:text-slate-300">Tài sản:</span>
-              <p id="gemBalanceText" class="text-xs text-pink-600 dark:text-pink-400 font-extrabold flex items-center gap-1.5">
-                <i class="fa-solid fa-gem text-pink-500 dark:text-pink-400 glow-gem"></i> <span>0</span>
-              </p>
-            </div>
+            
 
             <!-- Gems -->
             <div class="w-full bg-white rounded-xl py-1.5 px-3 flex items-center justify-between border border-slate-100 shadow-sm mt-1">
@@ -428,10 +421,10 @@
       <i class="fa-solid fa-brain text-pink-500 dark:text-pink-400"></i> Flashcards
     </h3>
         <div class="flex items-center gap-3">
-          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition">
-            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0 w-4 h-4">
-            <span>Tự đọc</span>
-          </label>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-200 cursor-pointer bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-3 py-1.5 rounded-xl transition">
+  <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0 w-4 h-4 dark:bg-slate-900 dark:border-slate-600">
+  <span>Tự đọc</span>
+</label>
           <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
             <i class="fa-solid fa-xmark text-lg"></i>
           </button>
@@ -1077,20 +1070,20 @@ function updateGamificationUI() {
       document.getElementById('flashcardProgress').style.width = `${progressPercent}%`;
 
       container.innerHTML = `
-        <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
-          <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 dark:border-slate-600 bg-gradient-to-br from-pink-50 to-white dark:from-slate-800 dark:to-slate-800 shadow-xl flex items-center justify-center p-6 text-center">
+                <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 dark:border-slate-600 bg-gradient-to-br from-pink-50 to-white dark:from-slate-800 dark:to-slate-800 shadow-xl flex items-center justify-center p-6 text-center transition-colors duration-300">
             
             <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
-              <span class="text-[11px] font-bold text-pink-400 uppercase tracking-widest mb-4">
+              <span class="text-[11px] font-bold text-pink-400 dark:text-pink-300 uppercase tracking-widest mb-4">
                 ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Từ của bạn'} • ${currentCardIndex + 1}/${activeList.length}
               </span>
               <div class="flex items-center gap-3">
-                <h2 class="text-4xl font-extrabold text-slate-800 drop-shadow-sm">${card.word}</h2>
+                <h2 class="text-4xl font-extrabold text-slate-800 dark:text-white drop-shadow-sm">${card.word}</h2>
                 <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-pink-500 hover:text-pink-700 bg-white border border-pink-200 p-3 rounded-full transition shadow-sm hover:scale-110" title="Nghe phát âm">
                   <i class="fa-solid fa-volume-high text-lg"></i>
                 </button>
               </div>
-              <span class="text-[10px] font-bold text-slate-400 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400"></i> Chạm để lật thẻ</span>
+                          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-300 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400 dark:text-pink-300"></i> Chạm để lật thẻ</span>
             </div>
 
             <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative shadow-inner">
