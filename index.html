@@ -1085,8 +1085,7 @@
       }
     }
 
-    function renderNews(article) {
-      // Hàm phụ để xóa các thẻ HTML thừa (nếu RSS trả về)
+        function renderNews(article) {
       const stripHtml = (html) => {
         let tmp = document.createElement("DIV");
         tmp.innerHTML = html;
@@ -1094,15 +1093,15 @@
       };
 
       document.getElementById('newsTitle').textContent = stripHtml(article.title_en);
-      document.getElementById('newsEnglishText').textContent = stripHtml(article.content_en);
       
-      // Hiển thị bản dịch (giữ nguyên định dạng xuống dòng nếu có)
-      document.getElementById('newsVietnameseText').innerHTML = article.content_vi.replace(/\n/g, '<br>');
+      // Hiển thị tiếng Anh, giữ lại các dấu xuống dòng
+      document.getElementById('newsEnglishText').innerHTML = stripHtml(article.content_en).replace(/\n/g, '<br><br>');
       
-      // Gắn link bài gốc
+      // Hiển thị tiếng Việt
+      document.getElementById('newsVietnameseText').innerHTML = article.content_vi.replace(/\n/g, '<br><br>');
+      
       document.getElementById('newsLink').href = article.link || '#';
 
-      // Ẩn loading, hiện nội dung
       document.getElementById('newsLoadingArea').classList.add('hidden');
       document.getElementById('newsContentArea').classList.remove('hidden');
     }
