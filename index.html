@@ -954,6 +954,30 @@ const avatarOptions = [
   { name: 'Cá voi', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f433.svg' }
 ];
 
+        // Bản đồ tọa độ căn chỉnh riêng cho từng con vật
+    const avatarOffsetConfig = {
+      'Mèo': { hatTop: '0px', glassTop: '26px', neckBottom: '2px' },
+      'Cún': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Cáo': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Gấu trúc': { hatTop: '0px', glassTop: '26px', neckBottom: '2px' },
+      'Ếch': { hatTop: '2px', glassTop: '20px', neckBottom: '2px' }, // Ếch mắt lồi cao
+      'Cú mèo': { hatTop: '-2px', glassTop: '26px', neckBottom: '2px' },
+      'Thỏ': { hatTop: '12px', glassTop: '32px', neckBottom: '2px' }, // Tai thỏ cao nên mũ phải đẩy xuống
+      'Koala': { hatTop: '0px', glassTop: '28px', neckBottom: '2px' },
+      'Hổ': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Sư tử': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Bò': { hatTop: '6px', glassTop: '32px', neckBottom: '2px' }, // Sừng bò
+      'Heo': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Khỉ': { hatTop: '2px', glassTop: '28px', neckBottom: '2px' },
+      'Cánh cụt': { hatTop: '0px', glassTop: '26px', neckBottom: '2px' },
+      'Kỳ lân': { hatTop: '10px', glassTop: '32px', neckBottom: '2px' }, // Sừng kỳ lân
+      'Bạch tuộc': { hatTop: '10px', glassTop: '34px', neckBottom: '8px' }, // Đầu tròn, cổ thấp
+      'Rùa': { hatTop: '8px', glassTop: '32px', neckBottom: '8px' },
+      'Ong': { hatTop: '2px', glassTop: '24px', neckBottom: '2px' },
+      'Bướm': { hatTop: '2px', glassTop: '24px', neckBottom: '2px' },
+      'Cá voi': { hatTop: '12px', glassTop: '34px', neckBottom: '10px' } // Cá voi không có cổ
+    };
+    
 function openAvatarPicker() {
   renderAvatarGrid();
   document.getElementById('avatarPickerModal').classList.remove('hidden');
@@ -1020,24 +1044,40 @@ function updateGamificationUI() {
   document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500 glow-gem"></i> ${userData.gems}`;
   document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi';
   
-      // Render các layer Avatar bằng ảnh SVG
+        // Render các layer Avatar bằng ảnh SVG (Có tự động căn chỉnh)
   const eq = userData.equipped || { hat: '', glasses: '', neck: '', bg: '' };
   
+  // Tìm con vật hiện tại đang dùng để lấy thông số
+  const currentAvatar = avatarOptions.find(a => a.url === userData.avatarUrl) || avatarOptions[0];
+  const offset = avatarOffsetConfig[currentAvatar.name] || avatarOffsetConfig['Mèo'];
+
   const bgImg = document.getElementById('avatarBgImg');
   if (eq.bg) { bgImg.src = eq.bg; bgImg.classList.remove('hidden'); } else { bgImg.classList.add('hidden'); }
   
   const neckImg = document.getElementById('avatarNeckImg');
-  if (eq.neck) { neckImg.src = eq.neck; neckImg.classList.remove('hidden'); } else { neckImg.classList.add('hidden'); }
+  if (eq.neck) { 
+    neckImg.src = eq.neck; 
+    neckImg.classList.remove('hidden'); 
+    neckImg.style.bottom = offset.neckBottom; // Áp dụng tọa độ cổ
+  } else { neckImg.classList.add('hidden'); }
   
   const glassesImg = document.getElementById('avatarGlassesImg');
-  if (eq.glasses) { glassesImg.src = eq.glasses; glassesImg.classList.remove('hidden'); } else { glassesImg.classList.add('hidden'); }
+  if (eq.glasses) { 
+    glassesImg.src = eq.glasses; 
+    glassesImg.classList.remove('hidden'); 
+    glassesImg.style.top = offset.glassTop; // Áp dụng tọa độ kính
+  } else { glassesImg.classList.add('hidden'); }
   
   const hatImg = document.getElementById('avatarHatImg');
-  if (eq.hat) { hatImg.src = eq.hat; hatImg.classList.remove('hidden'); } else { hatImg.classList.add('hidden'); }
+  if (eq.hat) { 
+    hatImg.src = eq.hat; 
+    hatImg.classList.remove('hidden'); 
+    hatImg.style.top = offset.hatTop; // Áp dụng tọa độ mũ
+  } else { hatImg.classList.add('hidden'); }
   
   const avatarImg = document.getElementById('avatarImg');
   if (avatarImg) avatarImg.src = userData.avatarUrl || avatarOptions[0].url;
-}
+  
     // SHOP MỚI (Giao diện đẹp)
         function openShopModal() {
       document.getElementById('shopGemText').innerHTML = `<i class="fa-solid fa-gem text-pink-200 glow-gem"></i> ${userData.gems} Gems`;
