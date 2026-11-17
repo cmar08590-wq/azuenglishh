@@ -618,11 +618,12 @@
     let cloudFiles = [];
     let currentDictationFile = null;
 
-    let userData = {
-  xp: 0, gems: 100, avatarName: 'Mochi Ham Học', 
-  avatarUrl: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
-  equippedHat: '', streakCount: 0, lastCheckIn: null
-};
+        let userData = {
+      xp: 0, gems: 100, avatarName: 'Mochi Ham Học', 
+      avatarUrl: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
+      equipped: { hat: '', glasses: '', neck: '', bg: '' }, 
+      streakCount: 0, lastCheckIn: null
+    };
 
     const shopItems = [
       { id: 'hat_grad', name: 'Mũ Cử Nhân', emoji: '🎓', price: 20 },
@@ -776,17 +777,28 @@
       }
     }
 
-    function loadUserDataLocal() {
-  const DEFAULT_AVATAR = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg';
-  userData = JSON.parse(localStorage.getItem('azu_public_user_profile')) || {
-    xp: 0, gems: 100, avatarName: 'Mochi Ham Học', avatarUrl: DEFAULT_AVATAR,
-    equippedHat: '', streakCount: 0, lastCheckIn: null
-  };
-  if (!userData.avatarUrl) userData.avatarUrl = DEFAULT_AVATAR;
-  customFlashcards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [
-    { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ' }
-  ];
-}
+        function loadUserDataLocal() {
+      const DEFAULT_AVATAR = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg';
+      let savedData = JSON.parse(localStorage.getItem('azu_public_user_profile'));
+      
+      if (savedData) {
+        userData = savedData;
+        // Nếu có dữ liệu cũ (equippedHat) thì tự động chuyển vào tủ đồ mới
+        if (!userData.equipped) {
+          userData.equipped = { hat: userData.equippedHat || '', glasses: '', neck: '', bg: '' };
+        }
+      } else {
+        userData = {
+          xp: 0, gems: 100, avatarName: 'Mochi Ham Học', avatarUrl: DEFAULT_AVATAR,
+          equipped: { hat: '', glasses: '', neck: '', bg: '' }, streakCount: 0, lastCheckIn: null
+        };
+      }
+      
+      if (!userData.avatarUrl) userData.avatarUrl = DEFAULT_AVATAR;
+      customFlashcards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [
+        { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ' }
+      ];
+    }
 
 
     function saveUserDataLocal() {
@@ -976,7 +988,10 @@ function updateGamificationUI() {
   document.getElementById('rankTitleText').textContent = rank.title;
   document.getElementById('gemBalanceText').innerHTML = `<i class="fa-solid fa-gem text-pink-500 glow-gem"></i> ${userData.gems}`;
   document.getElementById('avatarNameText').textContent = userData.avatarName || 'Mochi';
-  document.getElementById('avatarHatEmoji').textContent = userData.equippedHat || '';
+  
+  // Hiển thị mũ từ tủ đồ (nếu có)
+  document.getElementById('avatarHatEmoji').textContent = (userData.equipped && userData.equipped.hat) ? userData.equipped.hat : '';
+  
   const avatarImg = document.getElementById('avatarImg');
   if (avatarImg) avatarImg.src = userData.avatarUrl || avatarOptions[0].url;
 }
@@ -986,7 +1001,7 @@ function updateGamificationUI() {
       const container = document.getElementById('shopItemsContainer');
       container.innerHTML = shopItems.map(item => {
         const isBought = (userData.inventory || []).includes(item.id);
-        const isEquipped = userData.equippedHat === item.emoji;
+        const isEquipped = userData.equipped && userData.equipped.hat === item.emoji;
         return `
           <div class="shop-card bg-white dark:bg-slate-700 border-2 ${isEquipped ? 'border-pink-500 shadow-pink-200' : 'border-slate-100 dark:border-slate-600'} rounded-2xl p-4 flex flex-col items-center justify-between text-center gap-3 relative overflow-hidden">
             ${isEquipped ? '<div class="absolute top-0 right-0 bg-pink-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">Đang dùng</div>' : ''}
@@ -1011,7 +1026,8 @@ function updateGamificationUI() {
         userData.gems -= price;
         if (!userData.inventory) userData.inventory = [];
         userData.inventory.push(id);
-        userData.equippedHat = emoji;
+                if (!userData.equipped) userData.equipped = { hat: '', glasses: '', neck: '', bg: '' };
+        userData.equipped.hat = emoji;
         saveUserDataLocal();
         openShopModal();
         updateGamificationUI();
@@ -1021,8 +1037,9 @@ function updateGamificationUI() {
       }
     }
 
-    function equipHat(emoji) {
-      userData.equippedHat = userData.equippedHat === emoji ? '' : emoji;
+        function equipHat(emoji) {
+      if (!userData.equipped) userData.equipped = { hat: '', glasses: '', neck: '', bg: '' };
+      userData.equipped.hat = userData.equipped.hat === emoji ? '' : emoji;
       saveUserDataLocal();
       openShopModal();
       updateGamificationUI();
