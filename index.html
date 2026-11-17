@@ -54,6 +54,21 @@
     /* Toast Notification */
     .toast { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: translateY(100px); opacity: 0; transition: all 0.3s ease; }
     .toast.show { transform: translateY(0); opacity: 1; }
+
+      /* Ẩn thanh trượt cho Sidebar nhưng vẫn cho phép cuộn */
+    .hide-scrollbar::-webkit-scrollbar {
+      width: 4px; /* Làm thanh trượt siêu mỏng */
+    }
+    .hide-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(148, 163, 184, 0.3); /* Màu xám mờ */
+      border-radius: 10px;
+    }
+    .hide-scrollbar:hover::-webkit-scrollbar-thumb {
+      background-color: rgba(148, 163, 184, 0.6);
+    }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col relative transition-colors duration-300">
@@ -115,7 +130,7 @@
     <div id="mobileMenuOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed md:sticky top-0 md:top-[60px] left-0 w-64 h-full md:h-[calc(100vh-60px)] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-2xl md:shadow-sm -translate-x-full md:translate-x-0 z-50 md:z-10 transition-transform duration-300 overflow-y-auto">
+    <aside id="sidebar" class="fixed md:sticky top-0 md:top-[60px] left-0 w-64 h-full md:h-[calc(100vh-65px)] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-2xl md:shadow-sm -translate-x-full md:translate-x-0 z-50 md:z-10 transition-transform duration-300 overflow-y-auto hide-scrollbar">
       <div class="space-y-6">
         
         <!-- LINH VẬT (GIAO DIỆN MỚI) -->
