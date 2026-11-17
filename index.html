@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AZU English - Cloud Learning Hub</title>
+    <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
   tailwind.config = {
@@ -2314,6 +2316,21 @@ document.addEventListener('keydown', (e) => {
       </div>
     </div>
   </div>
+
+    <script>
+    // Đăng ký Service Worker cho PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => {
+            console.log('PWA Service Worker đã đăng ký thành công!', registration.scope);
+          })
+          .catch(err => {
+            console.log('Lỗi đăng ký PWA:', err);
+          });
+      });
+    }
+  </script>
 
 </body>
 </html>
