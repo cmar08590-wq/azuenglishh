@@ -1062,13 +1062,17 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     }
 
-    async function fetchBilingualNews() {
+        async function fetchBilingualNews() {
       try {
-        // Gọi đến Edge Function mà bạn vừa deploy
         const { data, error } = await supabaseClient.functions.invoke('fetch-bilingual-news');
         
         if (error) throw error;
         
+        // Kiểm tra xem Backend có báo lỗi bên trong không
+        if (data && data.success === false) {
+          throw new Error(data.error || "Lỗi từ máy chủ");
+        }
+
         if (data && data.success) {
           renderNews(data.article);
         } else {
@@ -1076,7 +1080,7 @@
         }
       } catch (err) {
         console.error("Lỗi lấy tin tức:", err);
-        showToast("Không thể tải tin tức lúc này. Vui lòng thử lại!", "error");
+        showToast("Không thể tải tin tức: " + err.message, "error");
         closeNewsModal();
       }
     }
