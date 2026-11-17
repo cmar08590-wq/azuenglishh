@@ -187,7 +187,7 @@
 <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">Hôm nay bạn muốn chinh phục thử thách nào?</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
 <div onclick="showView('files')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -248,32 +248,35 @@
             </div>
           </div>
 
-         <div onclick="openDictionaryModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+                   <!-- Từ Điển -->
+          <div onclick="openDictionaryModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-book-open"></i>
               </div>
               <div>
                 <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Từ Điển</h3>
-                          <div onclick="openReadingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
-            <div class="space-y-4">
-              <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors duration-300 shadow-sm">
-                <i class="fa-solid fa-book-reader"></i>
-              </div>
-              <div>
-                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Đọc Hiểu AI</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Dán đoạn văn bất kỳ, AI sẽ tự động tạo câu hỏi trắc nghiệm.</p>
-              </div>
-            </div>
-            <div class="mt-6 flex items-center text-xs font-bold text-rose-600">
-              <span>Luyện đọc ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
-            </div>
-          </div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Tra nghĩa, phiên âm, giới từ đi kèm và lưu thẳng vào Flashcards.</p>
               </div>
             </div>
             <div class="mt-6 flex items-center text-xs font-bold text-teal-600">
               <span>Tra từ ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Đọc Hiểu AI -->
+          <div onclick="openReadingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-book-reader"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Đọc Hiểu</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Dán đoạn văn bất kỳ, AI sẽ tự động tạo câu hỏi trắc nghiệm.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-rose-600">
+              <span>Luyện đọc ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
         </div>
