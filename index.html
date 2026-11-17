@@ -85,6 +85,10 @@
         <i class="fa-solid fa-bag-shopping text-pink-100 text-sm"></i> 
         <span class="hidden sm:inline">Cửa Hàng</span>
       </button>
+                <button onclick="openAuthModal()" id="authBtn" class="bg-slate-700/50 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-user text-slate-200 text-sm"></i> 
+        <span class="hidden sm:inline" id="authBtnText">Đăng nhập</span>
+      </button>
     </div>
   </header>
 
@@ -736,6 +740,38 @@
 
     </div>
   </div>
+
+    <!-- AUTH MODAL (ĐĂNG NHẬP / ĐĂNG KÝ) -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 id="authModalTitle" class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-user-circle text-indigo-500"></i> Đăng Nhập
+        </h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Email:</label>
+          <input type="email" id="authEmail" placeholder="nguyenvana@gmail.com" class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Mật khẩu:</label>
+          <input type="password" id="authPassword" placeholder="Ít nhất 6 ký tự..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
+        </div>
+        
+        <button onclick="handleAuthSubmit()" id="btnAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+          Đăng Nhập
+        </button>
+        
+        <p class="text-center text-xs font-medium text-slate-500 dark:text-slate-400 mt-4">
+          <span id="authSwitchText">Chưa có tài khoản?</span> 
+          <button onclick="toggleAuthMode()" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Đăng ký ngay</button>
+        </p>
+      </div>
+    </div>
+  </div>
   
   <!-- RANK MODAL -->
   <div id="rankModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
@@ -839,7 +875,133 @@
     const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // ==========================================
+    // LOGIC ĐĂNG NHẬP & ĐỒNG BỘ SUPABASE
+    // ==========================================
+    let isLoginMode = true;
+    let currentUserSession = null;
 
+    function openAuthModal() {
+      if (currentUserSession) {
+        if(confirm('Bạn có muốn đăng xuất không?')) {
+          supabaseClient.auth.signOut();
+        }
+        return;
+      }
+      document.getElementById('authModal').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    function toggleAuthMode() {
+      isLoginMode = !isLoginMode;
+      document.getElementById('authModalTitle').innerHTML = isLoginMode 
+        ? '<i class="fa-solid fa-user-circle text-indigo-500"></i> Đăng Nhập' 
+        : '<i class="fa-solid fa-user-plus text-emerald-500"></i> Đăng Ký';
+      document.getElementById('btnAuthSubmit').textContent = isLoginMode ? 'Đăng Nhập' : 'Tạo Tài Khoản';
+      document.getElementById('authSwitchText').textContent = isLoginMode ? 'Chưa có tài khoản?' : 'Đã có tài khoản?';
+      document.querySelector('#authModal p button').textContent = isLoginMode ? 'Đăng ký ngay' : 'Đăng nhập';
+    }
+
+    async function handleAuthSubmit() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const btn = document.getElementById('btnAuthSubmit');
+
+      if (!email || !password) return showToast('Vui lòng nhập đủ Email và Mật khẩu!', 'error');
+      if (password.length < 6) return showToast('Mật khẩu phải từ 6 ký tự!', 'error');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+
+      try {
+        if (isLoginMode) {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          showToast('Đăng nhập thành công!');
+        } else {
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          if (error) throw error;
+          showToast('Tạo tài khoản thành công! Đang đăng nhập...');
+        }
+        closeAuthModal();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = isLoginMode ? 'Đăng Nhập' : 'Tạo Tài Khoản';
+      }
+    }
+
+    // Lắng nghe trạng thái đăng nhập
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      currentUserSession = session;
+      const btnText = document.getElementById('authBtnText');
+      
+      if (session) {
+        btnText.textContent = session.user.email.split('@')[0];
+        document.getElementById('authBtn').classList.replace('bg-slate-700/50', 'bg-emerald-600');
+        await syncDataFromCloud(session.user.id);
+      } else {
+        btnText.textContent = 'Đăng nhập';
+        document.getElementById('authBtn').classList.replace('bg-emerald-600', 'bg-slate-700/50');
+      }
+    });
+
+    async function syncDataFromCloud(userId) {
+      const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
+      
+      if (data) {
+        // Nếu có dữ liệu trên mây -> Ghi đè vào máy
+        userData = {
+          xp: data.xp, gems: data.gems, avatarName: data.avatar_name,
+          avatarUrl: data.avatar_url, equipped: data.equipped,
+          inventory: data.inventory, streakCount: data.streak_count,
+          lastCheckIn: data.last_check_in
+        };
+        customFlashcards = data.custom_flashcards || [];
+        savedSentences = data.saved_sentences || [];
+        
+        // Cập nhật lại localStorage và giao diện
+        localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
+        localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
+        localStorage.setItem('azu_public_sentences', JSON.stringify(savedSentences));
+        
+        updateGamificationUI();
+        updateStreakUI();
+        renderFlashcard();
+        showToast('Đã tải dữ liệu từ đám mây!');
+      } else {
+        // Nếu chưa có dữ liệu trên mây -> Đẩy dữ liệu dưới máy lên
+        await saveDataToCloud(userId);
+      }
+    }
+
+    async function saveDataToCloud(userId) {
+      if (!userId) return; // Nếu chưa đăng nhập thì thôi
+      
+      const dbData = {
+        id: userId,
+        xp: userData.xp,
+        gems: userData.gems,
+        avatar_name: userData.avatarName,
+        avatar_url: userData.avatarUrl,
+        equipped: userData.equipped,
+        inventory: userData.inventory || [],
+        streak_count: userData.streakCount,
+        last_check_in: userData.lastCheckIn,
+        custom_flashcards: customFlashcards,
+        saved_sentences: savedSentences,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient.from('user_profiles').upsert(dbData);
+      if (error) console.error("Lỗi đồng bộ Supabase:", error);
+    }
+    
     let currentFolderId = 'all';
     let currentFilter = 'all';
     let selectedTag = null;
@@ -1049,9 +1211,15 @@
     }
 
 
-    function saveUserDataLocal() {
+        function saveUserDataLocal() {
       localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
       localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
+      localStorage.setItem('azu_public_sentences', JSON.stringify(savedSentences)); // Bổ sung lưu câu hay
+      
+      // TỰ ĐỘNG ĐỒNG BỘ LÊN MÂY NẾU ĐÃ ĐĂNG NHẬP
+      if (currentUserSession) {
+        saveDataToCloud(currentUserSession.user.id);
+      }
     }
 
     function renderDictationLessonsList() {
@@ -2121,7 +2289,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { 
     closePreview(); closeWritingModal(); closeFlashcardModal(); 
     closeCreateFolderModal(); closeAddFlashcardModal(); closeRankModal(); closeShopModal();
-    closeAvatarPicker(); closeQuizModal(); closeReadingModal(); closeSentenceModal();
+    closeAvatarPicker(); closeQuizModal(); closeReadingModal(); closeSentenceModal(); closeAuthModal();
   } 
 });
 
