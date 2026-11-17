@@ -669,6 +669,22 @@
 
     </div>
   </div>
+
+    <!-- CỬA SỔ TỪ ĐIỂN NỔI -->
+  <div id="dictionaryModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full h-[90vh] shadow-2xl flex flex-col overflow-hidden relative">
+      <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+        <h3 class="font-extrabold text-slate-800 dark:text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-teal-500"></i> Từ Điển AI
+        </h3>
+        <button onclick="closeDictionaryModal()" class="text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 p-2 rounded-xl transition active:scale-95">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <!-- Khung nhúng file dictionary.html -->
+      <iframe id="dictionaryIframe" src="" class="w-full flex-1 border-0 bg-white"></iframe>
+    </div>
+  </div>
   
     <!-- QUIZ MODAL -->
   <div id="quizModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
