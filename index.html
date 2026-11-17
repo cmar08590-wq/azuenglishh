@@ -159,8 +159,12 @@
           </button>
           
           <button onclick="openDictionaryModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-teal-50 dark:hover:bg-slate-700/50 hover:text-teal-600 dark:hover:text-white transition-all duration-200">
-  <i class="fa-solid fa-book-open w-5 text-center text-teal-500"></i> Tra Từ Điển AI
+  <i class="fa-solid fa-book-open w-5 text-center text-teal-500"></i> Tra Từ Điển
 </button>
+
+                    <button onclick="openReadingModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-slate-700/50 hover:text-rose-600 dark:hover:text-white transition-all duration-200">
+            <i class="fa-solid fa-book-reader w-5 text-center text-rose-500"></i> Luyện Đọc Hiểu
+          </button>
 
           <button onclick="showView('books')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-book-bookmark w-5 text-center text-emerald-500"></i> Sách Bổ Trợ
@@ -250,7 +254,21 @@
                 <i class="fa-solid fa-book-open"></i>
               </div>
               <div>
-                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Từ Điển AI</h3>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Từ Điển</h3>
+                          <div onclick="openReadingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-book-reader"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Đọc Hiểu AI</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Dán đoạn văn bất kỳ, AI sẽ tự động tạo câu hỏi trắc nghiệm.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-rose-600">
+              <span>Luyện đọc ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Tra nghĩa, phiên âm, giới từ đi kèm và lưu thẳng vào Flashcards.</p>
               </div>
             </div>
@@ -530,6 +548,64 @@
   </div>
 </div>
 
+    <!-- READING MODAL -->
+  <div id="readingModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative max-h-[90vh] overflow-y-auto">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-4">
+        <h3 class="font-extrabold text-slate-800 dark:text-white text-xl flex items-center gap-2">
+          <i class="fa-solid fa-book-reader text-rose-500"></i> Luyện Đọc Hiểu AI
+        </h3>
+        <button onclick="closeReadingModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-slate-600 p-2 rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Khu vực 1: Nhập văn bản -->
+      <div id="readingInputArea" class="space-y-4">
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Dán một đoạn văn tiếng Anh (khoảng 100-300 chữ) để AI tạo 3 câu hỏi trắc nghiệm cho bạn:</p>
+        <textarea id="readingInputText" rows="6" placeholder="Paste your reading text here..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
+        <button onclick="generateReadingQuiz()" id="btnGenerateReading" class="w-full bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Câu Hỏi Tự Động
+        </button>
+      </div>
+
+      <!-- Khu vực 2: Đang tải (Ẩn) -->
+      <div id="readingLoadingArea" class="hidden text-center py-12 space-y-4">
+        <i class="fa-solid fa-spinner fa-spin text-4xl text-rose-500"></i>
+        <p class="text-slate-600 dark:text-slate-300 font-bold">AI đang đọc bài và soạn câu hỏi...</p>
+        <p class="text-xs text-slate-400">Quá trình này mất khoảng 3-5 giây.</p>
+      </div>
+
+      <!-- Khu vực 3: Câu hỏi trắc nghiệm (Ẩn) -->
+      <div id="readingQuizArea" class="hidden space-y-6">
+        <div id="readingQuestionsContainer" class="space-y-6"></div>
+        <button onclick="submitReadingQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95">
+          Nộp Bài & Chấm Điểm
+        </button>
+      </div>
+
+      <!-- Khu vực 4: Kết quả (Ẩn) -->
+      <div id="readingResultArea" class="hidden text-center space-y-6 py-6">
+        <div class="w-24 h-24 bg-rose-50 dark:bg-rose-900/50 text-rose-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-4">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white">Hoàn Thành Bài Đọc!</h2>
+        <p class="text-slate-500 dark:text-slate-400 font-medium">Bạn đã trả lời đúng <span id="readingScoreText" class="text-rose-600 font-bold text-xl">0</span> / 3 câu.</p>
+        <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
+          <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-star"></i> Nhận được +<span id="readingXpText">0</span> XP
+          </p>
+        </div>
+        <button onclick="resetReadingModal()" class="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95">
+          Luyện Bài Khác
+        </button>
+      </div>
+
+    </div>
+  </div>
+  
     <!-- QUIZ MODAL -->
   <div id="quizModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative">
@@ -1684,6 +1760,35 @@ function updateGamificationUI() {
 
     function closeQuizModal() {
       document.getElementById('quizModal').classList.add('hidden');
+    }
+
+        // ==========================================
+    // LOGIC CỦA READING COMPREHENSION
+    // ==========================================
+    function openReadingModal() {
+      resetReadingModal();
+      document.getElementById('readingModal').classList.remove('hidden');
+    }
+
+    function closeReadingModal() {
+      document.getElementById('readingModal').classList.add('hidden');
+    }
+
+    function resetReadingModal() {
+      document.getElementById('readingInputText').value = '';
+      document.getElementById('readingInputArea').classList.remove('hidden');
+      document.getElementById('readingLoadingArea').classList.add('hidden');
+      document.getElementById('readingQuizArea').classList.add('hidden');
+      document.getElementById('readingResultArea').classList.add('hidden');
+    }
+
+    // Tạm thời để trống hàm này, Bước 2 sẽ viết code gọi AI
+    async function generateReadingQuiz() {
+      showToast('Tính năng gọi AI sẽ được cập nhật ở bước sau!', 'error');
+    }
+    
+    function submitReadingQuiz() {
+        // Sẽ viết ở Bước 3
     }
     
     function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
