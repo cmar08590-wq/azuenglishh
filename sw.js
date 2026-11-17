@@ -1,12 +1,10 @@
-const CACHE_NAME = 'azu-english-v1';
+const CACHE_NAME = 'azu-english-v2'; // Đã đổi tên để xóa cache cũ
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
-// Cài đặt Service Worker và lưu các file cốt lõi vào bộ nhớ tạm
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,7 +14,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Kích hoạt và dọn dẹp các cache cũ
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -32,11 +29,15 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Đánh chặn các request mạng (Ưu tiên mạng, nếu mất mạng thì lấy trong cache)
 self.addEventListener('fetch', (event) => {
+  // Bỏ qua các request không phải GET hoặc không phải HTTP/HTTPS
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
+
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    fetch(event.request).catch(async () => {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) return cachedResponse;
+      return new Response('Offline', { status: 503 });
     })
   );
 });
