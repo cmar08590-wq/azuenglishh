@@ -278,6 +278,15 @@ YÊU CẦU BẮT BUỘC:
 </div>`;
 
   try {
+    // Tạo thẻ div rỗng để chứa kết quả chạy dần
+    const aiCard = document.createElement('div');
+    aiCard.className = 'card ai-section';
+    
+    const contentDiv = document.createElement('div');
+    aiCard.appendChild(contentDiv);
+    results.appendChild(aiCard);
+
+    // Gọi API Streaming từ Supabase
     const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
       method: 'POST',
       headers: { 
@@ -288,28 +297,53 @@ YÊU CẦU BẮT BUỘC:
       body: JSON.stringify({ prompt: prompt })
     });
 
-    const data = await response.json();
-
-    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-      let aiHtml = data.candidates[0].content.parts[0].text;
-      aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
-      
-      const aiCard = document.createElement('div');
-      aiCard.className = 'card ai-section';
-      aiCard.innerHTML = aiHtml;
-
-      // Tạo nút Lưu vào Flashcards (Đã có Tailwind hỗ trợ nên sẽ rất đẹp)
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
-      saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
-      saveBtn.onclick = () => saveToFlashcard(word, aiHtml);
-
-      aiCard.appendChild(saveBtn);
-      results.appendChild(aiCard);
-    } else {
-      const errorMsg = data.error ? data.error.message : JSON.stringify(data);
-      results.innerHTML += `<div class="status error">Lỗi: ${errorMsg}</div>`;
+    if (!response.ok) {
+      throw new Error(`Lỗi HTTP: ${response.status}`);
     }
+
+    // Đọc luồng dữ liệu (Stream)
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let fullHtml = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.replace('data: ', '').trim();
+          if (dataStr === '[DONE]') continue;
+          
+          try {
+            const dataObj = JSON.parse(dataStr);
+            if (dataObj.candidates && dataObj.candidates[0].content.parts[0].text) {
+              const textChunk = dataObj.candidates[0].content.parts[0].text;
+              fullHtml += textChunk;
+              
+              // Cập nhật giao diện liên tục để tạo hiệu ứng gõ chữ
+              contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+            }
+          } catch (e) {
+            // Bỏ qua lỗi parse JSON nếu chunk bị cắt ngang
+          }
+        }
+      }
+    }
+
+    // Khi AI viết xong, làm sạch HTML và thêm nút Lưu Flashcards
+    const cleanHtml = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
+    saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
+    saveBtn.onclick = () => saveToFlashcard(word, cleanHtml);
+
+    aiCard.appendChild(saveBtn);
+
   } catch (err) {
     results.innerHTML += `<div class="status error">Lỗi kết nối AI: ${err.message}</div>`;
   }
