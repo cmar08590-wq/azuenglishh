@@ -294,21 +294,27 @@ YÊU CẦU BẮT BUỘC:
       body: JSON.stringify({ prompt: prompt })
     });
 
-    if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
+    // KIỂM TRA NẾU LÀ LỖI JSON (Không phải stream)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      contentDiv.innerHTML = `<div class="status error">Lỗi hệ thống: ${data.error || 'Không rõ nguyên nhân'}</div>`;
+      return; // Dừng lại, không chạy tiếp phần stream bên dưới
+    }
 
+    // NẾU LÀ STREAM, ĐỌC TỪ TỪ
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let fullHtml = '';
-    let buffer = ''; // Bộ đệm chống đứt gãy dữ liệu
+    let buffer = ''; 
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      
-      // Giữ lại dòng cuối cùng (có thể bị cắt ngang) vào buffer cho lần đọc sau
+      // Tách dòng hỗ trợ cả \n và \r\n
+      const lines = buffer.split(/\r?\n/);
       buffer = lines.pop(); 
 
       for (const line of lines) {
@@ -322,14 +328,12 @@ YÊU CẦU BẮT BUỘC:
               fullHtml += dataObj.candidates[0].content.parts[0].text;
               contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
             }
-          } catch (e) {
-            // Bỏ qua lỗi parse nếu dòng đó chưa hoàn chỉnh
-          }
+          } catch (e) {}
         }
       }
     }
 
-    // Xử lý nốt phần dữ liệu còn sót lại trong buffer (nếu có)
+    // Đọc nốt phần còn sót lại
     if (buffer.startsWith('data: ')) {
        try {
           const dataObj = JSON.parse(buffer.replace('data: ', '').trim());
@@ -342,19 +346,19 @@ YÊU CẦU BẮT BUỘC:
 
     const cleanHtml = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
     
-    // Nếu AI không trả về gì (do lỗi ngầm), hiển thị thông báo
-    if (!cleanHtml) {
-       contentDiv.innerHTML = '<p class="text-red-500">AI không trả về nội dung. Vui lòng thử lại.</p>';
-    } else {
+    if (cleanHtml) {
        const saveBtn = document.createElement('button');
        saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
        saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
        saveBtn.onclick = () => saveToFlashcard(word, cleanHtml);
        aiCard.appendChild(saveBtn);
+    } else {
+       // Nếu không có chữ nào hiện ra, yêu cầu xem lại Secret
+       contentDiv.innerHTML = `<div class="status error">Không nhận được chữ từ AI. Bạn hãy kiểm tra lại xem đã đặt tên Secret trên Supabase là <b>GEMINI_API_KEY</b> chưa, hoặc thử đổi model khác trong code Supabase (ví dụ: gemini-1.5-flash).</div>`;
     }
 
   } catch (err) {
-    results.innerHTML += `<div class="status error">Lỗi kết nối AI: ${err.message}</div>`;
+    results.innerHTML += `<div class="status error">Lỗi kết nối mạng: ${err.message}</div>`;
   }
 }
 
