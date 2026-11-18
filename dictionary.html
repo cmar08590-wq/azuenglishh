@@ -280,12 +280,8 @@ YÊU CẦU BẮT BUỘC:
   try {
     const aiCard = document.createElement('div');
     aiCard.className = 'card ai-section';
-    
-    // Hiển thị Loading
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'status';
-    loadingDiv.innerHTML = '<span class="loading-spinner"></span> AI đang phân tích...';
-    aiCard.appendChild(loadingDiv);
+    const contentDiv = document.createElement('div');
+    aiCard.appendChild(contentDiv);
     results.appendChild(aiCard);
 
     const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
@@ -298,35 +294,67 @@ YÊU CẦU BẮT BUỘC:
       body: JSON.stringify({ prompt: prompt })
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`Lỗi HTTP: ${response.status}`);
+    }
 
-    // Xóa Loading
-    aiCard.removeChild(loadingDiv);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let fullHtml = '';
+    let buffer = '';
 
-    // Nếu có dữ liệu trả về
-    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-      let aiHtml = data.candidates[0].content.parts[0].text;
-      aiHtml = aiHtml.replace(/```html/g, '').replace(/```/g, '').trim();
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.innerHTML = aiHtml;
-      aiCard.appendChild(contentDiv);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-      // Thêm nút Lưu Flashcards
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
-      saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
-      saveBtn.onclick = () => saveToFlashcard(word, aiHtml);
-      aiCard.appendChild(saveBtn);
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop(); 
 
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.replace('data: ', '').trim();
+          if (dataStr === '[DONE]') continue;
+          
+          try {
+            const dataObj = JSON.parse(dataStr);
+            if (dataObj.candidates && dataObj.candidates[0].content.parts[0].text) {
+              fullHtml += dataObj.candidates[0].content.parts[0].text;
+              contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+            }
+          } catch (e) {
+            // Bỏ qua lỗi parse JSON nếu chunk bị cắt ngang
+          }
+        }
+      }
+    }
+
+    // Xử lý nốt phần dữ liệu còn sót lại trong buffer
+    if (buffer.startsWith('data: ')) {
+       try {
+          const dataObj = JSON.parse(buffer.replace('data: ', '').trim());
+          if (dataObj.candidates && dataObj.candidates[0].content.parts[0].text) {
+              fullHtml += dataObj.candidates[0].content.parts[0].text;
+              contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+          }
+       } catch(e) {}
+    }
+
+    const cleanHtml = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+    
+    // CHỈ TẠO NÚT LƯU FLASHCARD MỘT LẦN DUY NHẤT SAU KHI AI VIẾT XONG
+    if (cleanHtml) {
+       const saveBtn = document.createElement('button');
+       saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
+       saveBtn.innerHTML = '<i class="fa-solid fa-plus-circle text-lg"></i> Lưu từ này vào Flashcards cá nhân';
+       saveBtn.onclick = () => saveToFlashcard(word, cleanHtml);
+       aiCard.appendChild(saveBtn);
     } else {
-      // Hiển thị lỗi chi tiết từ hệ thống
-      const errorMsg = data.error ? data.error.message : (data.error || "Không có phản hồi từ AI");
-      aiCard.innerHTML = `<div class="status error">Lỗi: ${errorMsg}</div>`;
+       contentDiv.innerHTML = '<p class="text-red-500">AI không trả về nội dung. Vui lòng thử lại.</p>';
     }
 
   } catch (err) {
-    results.innerHTML += `<div class="status error">Lỗi kết nối mạng: ${err.message}</div>`;
+    results.innerHTML += `<div class="status error">Lỗi kết nối AI: ${err.message}</div>`;
   }
 }
 
