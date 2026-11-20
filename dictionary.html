@@ -284,6 +284,8 @@ YÊU CẦU BẮT BUỘC:
     aiCard.appendChild(contentDiv);
     results.appendChild(aiCard);
 
+    contentDiv.innerHTML = '<div class="status"><span class="loading-spinner"></span> AI đang xử lý...</div>';
+
     const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
       method: 'POST',
       headers: { 
@@ -294,14 +296,18 @@ YÊU CẦU BẮT BUỘC:
       body: JSON.stringify({ prompt: prompt })
     });
 
-    if (!response.ok) {
-      throw new Error(`Lỗi HTTP: ${response.status}`);
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      contentDiv.innerHTML = `<div class="status error">${data.error || 'Lỗi không xác định'}</div>`;
+      return;
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
     let fullHtml = '';
     let buffer = '';
+    let isFirstChunk = true;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -318,31 +324,22 @@ YÊU CẦU BẮT BUỘC:
           
           try {
             const dataObj = JSON.parse(dataStr);
-            if (dataObj.candidates && dataObj.candidates[0].content.parts[0].text) {
-              fullHtml += dataObj.candidates[0].content.parts[0].text;
+            // Groq trả về choices[0].delta.content
+            if (dataObj.choices && dataObj.choices[0].delta && dataObj.choices[0].delta.content) {
+              if (isFirstChunk) {
+                contentDiv.innerHTML = '';
+                isFirstChunk = false;
+              }
+              fullHtml += dataObj.choices[0].delta.content;
               contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
             }
-          } catch (e) {
-            // Bỏ qua lỗi parse JSON nếu chunk bị cắt ngang
-          }
+          } catch (e) {}
         }
       }
     }
 
-    // Xử lý nốt phần dữ liệu còn sót lại trong buffer
-    if (buffer.startsWith('data: ')) {
-       try {
-          const dataObj = JSON.parse(buffer.replace('data: ', '').trim());
-          if (dataObj.candidates && dataObj.candidates[0].content.parts[0].text) {
-              fullHtml += dataObj.candidates[0].content.parts[0].text;
-              contentDiv.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
-          }
-       } catch(e) {}
-    }
-
     const cleanHtml = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
     
-    // CHỈ TẠO NÚT LƯU FLASHCARD MỘT LẦN DUY NHẤT SAU KHI AI VIẾT XONG
     if (cleanHtml) {
        const saveBtn = document.createElement('button');
        saveBtn.className = 'mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm w-full justify-center';
@@ -350,7 +347,7 @@ YÊU CẦU BẮT BUỘC:
        saveBtn.onclick = () => saveToFlashcard(word, cleanHtml);
        aiCard.appendChild(saveBtn);
     } else {
-       contentDiv.innerHTML = '<p class="text-red-500">AI không trả về nội dung. Vui lòng thử lại.</p>';
+       contentDiv.innerHTML = '<div class="status error">AI không trả về nội dung. Vui lòng thử lại.</div>';
     }
 
   } catch (err) {
