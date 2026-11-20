@@ -1337,46 +1337,117 @@
       document.getElementById('writingModal').classList.add('hidden');
     }
 
-    async function checkWriting() {
+        async function checkWriting() {
       const inputText = document.getElementById('writingInputText').value.trim();
       const resultContainer = document.getElementById('writingResultContainer');
       const responseBody = document.getElementById('writingResponseBody');
       const btn = document.getElementById('btnCheckWriting');
       const level = document.querySelector('input[name="writingLevel"]:checked').value;
 
-      if (!inputText) return showToast("Vui lòng nhập văn bản!", "error");
+      if (!inputText) {
+        alert("Vui lòng nhập văn bản tiếng Anh cần kiểm tra!");
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
       resultContainer.classList.remove('hidden');
-      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-6 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3"></i><br>Gia sư AI đang chấm bài...</div>';
+      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-4 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Gia sư AI đang chấm bài...</div>';
 
-      let levelInstruction = level === 'beginner' ? "Sửa lỗi cơ bản." : level === 'intermediate' ? "Sửa ngữ pháp, gợi ý từ vựng B1-B2." : "Chấm điểm IELTS, gợi ý từ Academic.";
+      let levelInstruction = level === 'beginner' ? "Người mới (A1-A2): Chỉ sửa lỗi chính tả, ngữ pháp cơ bản. Không dùng từ quá khó." 
+                         : level === 'intermediate' ? "Trung cấp (B1-B2): Sửa ngữ pháp, gợi ý từ vựng tự nhiên hơn, cách nối câu." 
+                         : "Nâng cao/IELTS (C1-C2): Chấm điểm, gợi ý từ vựng học thuật (Academic), cấu trúc phức tạp.";
 
-      const prompt = `Gia sư tiếng Anh. Kiểm tra bài viết: "${inputText}". Trình độ: ${levelInstruction}. Trả về HTML gồm: Đánh giá chung, Sửa lỗi chi tiết, Nâng cấp từ vựng, Bản viết lại.`;
+      const prompt = `Bạn là một gia sư tiếng Anh chuyên nghiệp. Hãy kiểm tra bài viết sau:
+"${inputText}"
+
+Yêu cầu dành cho trình độ: ${levelInstruction}
+
+Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không dùng markdown, không giải thích), chia thành các mục rõ ràng:
+1. <strong>Đánh giá chung:</strong> (Ước lượng trình độ CEFR hoặc điểm IELTS tương đương, nhận xét độ mạch lạc).
+2. <strong>Sửa lỗi chi tiết:</strong> (Chỉ rõ lỗi sai, giải thích tại sao sai và đưa ra từ/cụm từ sửa lại).
+3. <strong>Nâng cấp từ vựng:</strong> (Gợi ý các từ đồng nghĩa "xịn" hơn để thay thế các từ cơ bản trong bài).
+4. <strong>Bản viết lại hoàn chỉnh (Rewrite):</strong> (Viết lại toàn bộ đoạn văn sao cho tự nhiên và đúng ngữ pháp nhất).`;
 
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY
+          },
           body: JSON.stringify({ prompt: prompt })
         });
 
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-          let aiHtml = data.candidates[0].content.parts[0].text.replace(/```html/g, '').replace(/```/g, '').trim();
-          responseBody.innerHTML = aiHtml;
-          addXp(15); 
-          showToast("Đã chấm bài xong! +15 XP");
-        } else {
-          responseBody.innerHTML = `<span class="text-red-500">Lỗi AI: Không có phản hồi</span>`;
+        // Kiểm tra nếu là lỗi JSON (không phải stream)
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          responseBody.innerHTML = `<div class="text-red-500 font-bold p-4 text-center">${data.error || 'Lỗi không xác định'}</div>`;
+          return;
         }
+
+        // Đọc luồng stream từ Groq (thông qua Supabase)
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let fullHtml = '';
+        let buffer = '';
+        let isFirstChunk = true;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop(); 
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.replace('data: ', '').trim();
+              if (dataStr === '[DONE]') continue;
+              
+              try {
+                const dataObj = JSON.parse(dataStr);
+                // Groq trả về choices[0].delta.content
+                if (dataObj.choices && dataObj.choices[0].delta && dataObj.choices[0].delta.content) {
+                  if (isFirstChunk) {
+                    responseBody.innerHTML = ''; // Xóa loading khi có chữ đầu tiên
+                    isFirstChunk = false;
+                  }
+                  fullHtml += dataObj.choices[0].delta.content;
+                  responseBody.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+                }
+              } catch (e) {
+                // Bỏ qua lỗi parse JSON
+              }
+            }
+          }
+        }
+
+        // Xử lý nốt phần buffer còn sót
+        if (buffer.startsWith('data: ')) {
+          try {
+            const dataObj = JSON.parse(buffer.replace('data: ', '').trim());
+            if (dataObj.choices && dataObj.choices[0].delta && dataObj.choices[0].delta.content) {
+              fullHtml += dataObj.choices[0].delta.content;
+              responseBody.innerHTML = fullHtml.replace(/```html/g, '').replace(/```/g, '').trim();
+            }
+          } catch (e) {}
+        }
+
+        if (fullHtml.trim()) {
+          if (typeof addXp === 'function') addXp(15); // Thưởng XP
+        } else {
+          responseBody.innerHTML = `<div class="text-red-500 font-bold p-4 text-center">AI không trả về nội dung. Vui lòng thử lại.</div>`;
+        }
+
       } catch (err) {
-        responseBody.innerHTML = `<span class="text-red-500">Lỗi kết nối AI</span>`;
+        responseBody.innerHTML = `<div class="text-red-500 font-bold p-4 text-center">Lỗi kết nối AI: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích & Sửa Lỗi';
+        btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Check & Sửa Lỗi Bài Viết';
       }
     }
 
