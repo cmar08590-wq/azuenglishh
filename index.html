@@ -660,50 +660,64 @@
 
   <!-- MODAL FLASHCARDS (Giao diện mới) -->
   <div id="flashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative">
-  <div class="flex justify-between items-center">
-    <h3 class="font-extrabold text-slate-800 dark:text-white text-xl flex items-center gap-2">
-      <i class="fa-solid fa-brain text-pink-500 dark:text-pink-400"></i> Flashcards
-    </h3>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-200 cursor-pointer bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-3 py-1.5 rounded-xl transition">
-  <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0 w-4 h-4 dark:bg-slate-900 dark:border-slate-600">
-  <span>Tự đọc</span>
-</label>
-          <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
-            <i class="fa-solid fa-xmark text-lg"></i>
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative max-h-[90vh]">
+      
+      <!-- HEADER CHUNG -->
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-4">
+        <h3 class="font-extrabold text-slate-800 dark:text-white text-xl flex items-center gap-2">
+          <i class="fa-solid fa-brain text-pink-500 dark:text-pink-400"></i> Flashcards
+        </h3>
+        <button onclick="closeFlashcardModal()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- MÀN HÌNH 1: DANH SÁCH BỘ THẺ (Mặc định hiện) -->
+      <div id="deckListView" class="flex-1 overflow-y-auto custom-scrollbar space-y-4">
+        <div class="flex justify-between items-center">
+          <p class="text-sm font-medium text-slate-500">Chọn một bộ thẻ để học:</p>
+          <button onclick="openCreateDeckModal()" class="text-xs bg-pink-100 text-pink-600 hover:bg-pink-200 px-3 py-1.5 rounded-lg font-bold transition">
+            <i class="fa-solid fa-plus"></i> Tạo bộ mới
           </button>
+        </div>
+        <div id="deckContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Các bộ thẻ sẽ được render bằng JS -->
         </div>
       </div>
 
-      <div class="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl gap-1 text-sm font-bold">
-        <button onclick="switchFlashcardTab('system')" id="tabSystemBtn" class="flex-1 py-2.5 rounded-xl transition bg-white dark:bg-slate-700 text-pink-600 dark:text-pink-400 shadow-sm">
-          📌 Từ mẫu
-        </button>
-        <button onclick="switchFlashcardTab('custom')" id="tabCustomBtn" class="flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700">
-          👤 Cá nhân (<span id="customCardCount">0</span>)
-        </button>
-      </div>
+      <!-- MÀN HÌNH 2: LẬT THẺ (Ẩn lúc đầu) -->
+      <div id="cardStudyView" class="hidden flex-col flex-1">
+        <!-- Thanh công cụ trong lúc học -->
+        <div class="flex justify-between items-center mb-4">
+          <button onclick="backToDecks()" class="text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại
+          </button>
+          <span id="activeDeckName" class="text-sm font-bold text-pink-600 dark:text-pink-400">Tên bộ thẻ</span>
+          <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-200 cursor-pointer bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg">
+            <input type="checkbox" id="autoSpeechToggle" class="rounded text-pink-600 focus:ring-0 w-3 h-3">
+            <span>Tự đọc</span>
+          </label>
+        </div>
 
-      <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 shadow-inner">
-        <div id="flashcardProgress" class="bg-gradient-to-r from-pink-400 to-pink-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
-      </div>
+        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 shadow-inner mb-4">
+          <div id="flashcardProgress" class="bg-gradient-to-r from-pink-400 to-pink-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
+        </div>
 
-      <div id="flashcardContainer" class="py-2"></div>
+        <div id="flashcardContainer" class="py-2 flex-1 flex flex-col justify-center"></div>
 
-           <div class="flex justify-between items-center pt-4 border-t gap-2">
-        <div class="flex gap-2">
+        <div class="flex justify-between items-center pt-4 border-t dark:border-slate-700 gap-2 mt-auto">
           <button onclick="openAddFlashcardModal()" class="text-[11px] text-pink-600 hover:text-white font-bold flex items-center gap-1.5 bg-pink-50 hover:bg-pink-500 px-3 py-2.5 rounded-xl transition-all border border-pink-200 hover:border-pink-500 shadow-sm">
-            <i class="fa-solid fa-plus-circle"></i> Tạo thẻ
+            <i class="fa-solid fa-plus-circle"></i> Thêm từ
           </button>
           <button onclick="startQuiz()" class="text-[11px] text-indigo-600 hover:text-white font-bold flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 px-3 py-2.5 rounded-xl transition-all border border-indigo-200 hover:border-indigo-600 shadow-sm">
-            <i class="fa-solid fa-bolt"></i> Luyện Quiz
+            <i class="fa-solid fa-bolt"></i> Quiz
+          </button>
+          <button onclick="nextCard()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5 ml-auto">
+            Tiếp <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
-        <button onclick="nextCard()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5">
-          Tiếp <i class="fa-solid fa-arrow-right"></i>
-        </button>
       </div>
+
     </div>
   </div>
 
@@ -1626,10 +1640,32 @@
       { id: 's5', word: 'Pronunciation', meaning: 'Phát âm' }
     ];
 
-    let customFlashcards = [];
-    let currentFlashcardTab = 'system';
-    let currentCardIndex = 0;
-    let currentPreviewRecord = null;
+        // Cấu trúc mới: Mỗi bộ thẻ (deck) sẽ chứa 1 mảng các từ (cards)
+    let flashcardDecks = JSON.parse(localStorage.getItem('azu_flashcard_decks')) || [
+      {
+        id: 'deck_en_b1',
+        name: 'Tiếng Anh B1 - Từ Vựng',
+        lang: 'en',
+        icon: '🇬🇧',
+        cards: [
+          { id: 'c1', word: 'Metaphor', meaning: 'Phép ẩn dụ' },
+          { id: 'c2', word: 'Fluency', meaning: 'Sự lưu loát' }
+        ]
+      },
+      {
+        id: 'deck_zh_hsk1',
+        name: 'Tiếng Trung HSK 1',
+        lang: 'zh',
+        icon: '🇨🇳',
+        cards: [
+          { id: 'c3', word: '你好', meaning: 'Xin chào', pinyin: 'nǐ hǎo' },
+          { id: 'c4', word: '谢谢', meaning: 'Cảm ơn', pinyin: 'xiè xie' }
+        ]
+      }
+    ];
+    
+    // Biến lưu trạng thái bộ thẻ đang mở
+    let activeDeckId = null; 
 
         // Biến cho Quiz
     let quizQuestions = [];
@@ -1998,11 +2034,23 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         { id: 'c1', word: 'Lingo', meaning: 'Thuật ngữ' }
       ];
     }
-
+// Tự động chuyển dữ liệu Flashcards cũ sang cấu trúc Bộ thẻ
+      let oldCards = JSON.parse(localStorage.getItem('azu_public_custom_cards')) || [];
+      if (oldCards.length > 0 && flashcardDecks.length === 0) {
+         flashcardDecks.push({
+            id: 'deck_legacy',
+            name: 'Từ vựng cũ của tôi',
+            lang: 'en',
+            icon: '🕰️',
+            cards: oldCards
+         });
+         localStorage.setItem('azu_public_flashcard_decks', JSON.stringify(flashcardDecks));
+      }
 
         function saveUserDataLocal() {
       localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
       localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
+      localStorage.setItem('azu_flashcard_decks', JSON.stringify(flashcardDecks));
       localStorage.setItem('azu_public_sentences', JSON.stringify(savedSentences)); // Bổ sung lưu câu hay
       
       // TỰ ĐỘNG ĐỒNG BỘ LÊN MÂY NẾU ĐÃ ĐĂNG NHẬP
@@ -2477,28 +2525,30 @@ function updateGamificationUI() {
       renderFlashcard();
     }
 
-    function renderFlashcard() {
+        function renderFlashcard() {
       const container = document.getElementById('flashcardContainer');
-      document.getElementById('customCardCount').textContent = customFlashcards.length;
-      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
-
-      if (activeList.length === 0) {
-        container.innerHTML = `<div class="h-56 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Chưa có từ vựng nào.</p></div>`;
+      if (!activeDeckId) return;
+      
+      const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (!deck || deck.cards.length === 0) {
+        container.innerHTML = `<div class="h-56 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-50 dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+          <i class="fa-regular fa-folder-open text-4xl mb-3"></i><p>Bộ thẻ này chưa có từ vựng nào.</p>
+        </div>`;
         document.getElementById('flashcardProgress').style.width = '0%';
         return;
       }
 
-      const card = activeList[currentCardIndex];
-      const progressPercent = ((currentCardIndex + 1) / activeList.length) * 100;
+      const card = deck.cards[currentCardIndex];
+      const progressPercent = ((currentCardIndex + 1) / deck.cards.length) * 100;
       document.getElementById('flashcardProgress').style.width = `${progressPercent}%`;
 
       container.innerHTML = `
-                <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
+        <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
           <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 dark:border-slate-600 bg-gradient-to-br from-pink-50 to-white dark:from-slate-800 dark:to-slate-800 shadow-xl flex items-center justify-center p-6 text-center transition-colors duration-300">
             
             <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
               <span class="text-[11px] font-bold text-pink-400 dark:text-pink-300 uppercase tracking-widest mb-4">
-                ${currentFlashcardTab === 'system' ? 'Từ vựng mẫu' : 'Từ của bạn'} • ${currentCardIndex + 1}/${activeList.length}
+                ${currentCardIndex + 1} / ${deck.cards.length}
               </span>
               <div class="flex items-center gap-3">
                 <h2 class="text-4xl font-extrabold text-slate-800 dark:text-white drop-shadow-sm">${card.word}</h2>
@@ -2506,15 +2556,13 @@ function updateGamificationUI() {
                   <i class="fa-solid fa-volume-high text-lg"></i>
                 </button>
               </div>
-                          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-300 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400 dark:text-pink-300"></i> Chạm để lật thẻ</span>
+              <span class="text-[10px] font-bold text-slate-400 dark:text-slate-300 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400 dark:text-pink-300"></i> Chạm để lật thẻ</span>
             </div>
 
             <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative shadow-inner">
-              ${currentFlashcardTab === 'custom' ? `
-                <button onclick="event.stopPropagation(); deleteCustomCard('${card.id}')" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-2.5 rounded-full transition" title="Xóa từ này">
-                  <i class="fa-solid fa-trash text-sm"></i>
-                </button>
-              ` : ''}
+              <button onclick="event.stopPropagation(); deleteCardInDeck('${card.id}')" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-2.5 rounded-full transition" title="Xóa từ này">
+                <i class="fa-solid fa-trash text-sm"></i>
+              </button>
               <span class="text-[11px] font-bold text-pink-200 uppercase tracking-widest mb-4">Ý nghĩa</span>
               <p class="text-2xl font-bold leading-relaxed drop-shadow-md">${card.meaning}</p>
             </div>
@@ -2526,10 +2574,10 @@ function updateGamificationUI() {
       if (document.getElementById('autoSpeechToggle').checked) speakText(card.word);
     }
 
-    function nextCard() {
-      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
-      if (activeList.length > 0) {
-        currentCardIndex = (currentCardIndex + 1) % activeList.length;
+     function nextCard() {
+      const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (deck && deck.cards.length > 0) {
+        currentCardIndex = (currentCardIndex + 1) % deck.cards.length;
         addXp(2);
         renderFlashcard();
       }
@@ -2538,26 +2586,31 @@ function updateGamificationUI() {
     function openAddFlashcardModal() { document.getElementById('wordInput').value = ''; document.getElementById('meaningInput').value = ''; document.getElementById('addFlashcardModal').classList.remove('hidden'); }
     function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
 
-    function submitAddFlashcard() {
+        function submitAddFlashcard() {
       const word = document.getElementById('wordInput').value.trim();
       const meaning = document.getElementById('meaningInput').value.trim();
+      
+      if (!activeDeckId) return showToast('Chưa chọn bộ thẻ!', 'error');
+      
       if (word && meaning) {
-        customFlashcards.push({ id: 'c_' + Date.now(), word, meaning });
+        const deck = flashcardDecks.find(d => d.id === activeDeckId);
+        deck.cards.push({ id: 'c_' + Date.now(), word, meaning });
         saveUserDataLocal();
         addXp(5);
-        switchFlashcardTab('custom');
         closeAddFlashcardModal();
-        showToast('Đã thêm thẻ mới!');
+        showToast('Đã thêm thẻ mới vào bộ!');
+        renderFlashcard(); // Render lại để cập nhật số lượng
       } else {
         showToast('Vui lòng nhập đủ từ và nghĩa!', 'error');
       }
     }
 
-    function deleteCustomCard(id) {
+    function deleteCardInDeck(cardId) {
       if (confirm('Xóa từ vựng này?')) {
-        customFlashcards = customFlashcards.filter(c => c.id !== id);
+        const deck = flashcardDecks.find(d => d.id === activeDeckId);
+        deck.cards = deck.cards.filter(c => c.id !== cardId);
+        if (currentCardIndex >= deck.cards.length) currentCardIndex = Math.max(0, deck.cards.length - 1);
         saveUserDataLocal();
-        if (currentCardIndex >= customFlashcards.length) currentCardIndex = Math.max(0, customFlashcards.length - 1);
         renderFlashcard();
       }
     }
@@ -2814,16 +2867,13 @@ function updateGamificationUI() {
     // LOGIC CỦA QUIZ FLASHCARD
     // ==========================================
     function startQuiz() {
-      // Lấy danh sách thẻ đang dùng (Hệ thống hoặc Cá nhân)
-      const activeList = currentFlashcardTab === 'system' ? systemFlashcards : customFlashcards;
-      
-      if (activeList.length < 4) {
-        return showToast('Cần ít nhất 4 từ vựng để tạo Quiz!', 'error');
+      const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (!deck || deck.cards.length < 4) {
+        return showToast('Cần ít nhất 4 từ vựng trong bộ này để tạo Quiz!', 'error');
       }
 
-      // Trộn ngẫu nhiên danh sách và lấy tối đa 10 câu
+      const activeList = deck.cards; // Lấy từ vựng từ bộ thẻ hiện tại
       const shuffled = [...activeList].sort(() => 0.5 - Math.random());
-      const selectedCards = shuffled.slice(0, 10);
       
       quizQuestions = selectedCards.map(card => {
         // Tạo 3 đáp án sai từ các từ khác trong bộ thẻ
@@ -3176,45 +3226,122 @@ function updateGamificationUI() {
       }
     }
     
-    function openFlashcardModal() { currentCardIndex = 0; renderFlashcard(); document.getElementById('flashcardModal').classList.remove('hidden'); }
-    function closeFlashcardModal() { document.getElementById('flashcardModal').classList.add('hidden'); }
-
-    function getMimeType(filename) {
-      const ext = (filename || '').split('.').pop().toLowerCase();
-      if (ext === 'pdf') return 'application/pdf'; if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
-      if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext)) return 'audio/' + ext; if (['mp4', 'webm'].includes(ext)) return 'video/' + ext;
-      return 'application/octet-stream';
+        // ==========================================
+    // LOGIC HỆ THỐNG BỘ THẺ (DECK)
+    // ==========================================
+    function openFlashcardModal() {
+      backToDecks();
+      renderDecks();
+      document.getElementById('flashcardModal').classList.remove('hidden');
     }
 
-    function getFileIcon(type, name) {
-      const ext = (name || '').split('.').pop().toLowerCase();
-      if ((type && type.includes('pdf')) || ext === 'pdf') return '<i class="fa-solid fa-file-pdf text-red-500"></i>';
-      if ((type && type.includes('word')) || ['doc', 'docx'].includes(ext)) return '<i class="fa-solid fa-file-word text-blue-500"></i>';
-      if ((type && type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return '<i class="fa-solid fa-file-image text-emerald-500"></i>';
-      if ((type && type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return '<i class="fa-solid fa-file-audio text-amber-500"></i>';
-      if ((type && type.includes('video')) || ['mp4', 'webm'].includes(ext)) return '<i class="fa-solid fa-file-video text-purple-500"></i>';
-      return '<i class="fa-solid fa-file text-slate-400"></i>';
+    function closeFlashcardModal() {
+      document.getElementById('flashcardModal').classList.add('hidden');
     }
 
-    function formatSize(bytes) {
-      if (!bytes || bytes === 0) return '0 B';
-      const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    function backToDecks() {
+      activeDeckId = null;
+      document.getElementById('deckListView').classList.remove('hidden');
+      document.getElementById('cardStudyView').classList.add('hidden');
+      document.getElementById('cardStudyView').classList.remove('flex');
     }
 
-document.addEventListener('keydown', (e) => { 
-  if (e.key === 'Escape') { 
-    closePreview(); closeWritingModal(); closeFlashcardModal(); 
-    closeCreateFolderModal(); closeAddFlashcardModal(); closeRankModal(); closeShopModal();
-    closeAvatarPicker(); closeQuizModal(); closeReadingModal(); closeSentenceModal(); closeAuthModal(); closeNewsModal();
-    closeZhDictionaryModal();
-  } 
-});
+    function renderDecks() {
+      const container = document.getElementById('deckContainer');
+      
+      // Chỉ hiển thị bộ thẻ của ngôn ngữ hiện tại (EN hoặc ZH)
+      const filteredDecks = flashcardDecks.filter(d => d.lang === currentLanguage);
+
+      if (filteredDecks.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-sm bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+          <i class="fa-solid fa-layer-group text-3xl mb-2 opacity-50"></i><br>Chưa có bộ thẻ nào.
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = filteredDecks.map(deck => `
+        <div onclick="openDeck('${deck.id}')" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl cursor-pointer hover:shadow-md transition relative group">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl">${deck.icon || '📚'}</span>
+            <h4 class="font-bold text-slate-800 dark:text-white text-sm truncate">${deck.name}</h4>
+          </div>
+          <p class="text-[11px] font-bold text-slate-500">${deck.cards.length} từ vựng</p>
+          <button onclick="event.stopPropagation(); deleteDeck('${deck.id}')" class="absolute top-3 right-3 text-slate-300 hover:text-red-500 hidden group-hover:block transition">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function openDeck(deckId) {
+      activeDeckId = deckId;
+      currentCardIndex = 0;
+      const deck = flashcardDecks.find(d => d.id === deckId);
+      if (!deck) return;
+
+      document.getElementById('activeDeckName').textContent = deck.name;
+      document.getElementById('deckListView').classList.add('hidden');
+      document.getElementById('cardStudyView').classList.remove('hidden');
+      document.getElementById('cardStudyView').classList.add('flex');
+      
+      renderFlashcard();
+    }
+
+    function deleteDeck(deckId) {
+      if (confirm('Bạn có chắc muốn xóa toàn bộ bộ thẻ này?')) {
+        flashcardDecks = flashcardDecks.filter(d => d.id !== deckId);
+        saveUserDataLocal();
+        renderDecks();
+        showToast('Đã xóa bộ thẻ!');
+      }
+    }
+
+    function openCreateDeckModal() { document.getElementById('deckNameInput').value = ''; document.getElementById('createDeckModal').classList.remove('hidden'); }
+    function closeCreateDeckModal() { document.getElementById('createDeckModal').classList.add('hidden'); }
+
+    function submitCreateDeck() {
+      const name = document.getElementById('deckNameInput').value.trim();
+      if (!name) return showToast('Vui lòng nhập tên bộ thẻ!', 'error');
+      
+      const isZh = currentLanguage === 'zh';
+      
+      flashcardDecks.push({
+        id: 'deck_' + Date.now(),
+        name: name,
+        lang: isZh ? 'zh' : 'en',
+        icon: isZh ? '🇨🇳' : '🇬🇧',
+        cards: []
+      });
+      saveUserDataLocal();
+      closeCreateDeckModal();
+      renderDecks();
+      showToast('Đã tạo bộ thẻ mới!');
+    }
 
     updateThemeIcon();
     initApp();
   </script>
+
+    <!-- MODAL TẠO BỘ THẺ MỚI -->
+  <div id="createDeckModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-pink-500"></i> Tạo Bộ Thẻ Mới
+        </h3>
+        <button onclick="closeCreateDeckModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tên bộ thẻ:</label>
+        <input type="text" id="deckNameInput" placeholder="VD: TOEIC 600+, HSK 2..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeCreateDeckModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Hủy</button>
+        <button onclick="submitCreateDeck()" class="px-5 py-2 text-sm font-bold bg-pink-500 text-white hover:bg-pink-600 rounded-xl shadow-md transition active:scale-95">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+  
       <!-- MODAL TẠO THƯ MỤC MỚI (Đã sửa lỗi vị trí) -->
   <div id="createFolderModal2" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
