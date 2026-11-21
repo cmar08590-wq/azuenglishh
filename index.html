@@ -1418,6 +1418,8 @@
       }
     }
 
+    let loadedArticlesList = [];
+
     async function fetchArticleLibrary() {
       const cfg = getLangStorageConfig();
       const listContainer = document.getElementById('newsLibraryList');
@@ -1431,24 +1433,26 @@
 
         if (error) throw error;
 
-        if (data.length === 0) {
+        loadedArticlesList = data || [];
+
+        if (loadedArticlesList.length === 0) {
           listContainer.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p>Thư viện ${cfg.isZh ? 'Trung - Việt' : 'Anh - Việt'} chưa có bài nào.</p></div>`;
           return;
         }
 
-        listContainer.innerHTML = data.map(article => `
-          <div onclick="readSavedArticle('${article.id}')" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-pointer transition flex items-center justify-between gap-3 group">
+        listContainer.innerHTML = loadedArticlesList.map((article, index) => `
+          <div onclick="readSavedArticleByIndex(${index})" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-pointer transition flex items-center justify-between gap-3 group">
             <div class="flex items-center gap-4 overflow-hidden flex-1">
               <div class="w-10 h-10 shrink-0 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center text-lg">
                 <i class="fa-solid fa-file-lines"></i>
               </div>
               <div class="overflow-hidden flex-1">
-                <h4 class="font-bold text-slate-800 dark:text-white group-hover:text-orange-500 transition line-clamp-1">${article.title}</h4>
+                <h4 class="font-bold text-slate-800 dark:text-white group-hover:text-orange-500 transition line-clamp-1">${escapeHtml(article.title)}</h4>
                 <p class="text-xs text-slate-400 mt-1"><i class="fa-regular fa-clock"></i> ${new Date(article.created_at).toLocaleDateString('vi-VN')}</p>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <button onclick="event.stopPropagation(); editArticleTitle('${article.id}', '${article.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" class="text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-700 hover:bg-orange-50 dark:hover:bg-slate-600 p-2 rounded-xl transition" title="Sửa tiêu đề">
+              <button type="button" onclick="event.stopPropagation(); editArticleTitleByIndex(${index})" class="text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-700 hover:bg-orange-50 dark:hover:bg-slate-600 p-2 rounded-xl transition" title="Sửa tiêu đề">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
               <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition group-hover:translate-x-1"></i>
@@ -1460,16 +1464,28 @@
       }
     }
 
-    async function editArticleTitle(id, currentTitle) {
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function editArticleTitleByIndex(index) {
       const cfg = getLangStorageConfig();
-      const newTitle = prompt('Nhập tiêu đề mới cho bài báo:', currentTitle);
-      if (!newTitle || !newTitle.trim() || newTitle.trim() === currentTitle) return;
+      const article = loadedArticlesList[index];
+      if (!article) return;
+
+      const newTitle = prompt('Nhập tiêu đề mới cho bài báo:', article.title);
+      if (!newTitle || !newTitle.trim() || newTitle.trim() === article.title) return;
 
       try {
         const { error } = await supabaseClient
           .from(cfg.newsTable)
           .update({ title: newTitle.trim() })
-          .eq('id', id);
+          .eq('id', article.id);
 
         if (error) throw error;
         showToast('Đã cập nhật tiêu đề bài báo!');
@@ -1477,6 +1493,41 @@
       } catch (err) {
         showToast('Lỗi cập nhật tiêu đề: ' + err.message, 'error');
       }
+    }
+
+    function readSavedArticleByIndex(index) {
+      const cfg = getLangStorageConfig();
+      const data = loadedArticlesList[index];
+      if (!data) return showToast("Không tìm thấy bài viết!", "error");
+
+      document.getElementById('newsLibraryArea').classList.add('hidden');
+      document.getElementById('newsContentArea').classList.remove('hidden');
+
+      const resultContainer = document.getElementById('newsTranslationResult');
+      resultContainer.innerHTML = '';
+
+      const rawOriginal = data[cfg.newsContentCol] || '';
+      const paragraphsOrig = rawOriginal.split('\n').filter(p => p.trim().length > 0);
+      const paragraphsVi = (data.content_vi || '').split('\n\n').filter(p => p.trim().length > 0);
+
+      for (let i = 0; i < paragraphsOrig.length; i++) {
+        if (paragraphsOrig[i].trim().length < 2) continue;
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'flex flex-col md:flex-row border-b border-slate-200 dark:border-slate-700 mb-6 pb-6 group hover:bg-white dark:hover:bg-slate-800 transition-colors';
+
+        rowDiv.innerHTML = `
+          <div class="w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0">
+            ${escapeHtml(paragraphsOrig[i])}
+          </div>
+          <div class="w-full md:w-1/2 md:pl-6 text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            ${(paragraphsVi[i] || 'Đang cập nhật...').replace(/\n/g, '<br>')}
+          </div>
+        `;
+        resultContainer.appendChild(rowDiv);
+      }
+
+      document.getElementById('btnSaveArticle').style.display = 'none';
     }
     
     function openAuthModal() {
