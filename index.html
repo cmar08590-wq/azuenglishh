@@ -395,6 +395,38 @@
         <!-- KHU VỰC TIẾNG TRUNG (Ẩn mặc định) -->
         <!-- ========================================== -->
         <div id="hubChinese" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+
+          <!-- Thẻ Kho Tài Liệu Tiếng Trung -->
+          <div onclick="showView('files')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Kho Tài Liệu HSK</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Lưu trữ giáo trình HSK, file nghe MP3, tài liệu ngữ pháp tiếng Trung.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-blue-600">
+              <span>Mở thư mục</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Thẻ Sách Bổ Trợ Tiếng Trung -->
+          <div onclick="showView('books')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-book-bookmark"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Sách Bổ Trợ Tiếng Trung</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Tủ sách luyện đọc, truyện song ngữ, sách luyện thi HSK riêng biệt.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-emerald-600">
+              <span>Mở thư viện</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
           
           <!-- Thẻ Từ điển Hán Việt -->
           <div onclick="openZhDictionaryModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
@@ -712,6 +744,9 @@
           <button onclick="startQuiz()" class="text-[11px] text-indigo-600 hover:text-white font-bold flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 px-3 py-2.5 rounded-xl transition-all border border-indigo-200 hover:border-indigo-600 shadow-sm">
             <i class="fa-solid fa-bolt"></i> Quiz
           </button>
+          <button onclick="prevCard()" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-sm">
+  <i class="fa-solid fa-arrow-left"></i> Từ trước
+</button>
           <button onclick="nextCard()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-xl text-[11px] font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5 ml-auto">
             Tiếp <i class="fa-solid fa-arrow-right"></i>
           </button>
@@ -1022,7 +1057,7 @@
         
         <!-- Thanh Tiêu đề 2 Cột (Chỉ hiện trên Desktop) -->
         <div class="hidden md:flex max-w-5xl mx-auto mb-4 font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-300 dark:border-slate-700 pb-2">
-          <div class="w-1/2 pr-4 border-r border-slate-300 dark:border-slate-700"><i class="fa-solid fa-language text-indigo-500"></i> Bản gốc tiếng Anh</div>
+          <div id="newsColOriginalHeader" class="w-1/2 pr-4 border-r border-slate-300 dark:border-slate-700"><i class="fa-solid fa-language text-indigo-500"></i> Bản gốc tiếng Anh</div>
           <div class="w-1/2 pl-4"><i class="fa-solid fa-check-circle text-emerald-500"></i> Bản dịch tiếng Việt</div>
         </div>
 
@@ -1237,6 +1272,29 @@
     const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ma1C-Vbj3wI4He3ut084OA_RwA4VryR";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // CẤU HÌNH STORAGE TÁCH BIỆT EN / ZH TRÊN SUPABASE
+    // ==========================================
+    function getLangStorageConfig() {
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      return {
+        isZh: isZh,
+        // Bảng báo song ngữ
+        newsTable: isZh ? 'bilingual_articles_zh' : 'bilingual_articles',
+        newsContentCol: isZh ? 'content_zh' : 'content_en',
+        // Bảng & Bucket Kho file
+        folderTable: isZh ? 'folders_zh' : 'folders',
+        docTable: isZh ? 'documents_metadata_zh' : 'documents_metadata',
+        docBucket: isZh ? 'documents_zh' : 'documents',
+        defaultFolders: isZh
+          ? [ { id: 'zh_hsk', name: 'Giáo trình HSK' }, { id: 'zh_grammar', name: 'Ngữ pháp' }, { id: 'zh_audio', name: 'File nghe' } ]
+          : [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ],
+        // Bảng & Bucket Thư viện sách
+        bookTable: isZh ? 'books_metadata_zh' : 'books_metadata',
+        bookBucket: isZh ? 'books_zh' : 'books'
+      };
+    }
     
     // ==========================================
     // LOGIC ĐĂNG NHẬP & ĐỒNG BỘ SUPABASE
@@ -1259,14 +1317,32 @@
     }
 
         // ==========================================
-    // LOGIC ĐỌC BÁO SONG NGỮ (BILINGUAL NEWS)
+    // LOGIC ĐỌC BÁO SONG NGỮ (TÁCH BIỆT EN / ZH TRÊN SUPABASE)
     // ==========================================
-         let currentTranslatedEn = "";
+    let currentTranslatedOriginal = "";
     let currentTranslatedVi = "";
 
     function openNewsModal() {
+      const cfg = getLangStorageConfig();
+      const modalTitle = document.querySelector('#newsModal h3');
+      const inputDesc = document.querySelector('#newsInputArea p');
+      const inputBox = document.getElementById('newsInputText');
+      const colHeader = document.getElementById('newsColOriginalHeader');
+
+      if (cfg.isZh) {
+        if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-newspaper text-orange-500"></i> Đọc Báo Song Ngữ (Trung - Việt)';
+        if (inputDesc) inputDesc.textContent = 'Dán bài báo tiếng Trung của bạn vào đây. Hệ thống sẽ dịch từng đoạn sang tiếng Việt kèm Pinyin và lưu vào kho tiếng Trung riêng biệt.';
+        if (inputBox) inputBox.placeholder = 'Dán bài viết tiếng Trung vào đây...';
+        if (colHeader) colHeader.innerHTML = '<i class="fa-solid fa-language text-red-500"></i> Bản gốc tiếng Trung';
+      } else {
+        if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-newspaper text-orange-500"></i> Đọc Báo Song Ngữ (Anh - Việt)';
+        if (inputDesc) inputDesc.textContent = 'Dán bài báo tiếng Anh của bạn vào đây. Hệ thống sẽ dịch từng đoạn nhỏ, sau đó bạn có thể lưu lại vào thư viện cho mọi người cùng đọc.';
+        if (inputBox) inputBox.placeholder = 'Dán bài viết tiếng Anh vào đây...';
+        if (colHeader) colHeader.innerHTML = '<i class="fa-solid fa-language text-indigo-500"></i> Bản gốc tiếng Anh';
+      }
+
       document.getElementById('newsModal').classList.remove('hidden');
-      switchNewsTab('library'); // Mặc định mở vào thư viện cho tiện
+      switchNewsTab('library');
     }
 
     function closeNewsModal() {
@@ -1275,7 +1351,6 @@
     }
 
     function switchNewsTab(tab) {
-      // Đổi màu nút Tab
       const tabInput = document.getElementById('tabNews-input');
       const tabLib = document.getElementById('tabNews-library');
       if (tab === 'input') {
@@ -1284,10 +1359,9 @@
       } else {
         tabLib.className = "flex-1 py-2.5 rounded-xl transition bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm";
         tabInput.className = "flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700";
-        fetchArticleLibrary(); // Tải danh sách bài đã lưu
+        fetchArticleLibrary();
       }
 
-      // Ẩn/Hiện các khu vực
       document.getElementById('newsInputArea').classList.add('hidden');
       document.getElementById('newsContentArea').classList.add('hidden');
       document.getElementById('newsLibraryArea').classList.add('hidden');
@@ -1295,18 +1369,18 @@
       if (tab === 'input') {
         document.getElementById('newsInputArea').classList.remove('hidden');
         document.getElementById('newsInputText').value = '';
+        document.getElementById('btnSaveArticle').style.display = 'flex';
       } else {
         document.getElementById('newsLibraryArea').classList.remove('hidden');
       }
     }
 
-    // Dịch bài báo
     async function startNewsTranslation() {
+      const cfg = getLangStorageConfig();
       const inputText = document.getElementById('newsInputText').value.trim();
       if (!inputText) return showToast("Vui lòng dán bài báo!", "error");
 
       const paragraphs = inputText.split('\n').filter(p => p.trim().length > 0);
-      
       const btn = document.getElementById('btnTranslateNews');
       const inputArea = document.getElementById('newsInputArea');
       const contentArea = document.getElementById('newsContentArea');
@@ -1316,40 +1390,39 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
       inputArea.classList.add('hidden');
       contentArea.classList.remove('hidden');
-      resultContainer.innerHTML = ''; 
-      
-      currentTranslatedEn = inputText;
+      document.getElementById('btnSaveArticle').style.display = 'flex';
+      resultContainer.innerHTML = '';
+
+      currentTranslatedOriginal = inputText;
       currentTranslatedVi = '';
 
       for (let i = 0; i < paragraphs.length; i++) {
         const pText = paragraphs[i].trim();
-        if (pText.length < 3) continue;
+        if (pText.length < 2) continue;
 
-        // Tạo một HÀNG (Row) chứa 2 cột
         const rowDiv = document.createElement('div');
-        // Mobile thì xếp chồng (flex-col), Desktop thì chia đôi (md:flex-row)
         rowDiv.className = 'flex flex-col md:flex-row border-b border-slate-200 dark:border-slate-700 mb-6 pb-6 group hover:bg-white dark:hover:bg-slate-800 transition-colors rounded-xl md:rounded-none px-2 md:px-0';
-        
-        // Cột Tiếng Anh
-        const enDiv = document.createElement('div');
-        enDiv.className = 'w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0';
-        enDiv.textContent = pText;
-        
-        // Cột Tiếng Việt
+
+        const origDiv = document.createElement('div');
+        origDiv.className = 'w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0';
+        origDiv.textContent = pText;
+
         const viDiv = document.createElement('div');
         viDiv.className = 'w-full md:w-1/2 md:pl-6 text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed';
         viDiv.innerHTML = '<div class="flex items-center gap-2 text-orange-500 font-medium"><div class="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> Đang dịch...</div>';
 
-        rowDiv.appendChild(enDiv);
+        rowDiv.appendChild(origDiv);
         rowDiv.appendChild(viDiv);
         resultContainer.appendChild(rowDiv);
 
-        // Gọi API dịch
         try {
-          const prompt = `Dịch đoạn văn sau sang tiếng Việt. CHỈ TRẢ VỀ BẢN DỊCH. Đoạn văn: "${pText}"`;
+          const prompt = cfg.isZh
+            ? `Dịch đoạn văn tiếng Trung sau sang tiếng Việt, kèm phiên âm Pinyin ở dòng trên. Định dạng: [Pinyin]\n[Nghĩa tiếng Việt]. CHỈ TRẢ VỀ KẾT QUẢ DỊCH, không giải thích thêm. Đoạn văn: "${pText}"`
+            : `Dịch đoạn văn sau sang tiếng Việt. CHỈ TRẢ VỀ BẢN DỊCH. Đoạn văn: "${pText}"`;
+
           const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
             method: 'POST',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${SUPABASE_KEY}`,
               'apikey': SUPABASE_KEY
@@ -1367,7 +1440,7 @@
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split(/\r?\n/);
-            buffer = lines.pop(); 
+            buffer = lines.pop();
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const dataStr = line.replace('data: ', '').trim();
@@ -1381,10 +1454,10 @@
               }
             }
           }
-          
+
           const cleanText = fullText.trim() || "Không có kết quả.";
-          viDiv.innerHTML = cleanText;
-          currentTranslatedVi += cleanText + "\n\n";
+          viDiv.innerHTML = cleanText.replace(/\n/g, '<br>');
+          currentTranslatedVi += cleanText.replace(/\n+/g, ' — ') + "\n\n";
 
         } catch (error) {
           viDiv.innerHTML = `<span class="text-red-500 font-semibold">Lỗi kết nối AI.</span>`;
@@ -1396,32 +1469,29 @@
       btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Dịch';
     }
 
-    // Lưu bài báo
     async function saveArticleToLibrary() {
-      if (!currentTranslatedEn || !currentTranslatedVi) return showToast("Chưa có dữ liệu để lưu!", "error");
-      
+      const cfg = getLangStorageConfig();
+      if (!currentTranslatedOriginal || !currentTranslatedVi) return showToast("Chưa có dữ liệu để lưu!", "error");
+
       const btn = document.getElementById('btnSaveArticle');
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
-      // Lấy 50 ký tự đầu tiên làm tiêu đề
-      let title = currentTranslatedEn.substring(0, 50).trim();
-      if (currentTranslatedEn.length > 50) title += "...";
+      let title = currentTranslatedOriginal.substring(0, 50).trim();
+      if (currentTranslatedOriginal.length > 50) title += "...";
 
       try {
-        const { data, error } = await supabaseClient.from('bilingual_articles').insert([
-          { 
-            title: title, 
-            content_en: currentTranslatedEn, 
-            content_vi: currentTranslatedVi 
-          }
-        ]);
+        const payload = {
+          title: title,
+          [cfg.newsContentCol]: currentTranslatedOriginal,
+          content_vi: currentTranslatedVi
+        };
 
+        const { error } = await supabaseClient.from(cfg.newsTable).insert([payload]);
         if (error) throw error;
 
-        showToast('Đã lưu bài viết vào thư viện!');
-        switchNewsTab('library'); // Chuyển sang thư viện
-
+        showToast(cfg.isZh ? 'Đã lưu bài báo Trung - Việt!' : 'Đã lưu bài viết vào thư viện!');
+        switchNewsTab('library');
       } catch (err) {
         console.error(err);
         showToast('Lỗi khi lưu bài viết: ' + err.message, 'error');
@@ -1431,21 +1501,21 @@
       }
     }
 
-    // Tải thư viện bài đọc
     async function fetchArticleLibrary() {
+      const cfg = getLangStorageConfig();
       const listContainer = document.getElementById('newsLibraryList');
       listContainer.innerHTML = '<div class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-orange-500 mb-3"></i><p class="text-slate-500">Đang tải thư viện...</p></div>';
 
       try {
         const { data, error } = await supabaseClient
-          .from('bilingual_articles')
+          .from(cfg.newsTable)
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
 
         if (data.length === 0) {
-          listContainer.innerHTML = '<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p>Thư viện chưa có bài nào. Hãy là người đầu tiên đóng góp!</p></div>';
+          listContainer.innerHTML = `<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p>Thư viện ${cfg.isZh ? 'Trung - Việt' : 'Anh - Việt'} chưa có bài nào.</p></div>`;
           return;
         }
 
@@ -1463,46 +1533,45 @@
             <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition group-hover:translate-x-1"></i>
           </div>
         `).join('');
-
       } catch (err) {
         listContainer.innerHTML = `<div class="text-center py-10 text-red-500">Lỗi tải thư viện: ${err.message}</div>`;
       }
     }
 
-    // Đọc bài báo đã lưu
     async function readSavedArticle(id) {
-      const { data, error } = await supabaseClient.from('bilingual_articles').select('*').eq('id', id).single();
+      const cfg = getLangStorageConfig();
+      const { data, error } = await supabaseClient.from(cfg.newsTable).select('*').eq('id', id).single();
       if (error || !data) return showToast("Không tìm thấy bài viết!", "error");
 
       document.getElementById('newsLibraryArea').classList.add('hidden');
       document.getElementById('newsContentArea').classList.remove('hidden');
-      
+
       const resultContainer = document.getElementById('newsTranslationResult');
       resultContainer.innerHTML = '';
 
-      const paragraphsEn = data.content_en.split('\n').filter(p => p.trim().length > 0);
-      const paragraphsVi = data.content_vi.split('\n').filter(p => p.trim().length > 0);
+      const rawOriginal = data[cfg.newsContentCol] || '';
+      const paragraphsOrig = rawOriginal.split('\n').filter(p => p.trim().length > 0);
+      const paragraphsVi = data.content_vi.split('\n\n').filter(p => p.trim().length > 0);
 
-      for (let i = 0; i < paragraphsEn.length; i++) {
-        if (paragraphsEn[i].trim().length < 3) continue;
-        
+      for (let i = 0; i < paragraphsOrig.length; i++) {
+        if (paragraphsOrig[i].trim().length < 2) continue;
+
         const rowDiv = document.createElement('div');
         rowDiv.className = 'flex flex-col md:flex-row border-b border-slate-200 dark:border-slate-700 mb-6 pb-6 group hover:bg-white dark:hover:bg-slate-800 transition-colors';
-        
+
         rowDiv.innerHTML = `
           <div class="w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0">
-            ${paragraphsEn[i]}
+            ${paragraphsOrig[i]}
           </div>
           <div class="w-full md:w-1/2 md:pl-6 text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            ${paragraphsVi[i] || 'Đang cập nhật...'}
+            ${(paragraphsVi[i] || 'Đang cập nhật...').replace(/\n/g, '<br>')}
           </div>
         `;
         resultContainer.appendChild(rowDiv);
       }
-      
+
       document.getElementById('btnSaveArticle').style.display = 'none';
     }
-
     
     function openAuthModal() {
       if (currentUserSession) {
@@ -1737,10 +1806,17 @@
     // ==========================================
     let currentLanguage = localStorage.getItem('azu_lang') || 'en';
 
-    function toggleLanguage() {
+    async function toggleLanguage() {
       currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
       localStorage.setItem('azu_lang', currentLanguage);
       updateLanguageUI();
+
+      // Tự động tải lại Kho File, Thư mục & Sách Bổ Trợ từ bảng Supabase tương ứng
+      currentFolderId = 'all';
+      await fetchFolders();
+      await fetchCloudFiles();
+      await fetchLibraryBooks();
+
       showToast(currentLanguage === 'en' ? 'Đã chuyển sang Tiếng Anh 🇬🇧' : 'Đã chuyển sang Tiếng Trung 🇨🇳');
     }
 
@@ -2725,11 +2801,12 @@ function updateGamificationUI() {
     function closeCreateFolderModal() { document.getElementById('createFolderModal2').classList.add('hidden'); }
 
     async function submitCreateFolder() {
+      const cfg = getLangStorageConfig();
       const input = document.getElementById('folderNameInput').value.trim();
       if (input) {
         const newFolder = { id: 'f_' + Date.now(), name: input };
         folders.push(newFolder);
-        try { await supabaseClient.from('folders').insert([newFolder]); } catch(e) {}
+        try { await supabaseClient.from(cfg.folderTable).insert([newFolder]); } catch(e) {}
         addXp(10);
         renderFolders();
         renderDictationLessonsList();
@@ -2739,17 +2816,19 @@ function updateGamificationUI() {
     }
 
     async function fetchFolders() {
+      const cfg = getLangStorageConfig();
       try {
-        const { data, error } = await supabaseClient.from('folders').select('*');
+        const { data, error } = await supabaseClient.from(cfg.folderTable).select('*');
         if (!error && data && data.length > 0) folders = data;
-        else folders = [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ];
+        else folders = cfg.defaultFolders;
       } catch(e) {
-        folders = [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ];
+        folders = cfg.defaultFolders;
       }
       renderFolders();
     }
 
     async function deleteFolder(id) {
+      const cfg = getLangStorageConfig();
       const folderObj = folders.find(f => String(f.id) === String(id));
       if (confirm(`Xóa thư mục "${folderObj ? folderObj.name : ''}" và toàn bộ file bên trong?`)) {
         try {
@@ -2757,11 +2836,11 @@ function updateGamificationUI() {
           for (let file of filesInFolder) {
             if (file.url) {
               const urlParts = file.url.split('/');
-              if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from('documents').remove([urlParts[urlParts.length - 1]]);
+              if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from(cfg.docBucket).remove([urlParts[urlParts.length - 1]]);
             }
           }
-          await supabaseClient.from('documents_metadata').delete().eq('folder_id', id);
-          await supabaseClient.from('folders').delete().eq('id', id);
+          await supabaseClient.from(cfg.docTable).delete().eq('folder_id', id);
+          await supabaseClient.from(cfg.folderTable).delete().eq('id', id);
           folders = folders.filter(f => String(f.id) !== String(id));
           if (currentFolderId === id) currentFolderId = 'all';
           showToast('Đã xóa thư mục!');
@@ -2771,25 +2850,10 @@ function updateGamificationUI() {
       }
     }
 
-    function renderFolders() {
-      const navHorizontal = document.getElementById('folderNavHorizontal');
-      if (!navHorizontal) return;
-      let html = `<button onclick="switchFolder('all')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${currentFolderId === 'all' && currentFilter === 'all' && !selectedTag ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'} border">📂 Tất cả</button>`;
-      folders.forEach(f => {
-        const isActive = currentFolderId === f.id && currentFilter === 'all' && !selectedTag;
-        html += `
-  <div class="inline-flex items-center rounded-xl border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}">
-            <button onclick="switchFolder('${f.id}')" class="px-4 py-2 text-xs font-bold transition-all">📁 ${f.name}</button>
-            <button onclick="deleteFolder('${f.id}')" class="pr-3 pl-1 text-slate-400 hover:text-red-500 text-[10px] transition"><i class="fa-solid fa-xmark"></i></button>
-          </div>
-        `;
-      });
-      navHorizontal.innerHTML = html;
-    }
-
     async function fetchCloudFiles() {
+      const cfg = getLangStorageConfig();
       try {
-        const { data, error } = await supabaseClient.from('documents_metadata').select('*');
+        const { data, error } = await supabaseClient.from(cfg.docTable).select('*');
         if (!error && data) {
           cloudFiles = data.map(item => ({
             id: item.id, name: item.name, size: item.size, type: item.type,
@@ -2800,6 +2864,138 @@ function updateGamificationUI() {
           renderDictationLessonsList();
         }
       } catch(e) {}
+    }
+
+    function setupUploadListener() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput) return;
+      fileInput.addEventListener('change', async function(e) {
+        const cfg = getLangStorageConfig();
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        const targetFolder = currentFolderId === 'all' ? null : currentFolderId;
+        for (let file of files) {
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+          const { error } = await supabaseClient.storage.from(cfg.docBucket).upload(fileName, file);
+          if (error) { showToast('Lỗi tải file: ' + error.message, 'error'); continue; }
+          const { data: publicUrlData } = supabaseClient.storage.from(cfg.docBucket).getPublicUrl(fileName);
+          await supabaseClient.from(cfg.docTable).insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type || getMimeType(file.name), folder_id: targetFolder, date_added: new Date().toLocaleDateString('vi-VN'), is_starred: false, tags: [], note: '', url: publicUrlData.publicUrl }]);
+          addXp(10);
+        }
+        await fetchCloudFiles();
+        fileInput.value = '';
+        showToast('Tải file lên thành công!');
+      });
+    }
+
+    async function deleteFile(id) {
+      const cfg = getLangStorageConfig();
+      const fileToDelete = cloudFiles.find(f => String(f.id) === String(id));
+      if (!fileToDelete) return;
+      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}"?`)) {
+        try {
+          if (fileToDelete.url) {
+            const urlParts = fileToDelete.url.split('/');
+            if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from(cfg.docBucket).remove([urlParts[urlParts.length - 1]]);
+          }
+          await supabaseClient.from(cfg.docTable).delete().eq('id', id);
+          await fetchCloudFiles();
+          showToast('Đã xóa file!');
+        } catch (err) { showToast('Lỗi khi xóa file', 'error'); }
+      }
+    }
+
+    async function toggleStar(event, id) {
+      event.stopPropagation();
+      const cfg = getLangStorageConfig();
+      const file = cloudFiles.find(f => String(f.id) === String(id));
+      if (file) {
+        file.isStarred = !file.isStarred;
+        try { await supabaseClient.from(cfg.docTable).update({ is_starred: file.isStarred }).eq('id', id); } catch(e) {}
+        renderFiles();
+      }
+    }
+
+    async function saveFileNote() {
+      if (!currentPreviewRecord) return;
+      const cfg = getLangStorageConfig();
+      currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
+      try { await supabaseClient.from(cfg.docTable).update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id); showToast('Đã lưu ghi chú!'); } catch(e) {}
+    }
+
+    // --- THƯ VIỆN SÁCH TÁCH BIỆT ---
+    async function fetchLibraryBooks() {
+      const cfg = getLangStorageConfig();
+      try {
+        const { data, error } = await supabaseClient.from(cfg.bookTable).select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          libraryBooks = data;
+          renderBooksView();
+        }
+      } catch(e) { console.error(e); }
+    }
+
+    async function submitUploadBook() {
+      const cfg = getLangStorageConfig();
+      const title = document.getElementById('bookTitleInput').value.trim();
+      const author = document.getElementById('bookAuthorInput').value.trim();
+      const fileInput = document.getElementById('bookFileInput');
+      const file = fileInput.files[0];
+
+      if (!title) return showToast('Vui lòng nhập tên sách!', 'error');
+      if (!file) return showToast('Vui lòng chọn file sách!', 'error');
+
+      const btn = document.getElementById('btnUploadBook');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+
+      try {
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+        const { error: uploadError } = await supabaseClient.storage.from(cfg.bookBucket).upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabaseClient.storage.from(cfg.bookBucket).getPublicUrl(fileName);
+
+        const bookRecord = {
+          id: String(Date.now() + Math.random()),
+          title: title,
+          author: author,
+          file_url: publicUrlData.publicUrl,
+          file_name: file.name
+        };
+
+        const { error: dbError } = await supabaseClient.from(cfg.bookTable).insert([bookRecord]);
+        if (dbError) throw dbError;
+
+        showToast('Đã thêm sách vào thư viện!');
+        closeUploadBookModal();
+        fetchLibraryBooks();
+        addXp(10);
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Tải lên';
+      }
+    }
+
+    async function deleteBook(id) {
+      const cfg = getLangStorageConfig();
+      if (!confirm('Bạn có chắc muốn xóa cuốn sách này khỏi thư viện?')) return;
+      try {
+        const book = libraryBooks.find(b => b.id === id);
+        if (book && book.file_url) {
+          const urlParts = book.file_url.split('/');
+          const storageFileName = urlParts[urlParts.length - 1];
+          await supabaseClient.storage.from(cfg.bookBucket).remove([storageFileName]);
+        }
+
+        await supabaseClient.from(cfg.bookTable).delete().eq('id', id);
+        showToast('Đã xóa sách!');
+        fetchLibraryBooks();
+      } catch (err) {
+        showToast('Lỗi khi xóa sách', 'error');
+      }
     }
 
     function setupUploadListener() {
