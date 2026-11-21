@@ -2677,20 +2677,6 @@ function updateGamificationUI() {
       }
     }
       
-      // Kiểm tra ngôn ngữ hiện tại để đổi giao diện
-      if (currentLanguage === 'zh') {
-        document.getElementById('pinyinInputContainer').classList.remove('hidden');
-        document.getElementById('wordInputLabel').textContent = 'Chữ Hán:';
-        document.getElementById('wordInput').placeholder = 'VD: 你好...';
-      } else {
-        document.getElementById('pinyinInputContainer').classList.add('hidden');
-        document.getElementById('wordInputLabel').textContent = 'Từ tiếng Anh:';
-        document.getElementById('wordInput').placeholder = 'VD: Metaphor...';
-      }
-      
-      document.getElementById('addFlashcardModal').classList.remove('hidden'); 
-    }
-
     function deleteCardInDeck(cardId) {
       if (confirm('Xóa từ vựng này?')) {
         const deck = flashcardDecks.find(d => d.id === activeDeckId);
@@ -2960,6 +2946,7 @@ function updateGamificationUI() {
 
       const activeList = deck.cards; // Lấy từ vựng từ bộ thẻ hiện tại
       const shuffled = [...activeList].sort(() => 0.5 - Math.random());
+      const selectedCards = shuffled.slice(0, 10);
       
       quizQuestions = selectedCards.map(card => {
         // Tạo 3 đáp án sai từ các từ khác trong bộ thẻ
