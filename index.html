@@ -452,18 +452,25 @@
         </div>
       </div>
 
+            <!-- VIEW 4: SÁCH BỔ TRỢ (THƯ VIỆN SÁCH) -->
       <div id="viewBooks" class="space-y-6 hidden max-w-7xl mx-auto">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <button onclick="showView('hub')" class="text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
-  <i class="fa-solid fa-arrow-left"></i> Về Sảnh
-</button>
-<span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full shadow-sm">📚 Sách bổ trợ</span>
+            <i class="fa-solid fa-arrow-left"></i> Về Sảnh
+          </button>
+          <button onclick="openUploadBookModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2 active:scale-95">
+            <i class="fa-solid fa-book-medical"></i> Thêm Sách Mới
+          </button>
         </div>
+
         <div>
           <h2 class="text-2xl font-extrabold text-slate-800 dark:text-white">Thư Viện Sách 📚</h2>
-<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Các đầu sách PDF / Word chọn lọc:</p>
+          <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Tủ sách cá nhân của bạn, được lưu trữ riêng biệt.</p>
         </div>
-        <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+        <div id="bookGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <!-- Sách sẽ được render ở đây -->
+        </div>
       </div>
 
     </main>
@@ -947,7 +954,36 @@
 
   <!-- CÁC MODAL KHÁC (Giữ nguyên logic) -->
  
-
+  <!-- MODAL THÊM SÁCH MỚI -->
+  <div id="uploadBookModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+        <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-book-medical text-emerald-500"></i> Thêm Sách
+        </h3>
+        <button onclick="closeUploadBookModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tên sách:</label>
+          <input type="text" id="bookTitleInput" placeholder="VD: Harry Potter..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tác giả:</label>
+          <input type="text" id="bookAuthorInput" placeholder="VD: J.K. Rowling..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Chọn File (PDF/EPUB):</label>
+          <input type="file" id="bookFileInput" accept=".pdf,.docx,.epub" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-slate-700 dark:file:text-emerald-400">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeUploadBookModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Hủy</button>
+        <button onclick="submitUploadBook()" id="btnUploadBook" class="px-5 py-2 text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl shadow-md transition active:scale-95">Tải lên</button>
+      </div>
+    </div>
+  </div>
+  
     <div id="addFlashcardModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
@@ -1500,6 +1536,7 @@
       loadUserDataLocal();
       await fetchFolders();
       await fetchCloudFiles();
+      await fetchLibraryBooks();
       setupUploadListener();
       setupAudioDictationUploadListener();
       const searchInp = document.getElementById('searchFileInput');
@@ -1787,20 +1824,149 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       });
     }
 
+        // ==========================================
+    // LOGIC THƯ VIỆN SÁCH (TÁCH BIỆT)
+    // ==========================================
+    let libraryBooks = [];
+
+    function openUploadBookModal() {
+      document.getElementById('bookTitleInput').value = '';
+      document.getElementById('bookAuthorInput').value = '';
+      document.getElementById('bookFileInput').value = '';
+      document.getElementById('uploadBookModal').classList.remove('hidden');
+    }
+
+    function closeUploadBookModal() {
+      document.getElementById('uploadBookModal').classList.add('hidden');
+    }
+
+    async function fetchLibraryBooks() {
+      try {
+        const { data, error } = await supabaseClient.from('books_metadata').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          libraryBooks = data;
+          renderBooksView();
+        }
+      } catch(e) { console.error(e); }
+    }
+
     function renderBooksView() {
       const grid = document.getElementById('bookGrid');
-      const books = cloudFiles.filter(f => (f.name || '').toLowerCase().endsWith('.pdf') || (f.name || '').toLowerCase().endsWith('.docx'));
-      if (books.length === 0) return grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p class="font-medium">Chưa có sách.</p></div>`;
-      grid.innerHTML = books.map(b => `
-  <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm hover:shadow-md transition">
-    <div class="flex items-center gap-3 overflow-hidden">
-      <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xl"><i class="fa-solid fa-book"></i></div>
-      <div class="overflow-hidden"><h4 class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate">${b.name}</h4><p class="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">${formatSize(b.size)}</p></div>
+      if (!grid) return;
+      
+      if (libraryBooks.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400"><i class="fa-solid fa-book-open text-5xl mb-4 text-slate-300"></i><p class="font-medium text-lg">Thư viện đang trống.</p><p class="text-sm mt-1">Hãy thêm cuốn sách đầu tiên của bạn!</p></div>`;
+        return;
+      }
+
+      // Hiển thị dạng lưới ảnh bìa sách
+      grid.innerHTML = libraryBooks.map(book => {
+        // Tạo màu nền ngẫu nhiên cho bìa sách nếu không có ảnh
+        const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500', 'bg-amber-500', 'bg-indigo-500'];
+        const randomColor = colors[book.id.length % colors.length];
+        
+        return `
+          <div class="group relative flex flex-col cursor-pointer" onclick="previewBook('${book.id}')">
+            <!-- Bìa sách -->
+            <div class="w-full aspect-[3/4] ${randomColor} rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-2 relative overflow-hidden flex flex-col items-center justify-center p-4 text-center border border-white/20">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              <i class="fa-solid fa-book text-white/30 text-5xl mb-3 relative z-10"></i>
+              <h3 class="font-extrabold text-white text-sm line-clamp-3 relative z-10 leading-snug drop-shadow-md">${book.title}</h3>
+              <p class="text-[10px] text-white/80 font-medium mt-2 relative z-10">${book.author || 'Khuyết danh'}</p>
+              
+              <!-- Nút xóa (hiện khi hover) -->
+              <button onclick="event.stopPropagation(); deleteBook('${book.id}')" class="absolute top-2 right-2 bg-black/50 hover:bg-red-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
           </div>
-          <button onclick="previewFile('${b.id}')" class="text-xs bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition active:scale-95 shadow-sm">Đọc</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
+
+    async function submitUploadBook() {
+      const title = document.getElementById('bookTitleInput').value.trim();
+      const author = document.getElementById('bookAuthorInput').value.trim();
+      const fileInput = document.getElementById('bookFileInput');
+      const file = fileInput.files[0];
+      
+      if (!title) return showToast('Vui lòng nhập tên sách!', 'error');
+      if (!file) return showToast('Vui lòng chọn file sách!', 'error');
+
+      const btn = document.getElementById('btnUploadBook');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+
+      try {
+        // Upload file lên bucket 'books'
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+        const { error: uploadError } = await supabaseClient.storage.from('books').upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabaseClient.storage.from('books').getPublicUrl(fileName);
+
+        // Lưu thông tin vào bảng books_metadata
+        const bookRecord = {
+          id: String(Date.now() + Math.random()),
+          title: title,
+          author: author,
+          file_url: publicUrlData.publicUrl,
+          file_name: file.name
+        };
+
+        const { error: dbError } = await supabaseClient.from('books_metadata').insert([bookRecord]);
+        if (dbError) throw dbError;
+
+        showToast('Đã thêm sách vào thư viện!');
+        closeUploadBookModal();
+        fetchLibraryBooks(); // Tải lại lưới sách
+        addXp(10);
+
+      } catch (err) {
+        showToast('Lỗi: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Tải lên';
+      }
+    }
+
+    async function deleteBook(id) {
+      if (!confirm('Bạn có chắc muốn xóa cuốn sách này khỏi thư viện?')) return;
+      try {
+        const book = libraryBooks.find(b => b.id === id);
+        if (book && book.file_url) {
+          const urlParts = book.file_url.split('/');
+          const storageFileName = urlParts[urlParts.length - 1];
+          await supabaseClient.storage.from('books').remove([storageFileName]);
+        }
+        
+        await supabaseClient.from('books_metadata').delete().eq('id', id);
+        showToast('Đã xóa sách!');
+        fetchLibraryBooks();
+      } catch (err) {
+        showToast('Lỗi khi xóa sách', 'error');
+      }
+    }
+
+    function previewBook(id) {
+      const book = libraryBooks.find(b => b.id === id);
+      if (!book) return;
+      // Mở trình xem file PDF/Word (Tận dụng lại previewFile hiện có)
+      // Giả lập cấu trúc record để dùng lại hàm previewFile
+      const record = {
+        id: book.id, name: book.title, url: book.file_url, type: 'application/pdf', note: ''
+      };
+      currentPreviewRecord = record;
+      document.getElementById('previewTitle').textContent = record.name;
+      document.getElementById('previewIcon').innerHTML = '<i class="fa-solid fa-book text-emerald-500"></i>';
+      document.getElementById('previewDownloadBtn').href = record.url;
+      document.getElementById('fileNoteArea').value = record.note || '';
+      document.getElementById('previewSidebar').classList.remove('hidden');
+      document.getElementById('audioControlsContainer').classList.add('hidden');
+      document.getElementById('previewBody').innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+    
 const avatarOptions = [
   { name: 'Mèo', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg' },
   { name: 'Cún', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f436.svg' },
