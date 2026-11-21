@@ -2885,29 +2885,55 @@ function updateGamificationUI() {
     }
 
     let currentTtsAudio = null;
-    const ttsAudioCache = {}; // Lưu cache âm thanh trong phiên học để tiết kiệm API Groq
+    const ttsAudioCache = {};
+
+    function speakWithBrowser(text, lang) {
+      if (!('speechSynthesis' in window)) {
+        return showToast("Trình duyệt không hỗ trợ đọc văn bản!", "error");
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const targetLang = lang === 'zh' ? 'zh-CN' : 'en-US';
+      utterance.lang = targetLang;
+      utterance.rate = 0.92;
+
+      // Ưu tiên chọn giọng Neural/Natural tự nhiên có sẵn trên Edge/Chrome
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v =>
+        v.lang.toLowerCase().includes(lang === 'zh' ? 'zh' : 'en') &&
+        (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Xiaoxiao') || v.name.includes('Aria'))
+      ) || voices.find(v => v.lang.toLowerCase().includes(lang === 'zh' ? 'zh' : 'en'));
+
+      if (preferredVoice) utterance.voice = preferredVoice;
+      window.speechSynthesis.speak(utterance);
+    }
 
     async function speakText(text) {
       if (!text || !text.trim()) return;
 
-      // Dừng âm thanh đang phát (nếu có)
       if (currentTtsAudio) {
         currentTtsAudio.pause();
         currentTtsAudio = null;
       }
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      const lang = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh') ? 'zh' : 'en';
-      const cacheKey = `${lang}:${text.trim()}`;
+      // Tự nhận diện chữ Hán hoặc theo cờ ngôn ngữ đang bật
+      const hasChineseChar = /[\u4e00-\u9fa5]/.test(text);
+      const lang = (hasChineseChar || (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh')) ? 'zh' : 'en';
 
-      // 1. Nếu từ/câu này đã tạo giọng đọc rồi -> phát lại ngay lập tức từ cache
+      // Tiếng Trung: dùng thẳng giọng Neural chuẩn bản xứ của trình duyệt (0 độ trễ)
+      if (lang === 'zh') {
+        return speakWithBrowser(text.trim(), 'zh');
+      }
+
+      // Tiếng Anh: dùng Groq Orpheus AI TTS (có cache)
+      const cacheKey = `en:${text.trim()}`;
       if (ttsAudioCache[cacheKey]) {
         currentTtsAudio = new Audio(ttsAudioCache[cacheKey]);
-        currentTtsAudio.play().catch(() => {});
+        currentTtsAudio.play().catch(() => speakWithBrowser(text.trim(), 'en'));
         return;
       }
 
-      // 2. Gọi Groq TTS qua Supabase Edge Function
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
@@ -2919,26 +2945,23 @@ function updateGamificationUI() {
           body: JSON.stringify({
             action: 'tts',
             text: text.trim(),
-            lang: lang
+            lang: 'en'
           })
         });
 
-        if (!response.ok) throw new Error('Groq TTS unavailable');
+        if (!response.ok) throw new Error('Groq TTS failed');
 
         const blob = await response.blob();
+        if (blob.size < 100) throw new Error('Empty audio');
+
         const audioUrl = URL.createObjectURL(blob);
         ttsAudioCache[cacheKey] = audioUrl;
 
         currentTtsAudio = new Audio(audioUrl);
         await currentTtsAudio.play();
       } catch (err) {
-        // 3. Dự phòng tự động bằng giọng trình duyệt đúng ngôn ngữ nếu Groq lỗi
-        if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
-          utterance.rate = 0.9;
-          window.speechSynthesis.speak(utterance);
-        }
+        // Fallback ngay sang giọng trình duyệt nếu Groq chưa bật model
+        speakWithBrowser(text.trim(), 'en');
       }
     }
 
