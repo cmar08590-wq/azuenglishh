@@ -2621,21 +2621,28 @@ function updateGamificationUI() {
         <div class="flashcard cursor-pointer h-60 w-full" onclick="this.classList.toggle('flipped')">
           <div class="flashcard-inner relative w-full h-full rounded-3xl border-2 border-pink-100 dark:border-slate-600 bg-gradient-to-br from-pink-50 to-white dark:from-slate-800 dark:to-slate-800 shadow-xl flex items-center justify-center p-6 text-center transition-colors duration-300">
             
+            <!-- MẶT TRƯỚC (Có nút Xóa từ ngay góc trên bên phải) -->
             <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6">
-              <span class="text-[11px] font-bold text-pink-400 dark:text-pink-300 uppercase tracking-widest mb-4">
+              <button type="button" onclick="event.stopPropagation(); deleteCardInDeck('${card.id}')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 bg-white/80 dark:bg-slate-700/80 hover:bg-red-50 dark:hover:bg-red-900/40 p-2.5 rounded-full transition shadow-sm" title="Xóa từ này">
+                <i class="fa-solid fa-trash text-sm"></i>
+              </button>
+
+              <span class="text-[11px] font-bold text-pink-400 dark:text-pink-300 uppercase tracking-widest mb-3">
                 ${currentCardIndex + 1} / ${deck.cards.length}
               </span>
               <div class="flex items-center gap-3">
                 <h2 class="text-4xl font-extrabold text-slate-800 dark:text-white drop-shadow-sm">${card.word}</h2>
-                <button onclick="event.stopPropagation(); speakText('${card.word}')" class="text-pink-500 hover:text-pink-700 bg-white border border-pink-200 p-3 rounded-full transition shadow-sm hover:scale-110" title="Nghe phát âm">
+                <button type="button" onclick="event.stopPropagation(); speakText('${card.word.replace(/'/g, "\\'")}')" class="text-pink-500 hover:text-pink-700 bg-white border border-pink-200 p-3 rounded-full transition shadow-sm hover:scale-110" title="Nghe phát âm">
                   <i class="fa-solid fa-volume-high text-lg"></i>
                 </button>
               </div>
+              ${card.pinyin ? `<p class="text-sm font-bold text-amber-500 mt-2">${card.pinyin}</p>` : ''}
               <span class="text-[10px] font-bold text-slate-400 dark:text-slate-300 mt-6 absolute bottom-5 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer text-pink-400 dark:text-pink-300"></i> Chạm để lật thẻ</span>
             </div>
 
+            <!-- MẶT SAU -->
             <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-3xl relative shadow-inner">
-              <button onclick="event.stopPropagation(); deleteCardInDeck('${card.id}')" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-2.5 rounded-full transition" title="Xóa từ này">
+              <button type="button" onclick="event.stopPropagation(); deleteCardInDeck('${card.id}')" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-2.5 rounded-full transition" title="Xóa từ này">
                 <i class="fa-solid fa-trash text-sm"></i>
               </button>
               <span class="text-[11px] font-bold text-pink-200 uppercase tracking-widest mb-4">Ý nghĩa</span>
@@ -2727,12 +2734,22 @@ function updateGamificationUI() {
     }
       
     function deleteCardInDeck(cardId) {
-      if (confirm('Xóa từ vựng này?')) {
-        const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (!activeDeckId) return;
+      const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (!deck) return;
+
+      const targetCard = deck.cards.find(c => c.id === cardId);
+      const wordLabel = targetCard ? `"${targetCard.word}"` : 'từ vựng này';
+
+      if (confirm(`Bạn có chắc muốn xóa ${wordLabel} khỏi bộ thẻ?`)) {
         deck.cards = deck.cards.filter(c => c.id !== cardId);
-        if (currentCardIndex >= deck.cards.length) currentCardIndex = Math.max(0, deck.cards.length - 1);
+        if (currentCardIndex >= deck.cards.length) {
+          currentCardIndex = Math.max(0, deck.cards.length - 1);
+        }
         saveUserDataLocal();
         renderFlashcard();
+        renderDecks(); // Cập nhật lại số lượng từ hiển thị ngoài danh sách bộ thẻ
+        showToast('Đã xóa từ vựng khỏi bộ thẻ!');
       }
     }
 
