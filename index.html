@@ -232,16 +232,28 @@
     <!-- CONTENT AREA (Giữ nguyên logic) -->
     <main class="flex-1 p-4 pb-24 md:p-8 overflow-y-auto w-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
       
-      <!-- VIEW 1: SẢNH TRUNG TÂM -->
+            <!-- VIEW 1: SẢNH TRUNG TÂM -->
       <div id="viewHub" class="space-y-8 max-w-7xl mx-auto">
         <!-- TIÊU ĐỀ ĐỘNG (Thay đổi theo ngôn ngữ) -->
         <div class="text-center md:text-left">
           <h2 id="hubTitle" class="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Sảnh Học Tập <span class="text-indigo-600 dark:text-indigo-400">AZU English</span> 🚀</h2>
           <p id="hubSubtitle" class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">Hôm nay bạn muốn chinh phục thử thách nào?</p>
         </div>
+
+        <!-- ========================================== -->
+        <!-- KHU VỰC TIẾNG ANH (Mặc định hiển thị) -->
+        <!-- ========================================== -->
         <div id="hubEnglish" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
-<h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Kho Tài Liệu</h3>
-<p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Lưu trữ PDF, Word, Audio và tìm kiếm tài liệu nhanh chóng.</p>
+          
+          <!-- Kho Tài Liệu -->
+          <div onclick="showView('files')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Kho Tài Liệu</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Lưu trữ PDF, Word, Audio và tìm kiếm tài liệu nhanh chóng.</p>
               </div>
             </div>
             <div class="mt-6 flex items-center text-xs font-bold text-blue-600">
@@ -249,6 +261,7 @@
             </div>
           </div>
 
+          <!-- Nghe Chép Chính Tả -->
           <div onclick="showView('dictation')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -264,6 +277,7 @@
             </div>
           </div>
 
+          <!-- Check Bài Viết -->
           <div onclick="openWritingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -279,6 +293,7 @@
             </div>
           </div>
 
+          <!-- Flashcards -->
           <div onclick="openFlashcardModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pink-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -294,7 +309,7 @@
             </div>
           </div>
 
-                   <!-- Từ Điển -->
+          <!-- Từ Điển -->
           <div onclick="openDictionaryModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -310,9 +325,7 @@
             </div>
           </div>
 
-          <!-- Đọc Hiểu AI -->
-                    <!-- Sổ tay câu hay -->
-                    <!-- Đọc Báo Song Ngữ -->
+          <!-- Đọc Báo Song Ngữ -->
           <div onclick="openNewsModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -327,6 +340,8 @@
               <span>Đọc báo ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
+
+          <!-- Sổ Tay Câu Hay -->
           <div onclick="openSentenceModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-cyan-50 text-cyan-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -342,7 +357,8 @@
             </div>
           </div>
 
-                    <div onclick="showView('books')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+          <!-- Sách Bổ Trợ -->
+          <div onclick="showView('books')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm">
                 <i class="fa-solid fa-book-bookmark"></i>
@@ -356,7 +372,8 @@
               <span>Mở thư viện</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
-          
+
+          <!-- Đọc Hiểu -->
           <div onclick="openReadingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors duration-300 shadow-sm">
@@ -371,10 +388,12 @@
               <span>Luyện đọc ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
-        </div>
-      </div>
 
-  <!-- KHU VỰC TIẾNG TRUNG (Ẩn mặc định) -->
+        </div>
+
+        <!-- ========================================== -->
+        <!-- KHU VỰC TIẾNG TRUNG (Ẩn mặc định) -->
+        <!-- ========================================== -->
         <div id="hubChinese" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
           
           <!-- Thẻ Từ điển Hán Việt -->
