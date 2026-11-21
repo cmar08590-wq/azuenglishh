@@ -476,6 +476,22 @@
             </div>
           </div>
 
+          <!-- Thẻ Luyện Đọc Hiểu Tiếng Trung -->
+          <div onclick="openReadingModal()" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-book-reader"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Đọc Hiểu Tiếng Trung</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Dán đoạn văn Hán tự bất kỳ, AI tự động tạo câu hỏi trắc nghiệm.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-rose-600">
+              <span>Luyện đọc ngay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
           <!-- Thẻ Luyện Viết Chữ Hán -->
           <div onclick="showToast('Tính năng Luyện viết đang được xây dựng!', 'error')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
             <div class="space-y-4">
@@ -3337,12 +3353,30 @@ function updateGamificationUI() {
       showToast('Đã thêm vào Flashcards! +5 XP');
     }
     
+    let readingQuestions = [];
+    let currentReadingScore = 0;
+
     function openReadingModal() {
       resetReadingModal();
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      const modalTitle = document.querySelector('#readingModal h3');
+      const inputDesc = document.querySelector('#readingInputArea p');
+      const inputBox = document.getElementById('readingInputText');
+
+      if (isZh) {
+        if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-book-reader text-rose-500"></i> Luyện Đọc Hiểu (Tiếng Trung)';
+        if (inputDesc) inputDesc.textContent = 'Dán một đoạn văn tiếng Trung (khoảng 50-300 chữ Hán) để AI tạo 3 câu hỏi trắc nghiệm đọc hiểu cho bạn:';
+        if (inputBox) inputBox.placeholder = 'Dán đoạn văn tiếng Trung vào đây (VD: 昨天我去书店买了几本中文书...)';
+      } else {
+        if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-book-reader text-rose-500"></i> Luyện Đọc Hiểu (Tiếng Anh)';
+        if (inputDesc) inputDesc.textContent = 'Dán một đoạn văn tiếng Anh (khoảng 100-300 chữ) để AI tạo 3 câu hỏi trắc nghiệm cho bạn:';
+        if (inputBox) inputBox.placeholder = 'Paste your reading text here...';
+      }
+
       document.getElementById('readingModal').classList.remove('hidden');
     }
 
-        function closeReadingModal() {
+    function closeReadingModal() {
       document.getElementById('readingModal').classList.add('hidden');
     }
 
@@ -3357,107 +3391,101 @@ function updateGamificationUI() {
     }
 
     async function generateReadingQuiz() {
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
       const text = document.getElementById('readingInputText').value.trim();
-      if (text.length < 50) return showToast("Vui lòng dán đoạn văn dài hơn (ít nhất 50 chữ)!", "error");
+      const minLen = isZh ? 25 : 50; // Tiếng Trung cô đọng hơn nên chỉ cần tối thiểu 25 chữ
 
-      // Đổi trạng thái giao diện
+      if (text.length < minLen) {
+        return showToast(
+          isZh ? "Vui lòng dán đoạn văn dài hơn (ít nhất 25 chữ Hán)!" : "Vui lòng dán đoạn văn dài hơn (ít nhất 50 chữ)!",
+          "error"
+        );
+      }
+
       document.getElementById('readingInputArea').classList.add('hidden');
       document.getElementById('readingLoadingArea').classList.remove('hidden');
       document.getElementById('readingResultArea').classList.add('hidden');
       document.getElementById('readingQuizArea').classList.add('hidden');
 
-      const prompt = `Read the following English text:\n\n"${text}"\n\nCreate exactly 3 multiple-choice questions based on this text to test reading comprehension. 
-      Return ONLY a valid JSON array in this exact format, with no other text or markdown:
-      [
-        {
-          "question": "Question text here?",
-          "options": ["Option A", "Option B", "Option C", "Option D"],
-          "correct": 0 
-        }
-      ]
-      Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct option.`;
+      const prompt = isZh
+        ? `Đọc đoạn văn tiếng Trung sau:\n\n"${text}"\n\nTạo chính xác 3 câu hỏi trắc nghiệm đọc hiểu dựa trên nội dung đoạn văn này (câu hỏi và 4 đáp án viết bằng tiếng Trung kèm Pinyin hoặc tiếng Việt rõ ràng).
+Chỉ trả về DUY NHẤT một mảng JSON hợp lệ theo đúng cấu trúc sau, không kèm văn bản giải thích hay markdown:
+[
+  {
+    "question": "Nội dung câu hỏi?",
+    "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+    "correct": 0
+  }
+]
+Lưu ý: "correct" là chỉ số (0, 1, 2 hoặc 3) của đáp án đúng.`
+        : `Read the following English text:\n\n"${text}"\n\nCreate exactly 3 multiple-choice questions based on this text to test reading comprehension. 
+Return ONLY a valid JSON array in this exact format, with no other text or markdown:
+[
+  {
+    "question": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct": 0 
+  }
+]
+Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct option.`;
 
       try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY
+          },
           body: JSON.stringify({ prompt: prompt })
         });
 
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-          let jsonString = data.candidates[0].content.parts[0].text;
-          // Dọn dẹp các ký tự thừa của AI (nếu có)
-          jsonString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
-          
-          // Tìm mảng JSON trong chuỗi trả về
-          const startIndex = jsonString.indexOf('[');
-          const endIndex = jsonString.lastIndexOf(']') + 1;
-          if (startIndex !== -1 && endIndex !== -1) {
-            jsonString = jsonString.substring(startIndex, endIndex);
-          }
+        const rawText = await response.text();
+        let aiText = "";
 
-          readingQuestions = JSON.parse(jsonString);
-          renderReadingQuestions();
+        // Xử lý cả 2 trường hợp: Groq trả về luồng stream (data: ...) hoặc JSON thường
+        if (rawText.includes('data: ')) {
+          const lines = rawText.split(/\r?\n/);
+          for (const line of lines) {
+            if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+              try {
+                const parsed = JSON.parse(line.replace('data: ', '').trim());
+                if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                  aiText += parsed.choices[0].delta.content;
+                } else if (parsed.choices && parsed.choices[0]?.message?.content) {
+                  aiText += parsed.choices[0].message.content;
+                }
+              } catch (e) {}
+            }
+          }
         } else {
-          showToast("AI không thể tạo câu hỏi lúc này!", "error");
-          resetReadingModal();
+          const data = JSON.parse(rawText);
+          if (data.choices && data.choices[0]?.message?.content) {
+            aiText = data.choices[0].message.content;
+          } else if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            aiText = data.candidates[0].content.parts[0].text;
+          }
         }
+
+        if (!aiText) {
+          showToast("AI không thể tạo câu hỏi lúc này!", "error");
+          return resetReadingModal();
+        }
+
+        // Lọc lấy đúng mảng JSON [...]
+        let jsonString = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const startIndex = jsonString.indexOf('[');
+        const endIndex = jsonString.lastIndexOf(']') + 1;
+        if (startIndex !== -1 && endIndex > startIndex) {
+          jsonString = jsonString.substring(startIndex, endIndex);
+        }
+
+        readingQuestions = JSON.parse(jsonString);
+        renderReadingQuestions();
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi tạo câu hỏi đọc hiểu:", err);
         showToast("Lỗi phân tích dữ liệu từ AI. Vui lòng thử lại!", "error");
         resetReadingModal();
-      }
-    }
-
-    function renderReadingQuestions() {
-      document.getElementById('readingLoadingArea').classList.add('hidden');
-      document.getElementById('readingQuizArea').classList.remove('hidden');
-      
-      const container = document.getElementById('readingQuestionsContainer');
-      container.innerHTML = readingQuestions.map((q, qIndex) => `
-        <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <h4 class="font-bold text-slate-800 dark:text-white mb-3">Câu ${qIndex + 1}: ${q.question}</h4>
-          <div class="space-y-2">
-            ${q.options.map((opt, oIndex) => `
-              <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-rose-50 dark:hover:bg-slate-700 transition">
-                <input type="radio" name="q_${qIndex}" value="${oIndex}" class="w-4 h-4 text-rose-500 focus:ring-rose-500">
-                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function submitReadingQuiz() {
-      let score = 0;
-      let allAnswered = true;
-
-      readingQuestions.forEach((q, qIndex) => {
-        const selected = document.querySelector(`input[name="q_${qIndex}"]:checked`);
-        if (!selected) {
-          allAnswered = false;
-        } else if (parseInt(selected.value) === q.correct) {
-          score++;
-        }
-      });
-
-      if (!allAnswered) {
-        return showToast("Vui lòng trả lời tất cả các câu hỏi!", "error");
-      }
-
-      // Hiển thị kết quả
-      document.getElementById('readingQuizArea').classList.add('hidden');
-      document.getElementById('readingResultArea').classList.remove('hidden');
-      
-      document.getElementById('readingScoreText').textContent = score;
-      const xpEarned = score * 5; // Mỗi câu đúng được 5 XP
-      document.getElementById('readingXpText').textContent = xpEarned;
-
-      if (xpEarned > 0) {
-        addXp(xpEarned);
       }
     }
     
