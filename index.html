@@ -1040,12 +1040,12 @@
         // ==========================================
     // LOGIC ĐỌC BÁO SONG NGỮ (BILINGUAL NEWS)
     // ==========================================
-        function openNewsModal() {
+         let currentTranslatedEn = "";
+    let currentTranslatedVi = "";
+
+    function openNewsModal() {
       document.getElementById('newsModal').classList.remove('hidden');
-      document.getElementById('newsInputArea').classList.remove('hidden');
-      document.getElementById('newsContentArea').classList.add('hidden');
-      document.getElementById('newsInputText').value = '';
-      document.getElementById('newsTranslationResult').innerHTML = '';
+      switchNewsTab('library'); // Mặc định mở vào thư viện cho tiện
     }
 
     function closeNewsModal() {
@@ -1053,19 +1053,37 @@
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     }
 
-    function resetNewsModal() {
-      document.getElementById('newsInputArea').classList.remove('hidden');
-      document.getElementById('newsContentArea').classList.add('hidden');
-    }
-
-    async function startNewsTranslation() {
-      const inputText = document.getElementById('newsInputText').value.trim();
-      if (!inputText) {
-        showToast("Vui lòng dán bài báo tiếng Anh vào khung!", "error");
-        return;
+    function switchNewsTab(tab) {
+      // Đổi màu nút Tab
+      const tabInput = document.getElementById('tabNews-input');
+      const tabLib = document.getElementById('tabNews-library');
+      if (tab === 'input') {
+        tabInput.className = "flex-1 py-2.5 rounded-xl transition bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm";
+        tabLib.className = "flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700";
+      } else {
+        tabLib.className = "flex-1 py-2.5 rounded-xl transition bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm";
+        tabInput.className = "flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700";
+        fetchArticleLibrary(); // Tải danh sách bài đã lưu
       }
 
-      // Chia văn bản thành các đoạn nhỏ dựa vào dấu xuống dòng
+      // Ẩn/Hiện các khu vực
+      document.getElementById('newsInputArea').classList.add('hidden');
+      document.getElementById('newsContentArea').classList.add('hidden');
+      document.getElementById('newsLibraryArea').classList.add('hidden');
+
+      if (tab === 'input') {
+        document.getElementById('newsInputArea').classList.remove('hidden');
+        document.getElementById('newsInputText').value = '';
+      } else {
+        document.getElementById('newsLibraryArea').classList.remove('hidden');
+      }
+    }
+
+    // Dịch bài báo
+    async function startNewsTranslation() {
+      const inputText = document.getElementById('newsInputText').value.trim();
+      if (!inputText) return showToast("Vui lòng dán bài báo!", "error");
+
       const paragraphs = inputText.split('\n').filter(p => p.trim().length > 0);
       
       const btn = document.getElementById('btnTranslateNews');
@@ -1073,19 +1091,19 @@
       const contentArea = document.getElementById('newsContentArea');
       const resultContainer = document.getElementById('newsTranslationResult');
 
-      // Đổi trạng thái giao diện
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
       inputArea.classList.add('hidden');
       contentArea.classList.remove('hidden');
       resultContainer.innerHTML = ''; 
+      
+      currentTranslatedEn = inputText;
+      currentTranslatedVi = '';
 
-      // Lặp qua từng đoạn và gọi AI dịch
       for (let i = 0; i < paragraphs.length; i++) {
         const pText = paragraphs[i].trim();
         if (pText.length < 3) continue;
 
-        // Tạo khung chờ cho đoạn hiện tại
         const pairDiv = document.createElement('div');
         pairDiv.className = 'mb-8 pb-6 border-b border-slate-200 dark:border-slate-700';
         
@@ -1100,14 +1118,10 @@
         pairDiv.appendChild(enDiv);
         pairDiv.appendChild(viDiv);
         resultContainer.appendChild(pairDiv);
-
-        // Cuộn xuống đoạn đang dịch
         pairDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Gọi API Supabase (ai-dictionary) để dịch đoạn này
         try {
-          const prompt = `Bạn là một dịch giả chuyên nghiệp. Hãy dịch đoạn văn tiếng Anh sau sang tiếng Việt. CHỈ TRẢ VỀ BẢN DỊCH (không giải thích, không thêm markdown). Đoạn văn: "${pText}"`;
-          
+          const prompt = `Dịch đoạn văn sau sang tiếng Việt. CHỈ TRẢ VỀ BẢN DỊCH. Đoạn văn: "${pText}"`;
           const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
             method: 'POST',
             headers: { 
@@ -1118,7 +1132,6 @@
             body: JSON.stringify({ prompt: prompt })
           });
 
-          // Đọc stream
           const reader = response.body.getReader();
           const decoder = new TextDecoder("utf-8");
           let fullText = '';
@@ -1144,15 +1157,125 @@
             }
           }
           
-          viDiv.innerHTML = fullText.trim() || "Không có kết quả dịch.";
+          const cleanText = fullText.trim() || "Không có kết quả.";
+          viDiv.innerHTML = cleanText;
+          currentTranslatedVi += cleanText + "\n\n";
 
         } catch (error) {
-          viDiv.innerHTML = `<span class="text-red-500 font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối AI đoạn này.</span>`;
+          viDiv.innerHTML = `<span class="text-red-500 font-semibold">Lỗi kết nối AI.</span>`;
+          currentTranslatedVi += "[Lỗi dịch đoạn này]\n\n";
         }
       }
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Dịch';
+    }
+
+    // Lưu bài báo
+    async function saveArticleToLibrary() {
+      if (!currentTranslatedEn || !currentTranslatedVi) return showToast("Chưa có dữ liệu để lưu!", "error");
+      
+      const btn = document.getElementById('btnSaveArticle');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+
+      // Lấy 50 ký tự đầu tiên làm tiêu đề
+      let title = currentTranslatedEn.substring(0, 50).trim();
+      if (currentTranslatedEn.length > 50) title += "...";
+
+      try {
+        const { data, error } = await supabaseClient.from('bilingual_articles').insert([
+          { 
+            title: title, 
+            content_en: currentTranslatedEn, 
+            content_vi: currentTranslatedVi 
+          }
+        ]);
+
+        if (error) throw error;
+
+        showToast('Đã lưu bài viết vào thư viện!');
+        switchNewsTab('library'); // Chuyển sang thư viện
+
+      } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi lưu bài viết: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Lưu Vào Thư Viện';
+      }
+    }
+
+    // Tải thư viện bài đọc
+    async function fetchArticleLibrary() {
+      const listContainer = document.getElementById('newsLibraryList');
+      listContainer.innerHTML = '<div class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-3xl text-orange-500 mb-3"></i><p class="text-slate-500">Đang tải thư viện...</p></div>';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('bilingual_articles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data.length === 0) {
+          listContainer.innerHTML = '<div class="text-center py-10 text-slate-500"><i class="fa-solid fa-book-open text-4xl mb-3 text-slate-300"></i><p>Thư viện chưa có bài nào. Hãy là người đầu tiên đóng góp!</p></div>';
+          return;
+        }
+
+        listContainer.innerHTML = data.map(article => `
+          <div onclick="readSavedArticle('${article.id}')" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-pointer transition flex items-center justify-between group">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 dark:text-white group-hover:text-orange-500 transition line-clamp-1">${article.title}</h4>
+                <p class="text-xs text-slate-400 mt-1"><i class="fa-regular fa-clock"></i> ${new Date(article.created_at).toLocaleDateString('vi-VN')}</p>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition group-hover:translate-x-1"></i>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        listContainer.innerHTML = `<div class="text-center py-10 text-red-500">Lỗi tải thư viện: ${err.message}</div>`;
+      }
+    }
+
+    // Đọc bài báo đã lưu
+    async function readSavedArticle(id) {
+      const { data, error } = await supabaseClient.from('bilingual_articles').select('*').eq('id', id).single();
+      if (error || !data) return showToast("Không tìm thấy bài viết!", "error");
+
+      // Ẩn thư viện, hiện vùng nội dung
+      document.getElementById('newsLibraryArea').classList.add('hidden');
+      document.getElementById('newsContentArea').classList.remove('hidden');
+      
+      const resultContainer = document.getElementById('newsTranslationResult');
+      resultContainer.innerHTML = '';
+
+      // Chia lại thành các đoạn
+      const paragraphsEn = data.content_en.split('\n').filter(p => p.trim().length > 0);
+      const paragraphsVi = data.content_vi.split('\n').filter(p => p.trim().length > 0);
+
+      // Render nội dung
+      for (let i = 0; i < paragraphsEn.length; i++) {
+        if (paragraphsEn[i].trim().length < 3) continue;
+        
+        const pairDiv = document.createElement('div');
+        pairDiv.className = 'mb-8 pb-6 border-b border-slate-200 dark:border-slate-700';
+        
+        pairDiv.innerHTML = `
+          <div class="text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3">${paragraphsEn[i]}</div>
+          <div class="text-sm md:text-base text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border-l-4 border-orange-500">${paragraphsVi[i] || 'Đang cập nhật...'}</div>
+        `;
+        resultContainer.appendChild(pairDiv);
+      }
+      
+      // Ẩn nút "Lưu" vì bài này đã lưu rồi
+      document.getElementById('btnSaveArticle').style.display = 'none';
     }
     
     function openAuthModal() {
