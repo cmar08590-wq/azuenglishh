@@ -823,69 +823,43 @@
   <div id="newsModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full h-[95vh] md:h-[90vh] shadow-2xl flex flex-col overflow-hidden relative">
       
-      <!-- Header của Modal -->
+      <!-- Header -->
       <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0">
         <h3 class="font-extrabold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-          <i class="fa-solid fa-newspaper text-orange-500"></i> Tin Tức Song Ngữ
+          <i class="fa-solid fa-newspaper text-orange-500"></i> Đọc Báo Song Ngữ
         </h3>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 p-2 rounded-xl transition active:scale-95">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <!-- Trạng thái Đang tải -->
-      <div id="newsLoadingArea" class="flex-1 flex flex-col items-center justify-center space-y-4">
-        <i class="fa-solid fa-spinner fa-spin text-4xl text-orange-500"></i>
-        <p class="text-slate-600 dark:text-slate-300 font-bold">Đang lấy tin mới nhất từ BBC...</p>
-        <p class="text-xs text-slate-400">Hệ thống đang dịch bài báo, vui lòng đợi 3-5 giây.</p>
+      <!-- Khu vực nhập liệu -->
+      <div id="newsInputArea" class="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+        <div class="max-w-3xl mx-auto space-y-4">
+          <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-200 dark:border-orange-800">
+            <p class="text-sm font-medium text-orange-700 dark:text-orange-300">
+              <i class="fa-solid fa-circle-info"></i> Dán bài báo tiếng Anh của bạn vào đây. Hệ thống sẽ dịch từng đoạn nhỏ để đảm bảo tốc độ và không bị quá tải.
+            </p>
+          </div>
+          <textarea id="newsInputText" rows="8" placeholder="Dán bài viết tiếng Anh (BBC, CNN, VOA...) vào đây..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
+          <button onclick="startNewsTranslation()" id="btnTranslateNews" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Dịch
+          </button>
+        </div>
       </div>
 
-      <!-- Khu vực hiển thị bài báo -->
+      <!-- Khu vực hiển thị kết quả (Ẩn lúc đầu) -->
       <div id="newsContentArea" class="hidden flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50 dark:bg-slate-900">
-        
-        <!-- Tiêu đề bài báo -->
-        <div class="mb-6 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h2 id="newsTitle" class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white leading-tight mb-2"></h2>
-          <div class="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <span><i class="fa-brands fa-bbc"></i> Nguồn: BBC Learning English</span>
-            <span><i class="fa-solid fa-calendar"></i> Hôm nay</span>
-          </div>
+        <div class="max-w-4xl mx-auto space-y-4" id="newsTranslationResult">
+          <!-- Kết quả dịch sẽ được render ở đây -->
         </div>
-
-        <!-- Khung 2 cột (Mobile xếp chồng, Desktop 2 cột) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <!-- Cột Tiếng Anh -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border-y border-r border-slate-200 dark:border-slate-700">
-            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
-              <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-sm uppercase tracking-wider">🇬🇧 Bản gốc (English)</h4>
-              <button onclick="document.getElementById('newsEnglishText').innerText.split(' ').forEach((w,i) => setTimeout(() => speakText(w), i*300))" class="text-indigo-500 hover:text-indigo-700 transition" title="Nghe đọc toàn bài">
-                <i class="fa-solid fa-volume-high"></i>
-              </button>
-            </div>
-            <p id="newsEnglishText" class="text-slate-700 dark:text-slate-300 leading-relaxed font-medium text-justify md:text-left"></p>
-          </div>
-
-          <!-- Cột Tiếng Việt -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm border-y border-r border-slate-200 dark:border-slate-700">
-            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
-              <h4 class="font-bold text-emerald-600 dark:text-emerald-400 text-sm uppercase tracking-wider">🇻🇳 Bản dịch (Tiếng Việt)</h4>
-            </div>
-            <p id="newsVietnameseText" class="text-slate-700 dark:text-slate-300 leading-relaxed text-justify md:text-left"></p>
-          </div>
-        </div>
-
-        <!-- Nút tương tác (Mobile dễ bấm) -->
-        <div class="mt-6 flex flex-col sm:flex-row gap-3">
-          <button onclick="openNewsModal()" class="flex-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-rotate-right"></i> Đọc Bài Khác
-          </button>
-          <button onclick="window.open(document.getElementById('newsLink').href, '_blank')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem bài gốc
+        <div class="max-w-4xl mx-auto mt-6 flex flex-col sm:flex-row gap-3">
+          <button onclick="resetNewsModal()" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-left"></i> Dán bài khác
           </button>
         </div>
-        <a id="newsLink" href="#" class="hidden"></a>
-
       </div>
+
     </div>
   </div>
 
@@ -1047,63 +1021,119 @@
         // ==========================================
     // LOGIC ĐỌC BÁO SONG NGỮ (BILINGUAL NEWS)
     // ==========================================
-    function openNewsModal() {
-      // Hiển thị Modal và trạng thái Loading
+        function openNewsModal() {
       document.getElementById('newsModal').classList.remove('hidden');
-      document.getElementById('newsLoadingArea').classList.remove('hidden');
+      document.getElementById('newsInputArea').classList.remove('hidden');
       document.getElementById('newsContentArea').classList.add('hidden');
-      
-      fetchBilingualNews();
+      document.getElementById('newsInputText').value = '';
+      document.getElementById('newsTranslationResult').innerHTML = '';
     }
 
     function closeNewsModal() {
       document.getElementById('newsModal').classList.add('hidden');
-      // Dừng giọng đọc nếu đang đọc dở
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     }
 
-        async function fetchBilingualNews() {
-      try {
-        const { data, error } = await supabaseClient.functions.invoke('fetch-bilingual-news');
-        
-        if (error) throw error;
-        
-        // Kiểm tra xem Backend có báo lỗi bên trong không
-        if (data && data.success === false) {
-          throw new Error(data.error || "Lỗi từ máy chủ");
-        }
-
-        if (data && data.success) {
-          renderNews(data.article);
-        } else {
-          throw new Error("Không nhận được dữ liệu hợp lệ từ máy chủ.");
-        }
-      } catch (err) {
-        console.error("Lỗi lấy tin tức:", err);
-        showToast("Không thể tải tin tức: " + err.message, "error");
-        closeNewsModal();
-      }
+    function resetNewsModal() {
+      document.getElementById('newsInputArea').classList.remove('hidden');
+      document.getElementById('newsContentArea').classList.add('hidden');
     }
 
-        function renderNews(article) {
-      const stripHtml = (html) => {
-        let tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-      };
+    async function startNewsTranslation() {
+      const inputText = document.getElementById('newsInputText').value.trim();
+      if (!inputText) {
+        showToast("Vui lòng dán bài báo tiếng Anh vào khung!", "error");
+        return;
+      }
 
-      document.getElementById('newsTitle').textContent = stripHtml(article.title_en);
+      // Chia văn bản thành các đoạn nhỏ dựa vào dấu xuống dòng
+      const paragraphs = inputText.split('\n').filter(p => p.trim().length > 0);
       
-      // Hiển thị tiếng Anh, giữ lại các dấu xuống dòng
-      document.getElementById('newsEnglishText').innerHTML = stripHtml(article.content_en).replace(/\n/g, '<br><br>');
-      
-      // Hiển thị tiếng Việt
-      document.getElementById('newsVietnameseText').innerHTML = article.content_vi.replace(/\n/g, '<br><br>');
-      
-      document.getElementById('newsLink').href = article.link || '#';
+      const btn = document.getElementById('btnTranslateNews');
+      const inputArea = document.getElementById('newsInputArea');
+      const contentArea = document.getElementById('newsContentArea');
+      const resultContainer = document.getElementById('newsTranslationResult');
 
-      document.getElementById('newsLoadingArea').classList.add('hidden');
-      document.getElementById('newsContentArea').classList.remove('hidden');
+      // Đổi trạng thái giao diện
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+      inputArea.classList.add('hidden');
+      contentArea.classList.remove('hidden');
+      resultContainer.innerHTML = ''; 
+
+      // Lặp qua từng đoạn và gọi AI dịch
+      for (let i = 0; i < paragraphs.length; i++) {
+        const pText = paragraphs[i].trim();
+        if (pText.length < 3) continue;
+
+        // Tạo khung chờ cho đoạn hiện tại
+        const pairDiv = document.createElement('div');
+        pairDiv.className = 'mb-8 pb-6 border-b border-slate-200 dark:border-slate-700';
+        
+        const enDiv = document.createElement('div');
+        enDiv.className = 'text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3';
+        enDiv.textContent = pText;
+        
+        const viDiv = document.createElement('div');
+        viDiv.className = 'text-sm md:text-base text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border-l-4 border-orange-500 flex items-center gap-2';
+        viDiv.innerHTML = '<div class="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div> <span class="italic text-slate-400">Đang dịch...</span>';
+
+        pairDiv.appendChild(enDiv);
+        pairDiv.appendChild(viDiv);
+        resultContainer.appendChild(pairDiv);
+
+        // Cuộn xuống đoạn đang dịch
+        pairDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Gọi API Supabase (ai-dictionary) để dịch đoạn này
+        try {
+          const prompt = `Bạn là một dịch giả chuyên nghiệp. Hãy dịch đoạn văn tiếng Anh sau sang tiếng Việt. CHỈ TRẢ VỀ BẢN DỊCH (không giải thích, không thêm markdown). Đoạn văn: "${pText}"`;
+          
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'apikey': SUPABASE_KEY
+            },
+            body: JSON.stringify({ prompt: prompt })
+          });
+
+          // Đọc stream
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let fullText = '';
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split(/\r?\n/);
+            buffer = lines.pop(); 
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const dataStr = line.replace('data: ', '').trim();
+                if (dataStr === '[DONE]') continue;
+                try {
+                  const dataObj = JSON.parse(dataStr);
+                  if (dataObj.choices && dataObj.choices[0].delta && dataObj.choices[0].delta.content) {
+                    fullText += dataObj.choices[0].delta.content;
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+          
+          viDiv.innerHTML = fullText.trim() || "Không có kết quả dịch.";
+
+        } catch (error) {
+          viDiv.innerHTML = `<span class="text-red-500 font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối AI đoạn này.</span>`;
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Dịch';
     }
     
     function openAuthModal() {
