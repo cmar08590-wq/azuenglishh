@@ -170,7 +170,7 @@ function renderDictionaryCard(entry) {
   let headerHtml = `<div class="word-header">`;
   headerHtml += `<span class="word-title">${escapeHtml(entry.word)}</span>`;
   if (phoneticText) headerHtml += `<span class="word-phonetic">${escapeHtml(phoneticText)}</span>`;
-  if (audioUrl) headerHtml += `<button class="audio-btn" data-audio="${escapeHtml(audioUrl)}" title="Nghe phát âm">🔊</button>`;
+  headerHtml += `<button type="button" class="audio-btn" data-word="${escapeHtml(entry.word)}" data-fallback-audio="${escapeHtml(audioUrl)}" title="Nghe phát âm AI">🔊</button>`;
   headerHtml += `</div>`;
   card.innerHTML = headerHtml;
 
@@ -224,9 +224,10 @@ function renderDictionaryCard(entry) {
   }
 
   card.querySelectorAll('.audio-btn').forEach(b => {
-    b.addEventListener('click', () => {
-      const url = b.getAttribute('data-audio');
-      if (url) new Audio(url).play();
+    b.addEventListener('click', async () => {
+      const wordToSpeak = b.getAttribute('data-word');
+      const fallbackUrl = b.getAttribute('data-fallback-audio');
+      await playGroqTTS(wordToSpeak, fallbackUrl, b);
     });
   });
   card.querySelectorAll('.chip').forEach(chip => {
@@ -393,6 +394,65 @@ function saveToFlashcard(word, aiHtml) {
   alert(`🎉 Đã lưu "${word}" vào Flashcards cá nhân! Hãy quay lại Trang chủ và mở tính năng Flashcards để ôn tập nhé.`);
 }
 
+ const dictTtsCache = {};
+let activeDictAudio = null;
+
+async function playGroqTTS(text, fallbackUrl, btnEl) {
+  if (!text) return;
+  if (activeDictAudio) {
+    activeDictAudio.pause();
+    activeDictAudio = null;
+  }
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+  const key = text.trim().toLowerCase();
+  if (dictTtsCache[key]) {
+    activeDictAudio = new Audio(dictTtsCache[key]);
+    activeDictAudio.play().catch(() => {});
+    return;
+  }
+
+  const originalIcon = btnEl ? btnEl.innerHTML : '🔊';
+  if (btnEl) btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        action: 'tts',
+        text: text.trim(),
+        lang: 'en'
+      })
+    });
+
+    if (!res.ok) throw new Error('Groq TTS error');
+
+    const blob = await res.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    dictTtsCache[key] = audioUrl;
+
+    activeDictAudio = new Audio(audioUrl);
+    await activeDictAudio.play();
+  } catch (err) {
+    // Dự phòng bằng audio từ điển gốc hoặc giọng trình duyệt
+    if (fallbackUrl) {
+      activeDictAudio = new Audio(fallbackUrl);
+      activeDictAudio.play().catch(() => {});
+    } else if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+  } finally {
+    if (btnEl) btnEl.innerHTML = originalIcon;
+  }
+}
+ 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
