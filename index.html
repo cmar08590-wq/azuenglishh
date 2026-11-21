@@ -203,6 +203,9 @@
                     <button onclick="openReadingModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-slate-700/50 hover:text-rose-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-book-reader w-5 text-center text-rose-500"></i> Luyện Đọc Hiểu
           </button>
+                    <button onclick="showView('books')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-white transition-all duration-200">
+            <i class="fa-solid fa-book-bookmark w-5 text-center text-emerald-500"></i> Sách Bổ Trợ
+          </button>
                     <button onclick="openSentenceModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-slate-700/50 hover:text-cyan-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-quote-left w-5 text-center text-cyan-500"></i> Sổ Tay Câu Hay
           </button>
@@ -336,6 +339,21 @@
             </div>
             <div class="mt-6 flex items-center text-xs font-bold text-cyan-600">
               <span>Mở sổ tay</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+                    <div onclick="showView('books')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i class="fa-solid fa-book-bookmark"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Sách Bổ Trợ</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Tủ sách cá nhân của bạn, lưu trữ PDF, Word được thiết kế riêng biệt.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-emerald-600">
+              <span>Mở thư viện</span> <i class="fa-solid fa-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
             </div>
           </div>
           
