@@ -833,30 +833,49 @@
         </button>
       </div>
 
-      <!-- Khu vực nhập liệu -->
+      <!-- Thanh Tabs -->
+      <div class="flex bg-slate-100 dark:bg-slate-900 p-1.5 gap-1 text-sm font-bold shrink-0">
+        <button onclick="switchNewsTab('input')" id="tabNews-input" class="flex-1 py-2.5 rounded-xl transition bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-sm">
+          <i class="fa-solid fa-plus-circle"></i> Dịch Bài Mới
+        </button>
+        <button onclick="switchNewsTab('library')" id="tabNews-library" class="flex-1 py-2.5 rounded-xl transition text-slate-500 hover:text-slate-700">
+          <i class="fa-solid fa-book-bookmark"></i> Thư Viện Bài Đọc
+        </button>
+      </div>
+
+      <!-- TAB 1: NHẬP LIỆU -->
       <div id="newsInputArea" class="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
         <div class="max-w-3xl mx-auto space-y-4">
           <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-200 dark:border-orange-800">
             <p class="text-sm font-medium text-orange-700 dark:text-orange-300">
-              <i class="fa-solid fa-circle-info"></i> Dán bài báo tiếng Anh của bạn vào đây. Hệ thống sẽ dịch từng đoạn nhỏ để đảm bảo tốc độ và không bị quá tải.
+              Dán bài báo tiếng Anh của bạn vào đây. Hệ thống sẽ dịch từng đoạn nhỏ, sau đó bạn có thể lưu lại vào thư viện cho mọi người cùng đọc.
             </p>
           </div>
-          <textarea id="newsInputText" rows="8" placeholder="Dán bài viết tiếng Anh (BBC, CNN, VOA...) vào đây..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
+          <textarea id="newsInputText" rows="8" placeholder="Dán bài viết tiếng Anh vào đây..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
           <button onclick="startNewsTranslation()" id="btnTranslateNews" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Bắt Đầu Dịch
           </button>
         </div>
       </div>
 
-      <!-- Khu vực hiển thị kết quả (Ẩn lúc đầu) -->
+      <!-- TAB 1.5: KẾT QUẢ DỊCH (Ẩn) -->
       <div id="newsContentArea" class="hidden flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50 dark:bg-slate-900">
-        <div class="max-w-4xl mx-auto space-y-4" id="newsTranslationResult">
-          <!-- Kết quả dịch sẽ được render ở đây -->
-        </div>
-        <div class="max-w-4xl mx-auto mt-6 flex flex-col sm:flex-row gap-3">
-          <button onclick="resetNewsModal()" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-rotate-left"></i> Dán bài khác
+        <div class="max-w-4xl mx-auto space-y-4" id="newsTranslationResult"></div>
+        
+        <div class="max-w-4xl mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
+          <button onclick="saveArticleToLibrary()" id="btnSaveArticle" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Vào Thư Viện
           </button>
+          <button onclick="switchNewsTab('input')" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-left"></i> Dịch Bài Khác
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: THƯ VIỆN BÀI ĐỌC (Ẩn) -->
+      <div id="newsLibraryArea" class="hidden flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50 dark:bg-slate-900">
+        <div id="newsLibraryList" class="max-w-4xl mx-auto space-y-4">
+          <!-- Các bài báo đã lưu sẽ hiện ở đây -->
         </div>
       </div>
 
