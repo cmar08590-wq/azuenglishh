@@ -1869,7 +1869,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       document.getElementById('zhDictionaryModal').classList.add('hidden');
     }
 
-      async function searchChineseDictionary() {
+          async function searchChineseDictionary() {
       const query = document.getElementById('zhDictInput').value.trim();
       const resultArea = document.getElementById('zhDictResult');
       const btn = document.getElementById('btnSearchZhDict');
@@ -1889,34 +1889,31 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       - Ví dụ (kèm Pinyin và dịch tiếng Việt)
       Hãy trình bày đẹp mắt bằng các thẻ HTML (div, span, strong, p) và dùng class Tailwind có sẵn như text-red-500, text-lg, font-bold, mb-2 để dễ nhìn.`;
 
-            try {
+      try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
           body: JSON.stringify({ prompt: prompt })
         });
 
-        // Đọc dữ liệu dưới dạng text thô để kiểm tra
         const rawText = await response.text();
         let aiText = "";
 
         if (rawText.startsWith('data: ')) {
-          // Nếu là dữ liệu Groq trả về dạng luồng (Server-Sent Events)
           const lines = rawText.split('\n');
           for (let line of lines) {
             if (line.startsWith('data: ') && !line.includes('[DONE]')) {
               try {
-                const parsed = JSON.parse(line.substring(6)); // Cắt bỏ chữ "data: "
+                const parsed = JSON.parse(line.substring(6));
                 if (parsed.choices && parsed.choices[0]?.delta?.content) {
                   aiText += parsed.choices[0].delta.content;
                 } else if (parsed.choices && parsed.choices[0]?.message?.content) {
                   aiText += parsed.choices[0].message.content;
                 }
-              } catch (e) { /* Bỏ qua lỗi parse từng dòng */ }
+              } catch (e) { }
             }
           }
         } else {
-          // Nếu là dữ liệu JSON bình thường (Gemini hoặc cấu hình khác)
           try {
             const data = JSON.parse(rawText);
             if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
@@ -1924,9 +1921,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
             } else if (data.choices && data.choices[0]?.message) {
               aiText = data.choices[0].message.content;
             }
-          } catch (e) {
-            console.error("Lỗi parse JSON:", e);
-          }
+          } catch (e) { }
         }
         
         if (aiText) {
@@ -1942,6 +1937,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
       }
+    } // <--- DẤU NGOẶC NHỌN QUAN TRỌNG ĐỂ ĐÓNG HÀM
     
         function openDictionaryModal() {
       // Gán src lúc mở để iframe tự tải lại trang mới nhất
