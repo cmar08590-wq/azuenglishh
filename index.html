@@ -3231,6 +3231,46 @@ function updateGamificationUI() {
       renderFolders(); renderFiles(); showView('files');
     }
 
+    function getFileIcon(type, name) {
+      const ext = (name || '').split('.').pop().toLowerCase();
+      if ((type && type.includes('pdf')) || ext === 'pdf') {
+        return '<i class="fa-solid fa-file-pdf text-red-500"></i>';
+      }
+      if ((type && type.includes('audio')) || ['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) {
+        return '<i class="fa-solid fa-file-audio text-amber-500"></i>';
+      }
+      if ((type && type.includes('word')) || ['doc', 'docx'].includes(ext)) {
+        return '<i class="fa-solid fa-file-word text-blue-500"></i>';
+      }
+      if ((type && type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+        return '<i class="fa-solid fa-file-image text-emerald-500"></i>';
+      }
+      return '<i class="fa-solid fa-file-lines text-indigo-500"></i>';
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getMimeType(fileName) {
+      const ext = (fileName || '').split('.').pop().toLowerCase();
+      const map = {
+        pdf: 'application/pdf',
+        mp3: 'audio/mpeg',
+        wav: 'audio/wav',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg'
+      };
+      return map[ext] || 'application/octet-stream';
+    }
+    
     function renderFiles() {
       const grid = document.getElementById('fileGrid');
       if (!grid) return;
