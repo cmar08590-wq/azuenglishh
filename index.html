@@ -1533,8 +1533,11 @@
         rowDiv.className = 'flex flex-col md:flex-row border-b border-slate-200 dark:border-slate-700 mb-6 pb-6 group hover:bg-white dark:hover:bg-slate-800 transition-colors';
 
         rowDiv.innerHTML = `
-          <div class="w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0">
-            ${escapeHtml(paragraphsOrig[i])}
+          <div class="w-full md:w-1/2 md:pr-6 md:border-r border-slate-200 dark:border-slate-700 text-base md:text-lg text-slate-800 dark:text-white font-medium leading-relaxed mb-3 md:mb-0 flex items-start justify-between gap-3">
+            <span class="flex-1">${escapeHtml(paragraphsOrig[i])}</span>
+            <button type="button" onclick="speakText(this.previousElementSibling.textContent)" class="shrink-0 w-9 h-9 rounded-full bg-orange-50 dark:bg-slate-700 text-orange-500 hover:bg-orange-500 hover:text-white flex items-center justify-center transition shadow-sm mt-0.5" title="Nghe đọc đoạn này">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
           </div>
           <div class="w-full md:w-1/2 md:pl-6 text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
             ${(paragraphsVi[i] || 'Đang cập nhật...').replace(/\n/g, '<br>')}
@@ -2047,7 +2050,16 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         
         if (aiText) {
           let aiHtml = aiText.replace(/```html/g, '').replace(/```/g, '').trim();
-          resultArea.innerHTML = `<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm leading-relaxed">${aiHtml}</div>`;
+          resultArea.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm leading-relaxed space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Phát âm chuẩn</span>
+                <button type="button" onclick="speakText('${query.replace(/'/g, "\\'")}')" class="bg-red-50 dark:bg-slate-800 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 dark:border-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                  <i class="fa-solid fa-volume-high"></i> Nghe đọc "${escapeHtml(query)}"
+                </button>
+              </div>
+              <div>${aiHtml}</div>
+            </div>`;
         } else {
           resultArea.innerHTML = `<div class="text-red-500 font-bold p-4 text-center">Không tìm thấy kết quả cho từ này.</div>`;
         }
