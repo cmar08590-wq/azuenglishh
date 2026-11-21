@@ -1151,6 +1151,19 @@
         </div>
         <div>
           <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Nghĩa tiếng Việt:</label>
+                  <div>
+          <label id="wordInputLabel" class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Từ tiếng Anh:</label>
+          <input type="text" id="wordInput" placeholder="VD: Metaphor..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
+        </div>
+        
+        <!-- Ô nhập Pinyin (Ẩn mặc định, chỉ hiện khi học Tiếng Trung) -->
+        <div id="pinyinInputContainer" class="hidden">
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Phiên âm Pinyin:</label>
+          <input type="text" id="pinyinInput" placeholder="VD: nǐ hǎo..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
+        </div>
+
+        <div>
+          <label id="meaningInputLabel" class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Nghĩa tiếng Việt:</label>
           <input type="text" id="meaningInput" placeholder="VD: Phép ẩn dụ..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition">
         </div>
       </div>
@@ -2583,26 +2596,57 @@ function updateGamificationUI() {
       }
     }
 
-    function openAddFlashcardModal() { document.getElementById('wordInput').value = ''; document.getElementById('meaningInput').value = ''; document.getElementById('addFlashcardModal').classList.remove('hidden'); }
-    function closeAddFlashcardModal() { document.getElementById('addFlashcardModal').classList.add('hidden'); }
+        function prevCard() {
+      const deck = flashcardDecks.find(d => d.id === activeDeckId);
+      if (deck && deck.cards.length > 0) {
+        // Nếu đang ở thẻ đầu tiên mà bấm Lùi, nó sẽ vòng về thẻ cuối cùng
+        currentCardIndex = (currentCardIndex - 1 + deck.cards.length) % deck.cards.length;
+        renderFlashcard();
+      }
+    }
 
-        function submitAddFlashcard() {
+        function openAddFlashcardModal() { 
+      document.getElementById('wordInput').value = ''; 
+      document.getElementById('meaningInput').value = ''; 
+      document.getElementById('pinyinInput').value = ''; 
+
+              function submitAddFlashcard() {
       const word = document.getElementById('wordInput').value.trim();
       const meaning = document.getElementById('meaningInput').value.trim();
+      const pinyin = document.getElementById('pinyinInput').value.trim();
       
       if (!activeDeckId) return showToast('Chưa chọn bộ thẻ!', 'error');
       
       if (word && meaning) {
         const deck = flashcardDecks.find(d => d.id === activeDeckId);
-        deck.cards.push({ id: 'c_' + Date.now(), word, meaning });
+        
+        // Nếu là tiếng Trung thì lưu thêm pinyin
+        const newCard = { id: 'c_' + Date.now(), word, meaning };
+        if (currentLanguage === 'zh') newCard.pinyin = pinyin;
+
+        deck.cards.push(newCard);
         saveUserDataLocal();
         addXp(5);
         closeAddFlashcardModal();
         showToast('Đã thêm thẻ mới vào bộ!');
-        renderFlashcard(); // Render lại để cập nhật số lượng
+        renderFlashcard(); 
       } else {
         showToast('Vui lòng nhập đủ từ và nghĩa!', 'error');
       }
+    }
+      
+      // Kiểm tra ngôn ngữ hiện tại để đổi giao diện
+      if (currentLanguage === 'zh') {
+        document.getElementById('pinyinInputContainer').classList.remove('hidden');
+        document.getElementById('wordInputLabel').textContent = 'Chữ Hán:';
+        document.getElementById('wordInput').placeholder = 'VD: 你好...';
+      } else {
+        document.getElementById('pinyinInputContainer').classList.add('hidden');
+        document.getElementById('wordInputLabel').textContent = 'Từ tiếng Anh:';
+        document.getElementById('wordInput').placeholder = 'VD: Metaphor...';
+      }
+      
+      document.getElementById('addFlashcardModal').classList.remove('hidden'); 
     }
 
     function deleteCardInDeck(cardId) {
