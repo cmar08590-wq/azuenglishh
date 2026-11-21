@@ -1619,33 +1619,42 @@
       const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', userId).single();
       
       if (data) {
-        // Nếu có dữ liệu trên mây -> Ghi đè vào máy
         userData = {
-          xp: data.xp, gems: data.gems, avatarName: data.avatar_name,
-          avatarUrl: data.avatar_url, equipped: data.equipped,
-          inventory: data.inventory, streakCount: data.streak_count,
+          xp: data.xp,
+          gems: data.gems,
+          avatarName: data.avatar_name,
+          avatarUrl: data.avatar_url,
+          equipped: data.equipped,
+          inventory: data.inventory,
+          streakCount: data.streak_count,
           lastCheckIn: data.last_check_in
         };
         customFlashcards = data.custom_flashcards || [];
         savedSentences = data.saved_sentences || [];
+
+        // Đồng bộ bộ thẻ Flashcards từ tài khoản về máy
+        if (Array.isArray(data.flashcard_decks) && data.flashcard_decks.length > 0) {
+          flashcardDecks = data.flashcard_decks;
+        }
         
-        // Cập nhật lại localStorage và giao diện
         localStorage.setItem('azu_public_user_profile', JSON.stringify(userData));
         localStorage.setItem('azu_public_custom_cards', JSON.stringify(customFlashcards));
+        localStorage.setItem('azu_flashcard_decks', JSON.stringify(flashcardDecks));
         localStorage.setItem('azu_public_sentences', JSON.stringify(savedSentences));
         
         updateGamificationUI();
         updateStreakUI();
-        renderFlashcard();
-        showToast('Đã tải dữ liệu từ đám mây!');
+        if (typeof renderDecks === 'function') renderDecks();
+        if (activeDeckId) renderFlashcard();
+        showToast('Đã đồng bộ toàn bộ Flashcards từ tài khoản!');
       } else {
-        // Nếu chưa có dữ liệu trên mây -> Đẩy dữ liệu dưới máy lên
+        // Tài khoản mới chưa có dữ liệu trên mây -> đẩy toàn bộ bộ thẻ hiện tại lên
         await saveDataToCloud(userId);
       }
     }
 
     async function saveDataToCloud(userId) {
-      if (!userId) return; // Nếu chưa đăng nhập thì thôi
+      if (!userId) return;
       
       const dbData = {
         id: userId,
@@ -1658,6 +1667,7 @@
         streak_count: userData.streakCount,
         last_check_in: userData.lastCheckIn,
         custom_flashcards: customFlashcards,
+        flashcard_decks: flashcardDecks, // Lưu toàn bộ bộ thẻ EN & ZH lên tài khoản
         saved_sentences: savedSentences,
         updated_at: new Date().toISOString()
       };
@@ -2753,12 +2763,61 @@ function updateGamificationUI() {
       }
     }
 
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
+    let currentTtsAudio = null;
+    const ttsAudioCache = {}; // Lưu cache âm thanh trong phiên học để tiết kiệm API Groq
+
+    async function speakText(text) {
+      if (!text || !text.trim()) return;
+
+      // Dừng âm thanh đang phát (nếu có)
+      if (currentTtsAudio) {
+        currentTtsAudio.pause();
+        currentTtsAudio = null;
+      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+      const lang = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh') ? 'zh' : 'en';
+      const cacheKey = `${lang}:${text.trim()}`;
+
+      // 1. Nếu từ/câu này đã tạo giọng đọc rồi -> phát lại ngay lập tức từ cache
+      if (ttsAudioCache[cacheKey]) {
+        currentTtsAudio = new Audio(ttsAudioCache[cacheKey]);
+        currentTtsAudio.play().catch(() => {});
+        return;
+      }
+
+      // 2. Gọi Groq TTS qua Supabase Edge Function
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY
+          },
+          body: JSON.stringify({
+            action: 'tts',
+            text: text.trim(),
+            lang: lang
+          })
+        });
+
+        if (!response.ok) throw new Error('Groq TTS unavailable');
+
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        ttsAudioCache[cacheKey] = audioUrl;
+
+        currentTtsAudio = new Audio(audioUrl);
+        await currentTtsAudio.play();
+      } catch (err) {
+        // 3. Dự phòng tự động bằng giọng trình duyệt đúng ngôn ngữ nếu Groq lỗi
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
+          utterance.rate = 0.9;
+          window.speechSynthesis.speak(utterance);
+        }
       }
     }
 
