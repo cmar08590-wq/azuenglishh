@@ -2630,26 +2630,6 @@ function updateGamificationUI() {
       document.getElementById('createDeckModal').classList.add('hidden'); 
     }
 
-    function submitCreateDeck() {
-      const name = document.getElementById('deckNameInput').value.trim();
-      if (!name) return showToast('Vui lòng nhập tên bộ thẻ!', 'error');
-      
-      const isZh = currentLanguage === 'zh';
-      
-      flashcardDecks.push({
-        id: 'deck_' + Date.now(),
-        name: name,
-        lang: isZh ? 'zh' : 'en',
-        icon: isZh ? '🇨🇳' : '🇬🇧',
-        cards: []
-      });
-      
-      saveUserDataLocal(); 
-      closeCreateDeckModal(); 
-      renderDecks(); 
-      showToast('Đã tạo bộ thẻ mới!');
-    }
-
     function openAddFlashcardModal() { 
       document.getElementById('wordInput').value = ''; 
       document.getElementById('meaningInput').value = ''; 
@@ -3185,19 +3165,28 @@ function updateGamificationUI() {
       }
     }
 
-    function convertSentenceToFlashcard(id) {
+        function convertSentenceToFlashcard(id) {
       const sentence = savedSentences.find(s => s.id === id);
       if (!sentence) return;
 
-      // Kiểm tra xem đã có trong flashcard chưa (dựa vào từ)
-      const isExist = customFlashcards.some(c => c.word === sentence.text);
+      // Tìm bộ thẻ Tiếng Anh đầu tiên (hoặc bộ thẻ đang mở) để lưu vào
+      let targetDeck = flashcardDecks.find(d => d.lang === 'en');
+      
+      // Nếu chưa có bộ thẻ Tiếng Anh nào, tự động tạo một bộ mới
+      if (!targetDeck) {
+        targetDeck = { id: 'deck_default_en', name: 'Từ vựng từ Sổ tay', lang: 'en', icon: '🇬🇧', cards: [] };
+        flashcardDecks.push(targetDeck);
+      }
+
+      // Kiểm tra xem đã có trong bộ thẻ chưa (dựa vào từ)
+      const isExist = targetDeck.cards.some(c => c.word === sentence.text);
       if (isExist) {
         return showToast('Câu này đã có trong Flashcards rồi!', 'error');
       }
 
-      // Thêm vào Flashcard với từ là câu tiếng Anh, nghĩa là ghi chú (hoặc nguồn)
+      // Thêm vào Flashcard
       const meaning = sentence.note || `Trích từ: ${sentence.source}`;
-      customFlashcards.push({ 
+      targetDeck.cards.push({ 
         id: 'c_' + Date.now(), 
         word: sentence.text, 
         meaning: meaning 
@@ -3428,25 +3417,6 @@ function updateGamificationUI() {
     initApp();
   </script>
 
-    <!-- MODAL TẠO BỘ THẺ MỚI -->
-  <div id="createDeckModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
-      <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
-        <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-          <i class="fa-solid fa-layer-group text-pink-500"></i> Tạo Bộ Thẻ Mới
-        </h3>
-        <button onclick="closeCreateDeckModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <div>
-        <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tên bộ thẻ:</label>
-        <input type="text" id="deckNameInput" placeholder="VD: TOEIC 600+, HSK 2..." class="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white transition">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeCreateDeckModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Hủy</button>
-        <button onclick="submitCreateDeck()" class="px-5 py-2 text-sm font-bold bg-pink-500 text-white hover:bg-pink-600 rounded-xl shadow-md transition active:scale-95">Tạo mới</button>
-      </div>
-    </div>
-  </div>
   
       <!-- MODAL TẠO THƯ MỤC MỚI (Đã sửa lỗi vị trí) -->
   <div id="createFolderModal2" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
