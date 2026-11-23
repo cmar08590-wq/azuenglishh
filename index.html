@@ -1296,20 +1296,21 @@
     // CẤU HÌNH STORAGE TÁCH BIỆT EN / ZH TRÊN SUPABASE
     // ==========================================
     function getLangStorageConfig() {
-      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      const savedLang = localStorage.getItem('azu_lang') || 'en';
+      if (typeof currentLanguage === 'undefined' || !currentLanguage) {
+        currentLanguage = savedLang;
+      }
+      const isZh = (currentLanguage === 'zh');
       return {
         isZh: isZh,
-        // Bảng báo song ngữ
         newsTable: isZh ? 'bilingual_articles_zh' : 'bilingual_articles',
         newsContentCol: isZh ? 'content_zh' : 'content_en',
-        // Bảng & Bucket Kho file
         folderTable: isZh ? 'folders_zh' : 'folders',
         docTable: isZh ? 'documents_metadata_zh' : 'documents_metadata',
         docBucket: isZh ? 'documents_zh' : 'documents',
         defaultFolders: isZh
           ? [ { id: 'zh_hsk', name: 'Giáo trình HSK' }, { id: 'zh_grammar', name: 'Ngữ pháp' }, { id: 'zh_audio', name: 'File nghe' } ]
           : [ { id: 'general', name: 'Tài liệu chung' }, { id: 'grammar', name: 'Ngữ pháp' }, { id: 'listening', name: 'Luyện nghe' } ],
-        // Bảng & Bucket Thư viện sách
         bookTable: isZh ? 'books_metadata_zh' : 'books_metadata',
         bookBucket: isZh ? 'books_zh' : 'books'
       };
@@ -2199,6 +2200,13 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
         toggleMobileSidebar();
       }
+
+      if (viewName === 'files') {
+        fetchFolders();
+        fetchCloudFiles();
+      } else if (viewName === 'books') {
+        fetchLibraryBooks();
+      }
       
       document.getElementById('viewHub').classList.add('hidden');
       document.getElementById('viewFiles').classList.add('hidden');
@@ -2326,22 +2334,22 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       const audioInput = document.getElementById('audioUploadInput');
       if (!audioInput) return;
       audioInput.addEventListener('change', async function(e) {
+        const cfg = getLangStorageConfig();
         const files = e.target.files;
         if (!files) return;
         const folderSelect = document.getElementById('dictationFolderSelect');
         const selectedFolder = (folderSelect && folderSelect.value !== 'ALL') ? folderSelect.value : null;
         for (let file of files) {
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-          const { error } = await supabaseClient.storage.from('documents').upload(fileName, file);
+          const { error } = await supabaseClient.storage.from(cfg.docBucket).upload(fileName, file);
           if (error) { showToast('Lỗi tải file', 'error'); continue; }
-          const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
-          await supabaseClient.from('documents_metadata').insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type, folder_id: selectedFolder, date_added: new Date().toLocaleDateString('vi-VN'), url: publicUrlData.publicUrl }]);
+          const { data: publicUrlData } = supabaseClient.storage.from(cfg.docBucket).getPublicUrl(fileName);
+          await supabaseClient.from(cfg.docTable).insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type || getMimeType(file.name), folder_id: selectedFolder, date_added: new Date().toLocaleDateString('vi-VN'), is_starred: false, tags: [], note: '', url: publicUrlData.publicUrl }]);
           addXp(10);
         }
         await fetchCloudFiles();
-        renderDictationLessonsList();
         audioInput.value = '';
-        showToast('Đã tải audio lên!');
+        showToast('Đã tải file âm thanh thành công!');
       });
     }
 
@@ -2362,8 +2370,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
 
     async function fetchLibraryBooks() {
+      const cfg = getLangStorageConfig();
       try {
-        const { data, error } = await supabaseClient.from('books_metadata').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabaseClient.from(cfg.bookTable).select('*').order('created_at', { ascending: false });
         if (!error && data) {
           libraryBooks = data;
           renderBooksView();
@@ -2406,6 +2415,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
 
     async function submitUploadBook() {
+      const cfg = getLangStorageConfig();
       const title = document.getElementById('bookTitleInput').value.trim();
       const author = document.getElementById('bookAuthorInput').value.trim();
       const fileInput = document.getElementById('bookFileInput');
@@ -2419,14 +2429,14 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
 
       try {
-        // Upload file lên bucket 'books'
+        // Upload file lên đúng bucket (books hoặc books_zh)
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-        const { error: uploadError } = await supabaseClient.storage.from('books').upload(fileName, file);
+        const { error: uploadError } = await supabaseClient.storage.from(cfg.bookBucket).upload(fileName, file);
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabaseClient.storage.from('books').getPublicUrl(fileName);
+        const { data: publicUrlData } = supabaseClient.storage.from(cfg.bookBucket).getPublicUrl(fileName);
 
-        // Lưu thông tin vào bảng books_metadata
+        // Lưu thông tin vào đúng bảng (books_metadata hoặc books_metadata_zh)
         const bookRecord = {
           id: String(Date.now() + Math.random()),
           title: title,
@@ -2435,12 +2445,12 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
           file_name: file.name
         };
 
-        const { error: dbError } = await supabaseClient.from('books_metadata').insert([bookRecord]);
+        const { error: dbError } = await supabaseClient.from(cfg.bookTable).insert([bookRecord]);
         if (dbError) throw dbError;
 
         showToast('Đã thêm sách vào thư viện!');
         closeUploadBookModal();
-        fetchLibraryBooks(); // Tải lại lưới sách
+        fetchLibraryBooks();
         addXp(10);
 
       } catch (err) {
@@ -2452,16 +2462,17 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
 
     async function deleteBook(id) {
+      const cfg = getLangStorageConfig();
       if (!confirm('Bạn có chắc muốn xóa cuốn sách này khỏi thư viện?')) return;
       try {
         const book = libraryBooks.find(b => b.id === id);
         if (book && book.file_url) {
           const urlParts = book.file_url.split('/');
           const storageFileName = urlParts[urlParts.length - 1];
-          await supabaseClient.storage.from('books').remove([storageFileName]);
+          await supabaseClient.storage.from(cfg.bookBucket).remove([storageFileName]);
         }
         
-        await supabaseClient.from('books_metadata').delete().eq('id', id);
+        await supabaseClient.from(cfg.bookTable).delete().eq('id', id);
         showToast('Đã xóa sách!');
         fetchLibraryBooks();
       } catch (err) {
@@ -3111,116 +3122,7 @@ function updateGamificationUI() {
     }
 
     // --- THƯ VIỆN SÁCH TÁCH BIỆT ---
-    async function fetchLibraryBooks() {
-      const cfg = getLangStorageConfig();
-      try {
-        const { data, error } = await supabaseClient.from(cfg.bookTable).select('*').order('created_at', { ascending: false });
-        if (!error && data) {
-          libraryBooks = data;
-          renderBooksView();
-        }
-      } catch(e) { console.error(e); }
-    }
 
-    async function submitUploadBook() {
-      const cfg = getLangStorageConfig();
-      const title = document.getElementById('bookTitleInput').value.trim();
-      const author = document.getElementById('bookAuthorInput').value.trim();
-      const fileInput = document.getElementById('bookFileInput');
-      const file = fileInput.files[0];
-
-      if (!title) return showToast('Vui lòng nhập tên sách!', 'error');
-      if (!file) return showToast('Vui lòng chọn file sách!', 'error');
-
-      const btn = document.getElementById('btnUploadBook');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
-
-      try {
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-        const { error: uploadError } = await supabaseClient.storage.from(cfg.bookBucket).upload(fileName, file);
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabaseClient.storage.from(cfg.bookBucket).getPublicUrl(fileName);
-
-        const bookRecord = {
-          id: String(Date.now() + Math.random()),
-          title: title,
-          author: author,
-          file_url: publicUrlData.publicUrl,
-          file_name: file.name
-        };
-
-        const { error: dbError } = await supabaseClient.from(cfg.bookTable).insert([bookRecord]);
-        if (dbError) throw dbError;
-
-        showToast('Đã thêm sách vào thư viện!');
-        closeUploadBookModal();
-        fetchLibraryBooks();
-        addXp(10);
-      } catch (err) {
-        showToast('Lỗi: ' + err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = 'Tải lên';
-      }
-    }
-
-    async function deleteBook(id) {
-      const cfg = getLangStorageConfig();
-      if (!confirm('Bạn có chắc muốn xóa cuốn sách này khỏi thư viện?')) return;
-      try {
-        const book = libraryBooks.find(b => b.id === id);
-        if (book && book.file_url) {
-          const urlParts = book.file_url.split('/');
-          const storageFileName = urlParts[urlParts.length - 1];
-          await supabaseClient.storage.from(cfg.bookBucket).remove([storageFileName]);
-        }
-
-        await supabaseClient.from(cfg.bookTable).delete().eq('id', id);
-        showToast('Đã xóa sách!');
-        fetchLibraryBooks();
-      } catch (err) {
-        showToast('Lỗi khi xóa sách', 'error');
-      }
-    }
-
-    function setupUploadListener() {
-      const fileInput = document.getElementById('fileInput');
-      if (!fileInput) return;
-      fileInput.addEventListener('change', async function(e) {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        const targetFolder = currentFolderId === 'all' ? null : currentFolderId;
-        for (let file of files) {
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-          const { error } = await supabaseClient.storage.from('documents').upload(fileName, file);
-          if (error) { showToast('Lỗi tải file: ' + error.message, 'error'); continue; }
-          const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(fileName);
-          await supabaseClient.from('documents_metadata').insert([{ id: String(Date.now() + Math.random()), name: file.name, size: file.size, type: file.type || getMimeType(file.name), folder_id: targetFolder, date_added: new Date().toLocaleDateString('vi-VN'), is_starred: false, tags: [], note: '', url: publicUrlData.publicUrl }]);
-          addXp(10);
-        }
-        await fetchCloudFiles();
-        fileInput.value = '';
-        showToast('Tải file lên thành công!');
-      });
-    }
-
-    async function deleteFile(id) {
-      const fileToDelete = cloudFiles.find(f => String(f.id) === String(id));
-      if (!fileToDelete) return;
-      if (confirm(`Xóa vĩnh viễn file "${fileToDelete.name}"?`)) {
-        try {
-          if (fileToDelete.url) {
-            const urlParts = fileToDelete.url.split('/');
-            if (urlParts[urlParts.length - 1]) await supabaseClient.storage.from('documents').remove([urlParts[urlParts.length - 1]]);
-          }
-          await supabaseClient.from('documents_metadata').delete().eq('id', id);
-          await fetchCloudFiles();
-          showToast('Đã xóa file!');
-        } catch (err) { showToast('Lỗi khi xóa file', 'error'); }
-      }
-    }
 
     function switchFolder(id) {
       currentFolderId = id; currentFilter = 'all'; selectedTag = null;
@@ -3316,15 +3218,6 @@ function updateGamificationUI() {
       `).join('');
     }
 
-    async function toggleStar(event, id) {
-      event.stopPropagation();
-      const file = cloudFiles.find(f => String(f.id) === String(id));
-      if (file) {
-        file.isStarred = !file.isStarred;
-        try { await supabaseClient.from('documents_metadata').update({ is_starred: file.isStarred }).eq('id', id); } catch(e) {}
-        renderFiles();
-      }
-    }
 
     function previewFile(id) {
       const record = cloudFiles.find(f => String(f.id) === String(id));
@@ -3353,11 +3246,6 @@ function updateGamificationUI() {
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    async function saveFileNote() {
-      if (!currentPreviewRecord) return;
-      currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
-      try { await supabaseClient.from('documents_metadata').update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id); showToast('Đã lưu ghi chú!'); } catch(e) {}
-    }
 
     function changeAudioSpeed(speed) { const audio = document.getElementById('mainAudioPlayer'); if (audio) audio.playbackRate = parseFloat(speed); }
     function closePreview() { document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewBody').innerHTML = ''; }
