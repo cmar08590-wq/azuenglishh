@@ -250,6 +250,48 @@
         <!-- KHU VỰC TIẾNG ANH (Mặc định hiển thị) -->
         <!-- ========================================== -->
         <div id="hubEnglish" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+          <!-- THẺ TỪ VỰNG MINH HỌA NGOÀI SẢNH (WORD OF THE DAY) -->
+        <div id="wotdCardContainer" class="mb-6 rounded-3xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-800 text-white relative">
+          <!-- Họa tiết nền phong cảnh tối giản -->
+          <div class="absolute inset-0 opacity-25 pointer-events-none" style="background-image: radial-gradient(circle at 80% 25%, #fbbf24 0%, transparent 35%), linear-gradient(180deg, transparent 55%, #0f172a 100%);"></div>
+
+          <div class="relative z-10 p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1.5 max-w-2xl">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/15 text-amber-300 backdrop-blur-sm">
+                  <i class="fa-solid fa-sparkles mr-1"></i> Từ vựng mỗi ngày
+                </span>
+                <span id="wotdPos" class="text-xs font-medium text-slate-300">adj. · /səˈriːn/</span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <h2 id="wotdWord" class="text-2xl md:text-3xl font-black tracking-tight text-white">serene</h2>
+                <button onclick="speakText(document.getElementById('wotdWord').textContent)" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-amber-300 transition" title="Nghe phát âm">
+                  <i class="fa-solid fa-volume-high text-xs"></i>
+                </button>
+              </div>
+
+              <p id="wotdMeaning" class="text-sm md:text-base font-bold text-amber-200">thanh bình, yên ả</p>
+
+              <div class="pt-1.5 border-t border-white/10 text-xs space-y-0.5">
+                <p id="wotdExampleEn" class="italic text-slate-200">"The lake was calm and serene at dawn."</p>
+                <p id="wotdExampleVi" class="text-slate-400">Mặt hồ lúc bình minh yên ả và thanh bình.</p>
+              </div>
+            </div>
+
+            <!-- Thanh đổi giao diện thẻ & Đổi từ ngẫu nhiên -->
+            <div class="flex flex-row md:flex-col items-end justify-between gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 bg-black/25 p-1 rounded-xl backdrop-blur-sm text-[11px] font-bold">
+                <button onclick="setWotdTheme('dark')" class="px-2.5 py-1 rounded-lg bg-white/20 text-white hover:bg-white/30 transition">Nền tối</button>
+                <button onclick="setWotdTheme('sunset')" class="px-2.5 py-1 rounded-lg text-amber-200 hover:bg-white/20 transition">Hoàng hôn</button>
+                <button onclick="setWotdTheme('emerald')" class="px-2.5 py-1 rounded-lg text-emerald-200 hover:bg-white/20 transition">Rừng xanh</button>
+              </div>
+              <button onclick="pickRandomWotd()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
+                <i class="fa-solid fa-shuffle"></i> Đổi từ khác
+              </button>
+            </div>
+          </div>
+        </div>
           
           <!-- Kho Tài Liệu -->
           <div onclick="showView('files')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 group flex flex-col justify-between">
@@ -2172,6 +2214,7 @@
 
       showToast(currentLanguage === 'en' ? 'Đã chuyển sang Tiếng Anh 🇬🇧' : 'Đã chuyển sang Tiếng Trung 🇨🇳');
       updateZhDictationVisibility();
+      pickRandomWotd();
     }
 
     function updateLanguageUI() {
@@ -4865,6 +4908,66 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
         box.innerHTML = cleanHtml;
       } catch {
         box.textContent = 'Lỗi kết nối AI khi phân tích bộ thủ.';
+      }
+    }
+
+      // ==========================================
+    // THẺ TỪ VỰNG MINH HỌA NGOÀI SẢNH (WOTD)
+    // ==========================================
+    const sampleWotdEn = [
+      { word: "serene", pos: "adj. · /səˈriːn/", meaning: "thanh bình, yên ả", ex: "The lake was calm and serene at dawn.", exVi: "Mặt hồ lúc bình minh yên ả và thanh bình." },
+      { word: "meticulous", pos: "adj. · /məˈtɪkjələs/", meaning: "tỉ mỉ, kỹ lưỡng", ex: "She is meticulous about checking every shipping document.", exVi: "Cô ấy rất tỉ mỉ trong việc kiểm tra từng chứng từ vận tải." },
+      { word: "resilient", pos: "adj. · /rɪˈzɪliənt/", meaning: "kiên cường, bền bỉ", ex: "A resilient mindset helps you overcome academic setbacks.", exVi: "Tư duy kiên cường giúp bạn vượt qua những trở ngại học tập." },
+      { word: "lucrative", pos: "adj. · /ˈluːkrətɪv/", meaning: "sinh lời cao, béo bở", ex: "International freight forwarding can be a lucrative career.", exVi: "Giao nhận vận tải quốc tế có thể là một nghề mang lại thu nhập cao." }
+    ];
+
+    const sampleWotdZh = [
+      { word: "坚持", pos: "động từ · jiānchí", meaning: "kiên trì, bền bỉ", ex: "只要坚持练习，汉语水平一定会提高。", exVi: "Chỉ cần kiên trì luyện tập, trình độ tiếng Hán nhất định sẽ nâng cao." },
+      { word: "从容", pos: "tính từ · cóngróng", meaning: "ung dung, bình tĩnh", ex: "面对挑战时，他总是显得很从容。", exVi: "Khi đối mặt với thử thách, anh ấy luôn tỏ ra rất ung dung." },
+      { word: "收获", pos: "danh/động từ · shōuhuò", meaning: "thu hoạch, gặt hái", ex: "这次旅行让我收获了很多宝贵的经验。", exVi: "Chuyến đi lần này giúp tôi gặt hái được nhiều kinh nghiệm quý báu." },
+      { word: "宁静", pos: "tính từ · níngjìng", meaning: "yên tĩnh, thanh bình", ex: "清晨的湖面非常宁静。", exVi: "Mặt hồ lúc sáng sớm vô cùng thanh bình." }
+    ];
+
+    function pickRandomWotd() {
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      // Ưu tiên lấy từ kho Flashcards người dùng đã lưu nếu có
+      const userCards = (typeof allFlashcards !== 'undefined' && Array.isArray(allFlashcards))
+        ? allFlashcards.filter(c => isZh ? /[\u4e00-\u9fa5]/.test(c.front || '') : !/[\u4e00-\u9fa5]/.test(c.front || ''))
+        : [];
+
+      if (userCards.length > 0 && Math.random() > 0.35) {
+        const card = userCards[Math.floor(Math.random() * userCards.length)];
+        document.getElementById('wotdWord').textContent = card.front || '';
+        document.getElementById('wotdPos').textContent = card.phonetic || (isZh ? 'Flashcard Hán tự' : 'Flashcard cá nhân');
+        document.getElementById('wotdMeaning').textContent = card.back || '';
+        document.getElementById('wotdExampleEn').textContent = card.example ? `"${card.example}"` : 'Ôn tập từ vựng từ bộ thẻ cá nhân của bạn.';
+        document.getElementById('wotdExampleVi').textContent = '';
+        return;
+      }
+
+      const pool = isZh ? sampleWotdZh : sampleWotdEn;
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      document.getElementById('wotdWord').textContent = item.word;
+      document.getElementById('wotdPos').textContent = item.pos;
+      document.getElementById('wotdMeaning').textContent = item.meaning;
+      document.getElementById('wotdExampleEn').textContent = `"${item.ex}"`;
+      document.getElementById('wotdExampleVi').textContent = item.exVi;
+    }
+
+    function setWotdTheme(theme) {
+      const card = document.getElementById('wotdCardContainer');
+      if (!card) return;
+      card.classList.remove(
+        'from-slate-900', 'via-indigo-950', 'to-slate-800',
+        'from-rose-950', 'via-amber-900', 'to-slate-900',
+        'from-emerald-950', 'via-teal-900', 'to-slate-900'
+      );
+      if (theme === 'sunset') {
+        card.classList.add('from-rose-950', 'via-amber-900', 'to-slate-900');
+      } else if (theme === 'emerald') {
+        card.classList.add('from-emerald-950', 'via-teal-900', 'to-slate-900');
+      } else {
+        card.classList.add('from-slate-900', 'via-indigo-950', 'to-slate-800');
       }
     }
       
