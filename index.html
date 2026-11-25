@@ -32,6 +32,7 @@
     }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <style>
     .modal-backdrop { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
     .flashcard { perspective: 1000px; }
@@ -624,6 +625,9 @@
           <button onclick="openUploadBookModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2 active:scale-95">
             <i class="fa-solid fa-book-medical"></i> Thêm Sách Mới
           </button>
+          <button onclick="openHanziStudio()" class="bg-rose-50 dark:bg-slate-700 hover:bg-rose-600 text-rose-600 dark:text-rose-300 hover:text-white border border-rose-200 dark:border-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-pen-nib"></i> <span>Luyện Viết Hán Tự</span>
+        </button>
         </div>
 
         <div>
@@ -1265,6 +1269,110 @@
         <h3 id="previewTitle" class="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate">Xem tài liệu</h3>
       </div>
 
+      <!-- MODAL LUYỆN VIẾT CHỮ HÁN (HANZI WRITER + CHIẾT TỰ + FLASHCARDS) -->
+  <div id="hanziStudioModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+      
+      <!-- Header -->
+      <div class="px-5 py-3.5 bg-gradient-to-r from-rose-600 to-amber-600 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">✍️</span>
+          <div>
+            <h3 class="font-bold text-base md:text-lg leading-tight">Phòng Luyện Viết Chữ Hán</h3>
+            <p class="text-[11px] text-rose-100">Chuẩn bút thuận · Chiết tự bộ thủ · Đồng bộ Flashcards</p>
+          </div>
+        </div>
+        <button onclick="closeHanziStudio()" class="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Thanh chọn nguồn từ vựng (Nhập tay hoặc chọn từ Flashcards) -->
+      <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
+          <input type="text" id="hanziCustomInput" placeholder="Nhập từ/câu chữ Hán (VD: 你好, 学习)..." class="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-white">
+          <button onclick="loadHanziFromInput()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0">
+            Tập viết
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
+          <select id="hanziDeckSelect" onchange="loadHanziFromDeck(this.value)" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <option value="">-- Hoặc chọn bộ Flashcards Tiếng Trung --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Danh sách các chữ Hán trong phiên luyện tập -->
+      <div id="hanziCharPills" class="px-4 py-2.5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5 overflow-x-auto min-h-[48px]">
+        <span class="text-xs text-slate-400 italic">Chọn chữ bên dưới hoặc nhập từ ở trên để bắt đầu...</span>
+      </div>
+
+      <!-- Khu vực chính: Trái (Bảng viết) - Phải (Chiết tự & Bộ thủ) -->
+      <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100 dark:bg-slate-900/60">
+        
+        <!-- Cột trái: Ô vuông luyện viết chuẩn bút thuận -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between shadow-sm">
+          <div class="w-full flex justify-between items-center mb-2">
+            <span id="hanziCurrentTitle" class="text-sm font-extrabold text-slate-700 dark:text-slate-200">Chữ đang luyện: <span class="text-rose-600 text-lg" id="hanziActiveChar">学</span></span>
+            <button onclick="speakText(document.getElementById('hanziActiveChar').textContent)" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+              <i class="fa-solid fa-volume-high"></i> Nghe
+            </button>
+          </div>
+
+          <!-- Khung ô chữ Mễ (米字格) -->
+          <div class="relative my-2 border-2 border-rose-400 rounded-xl bg-amber-50/40 dark:bg-slate-900 shadow-inner overflow-hidden" style="width: 240px; height: 240px;">
+            <!-- Đường kẻ ô chữ Mễ nền -->
+            <svg class="absolute inset-0 pointer-events-none opacity-30" width="240" height="240">
+              <line x1="0" y1="120" x2="240" y2="120" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="120" y1="0" x2="120" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="0" y1="0" x2="240" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="240" y1="0" x2="0" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+            </svg>
+            <div id="hanziWriterTarget" class="relative z-10 w-full h-full cursor-crosshair"></div>
+          </div>
+
+          <p id="hanziQuizStatus" class="text-xs font-bold text-slate-500 dark:text-slate-400 h-5 text-center">Bấm "Xem nét mẫu" hoặc dùng chuột viết trực tiếp lên ô!</p>
+
+          <!-- Nút điều khiển viết -->
+          <div class="grid grid-cols-3 gap-2 w-full mt-3">
+            <button onclick="animateHanziStroke()" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-play"></i> Xem nét mẫu
+            </button>
+            <button onclick="startHanziPractice(true)" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-pen"></i> Tập tô nét
+            </button>
+            <button onclick="startHanziPractice(false)" class="bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
+              <i class="fa-solid fa-eye-slash"></i> Viết mù (Test)
+            </button>
+          </div>
+        </div>
+
+        <!-- Cột phải: Phân tích Bộ thủ & Chiết tự ghi nhớ -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex items-center justify-between border-b dark:border-slate-700 pb-2 mb-3">
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-puzzle-piece text-amber-500"></i> Phân tích Bộ thủ & Chiết tự
+              </h4>
+              <button onclick="analyzeCurrentHanzi()" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg transition">
+                Phân tích chữ này
+              </button>
+            </div>
+            <div id="hanziRadicalResult" class="text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2 max-h-60 overflow-y-auto pr-1">
+              Chọn một chữ Hán bất kỳ, hệ thống sẽ phân tách <b>Bộ thủ chính</b>, <b>Cấu trúc chữ</b>, <b>Số nét</b> và <b>Mẹo chiết tự</b> giúp bạn nhớ mặt chữ cực nhanh.
+            </div>
+          </div>
+
+          <div class="pt-3 border-t dark:border-slate-700 flex justify-between items-center text-[11px] text-slate-400">
+            <span>Hoàn thành viết mù mỗi chữ nhận <b>+5 XP</b></span>
+            <button onclick="nextHanziChar()" class="text-rose-600 font-bold hover:underline">Chữ tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+      
       <!-- Thanh điều khiển PDF (Chỉ hiện khi mở PDF trực tiếp) -->
       <div id="pdfToolbar" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
         <button onclick="changePdfPage(-1)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Trang trước"><i class="fa-solid fa-chevron-left"></i></button>
@@ -4449,6 +4557,191 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
   </div>
 
     <script>
+
+      // ==========================================
+    // HỆ THỐNG LUYỆN VIẾT CHỮ HÁN (HANZI STUDIO)
+    // ==========================================
+    let hanziWriterInstance = null;
+    let hanziCharList = ['学', '习', '汉', '语'];
+    let hanziCurrentIdx = 0;
+    let hanziRadicalCache = {};
+
+    function openHanziStudio(initialWord) {
+      const modal = document.getElementById('hanziStudioModal');
+      const select = document.getElementById('hanziDeckSelect');
+
+      // Nạp danh sách các bộ Flashcards tiếng Trung vào dropdown
+      let opts = '<option value="">-- Hoặc chọn bộ Flashcards Tiếng Trung --</option>';
+      if (typeof flashcardDecks !== 'undefined') {
+        flashcardDecks.filter(d => d.lang === 'zh' || /[\u4e00-\u9fa5]/.test(d.name)).forEach(d => {
+          opts += `<option value="${d.id}">🗂️ ${escapeHtml(d.name)} (${(d.cards || []).length} thẻ)</option>`;
+        });
+      }
+      select.innerHTML = opts;
+
+      if (initialWord) {
+        const chars = extractChineseChars(initialWord);
+        if (chars.length > 0) hanziCharList = chars;
+      }
+
+      modal.classList.remove('hidden');
+      renderHanziPills();
+      selectHanziChar(0);
+    }
+
+    function closeHanziStudio() {
+      document.getElementById('hanziStudioModal').classList.add('hidden');
+    }
+
+    function extractChineseChars(text) {
+      const matches = (text || '').match(/[\u4e00-\u9fa5]/g);
+      return matches ? [...new Set(matches)] : [];
+    }
+
+    function loadHanziFromInput() {
+      const val = document.getElementById('hanziCustomInput').value.trim();
+      const chars = extractChineseChars(val);
+      if (chars.length === 0) return showToast('Vui lòng nhập ít nhất 1 chữ Hán!', 'error');
+      hanziCharList = chars;
+      renderHanziPills();
+      selectHanziChar(0);
+    }
+
+    function loadHanziFromDeck(deckId) {
+      if (!deckId || typeof flashcardDecks === 'undefined') return;
+      const deck = flashcardDecks.find(d => String(d.id) === String(deckId));
+      if (!deck || !deck.cards || deck.cards.length === 0) {
+        return showToast('Bộ thẻ này chưa có từ vựng nào!', 'error');
+      }
+      const combined = deck.cards.map(c => c.word).join('');
+      const chars = extractChineseChars(combined);
+      if (chars.length === 0) return showToast('Không tìm thấy chữ Hán trong bộ thẻ này!', 'error');
+      hanziCharList = chars;
+      renderHanziPills();
+      selectHanziChar(0);
+    }
+
+    function renderHanziPills() {
+      const box = document.getElementById('hanziCharPills');
+      box.innerHTML = hanziCharList.map((ch, idx) => `
+        <button onclick="selectHanziChar(${idx})" class="px-3 py-1.5 rounded-xl text-base font-bold transition shrink-0 border ${
+          idx === hanziCurrentIdx
+            ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+            : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-rose-400'
+        }">${ch}</button>
+      `).join('');
+    }
+
+    function selectHanziChar(idx) {
+      hanziCurrentIdx = Math.max(0, Math.min(idx, hanziCharList.length - 1));
+      const ch = hanziCharList[hanziCurrentIdx];
+      document.getElementById('hanziActiveChar').textContent = ch;
+      renderHanziPills();
+
+      const target = document.getElementById('hanziWriterTarget');
+      target.innerHTML = '';
+
+      if (typeof HanziWriter === 'undefined') {
+        target.innerHTML = '<div class="p-4 text-center text-xs text-red-500">Chưa tải được thư viện HanziWriter.</div>';
+        return;
+      }
+
+      hanziWriterInstance = HanziWriter.create('hanziWriterTarget', ch, {
+        width: 240,
+        height: 240,
+        padding: 15,
+        showOutline: true,
+        strokeAnimationSpeed: 1,
+        delayBetweenStrokes: 250,
+        strokeColor: '#e11d48',
+        outlineColor: '#cbd5e1',
+        drawingColor: '#0f172a',
+        drawingWidth: 16,
+        showHintAfterMisses: 2
+      });
+
+      startHanziPractice(true);
+      analyzeCurrentHanzi();
+    }
+
+    function animateHanziStroke() {
+      if (!hanziWriterInstance) return;
+      document.getElementById('hanziQuizStatus').textContent = 'Đang chạy nét mẫu chuẩn bút thuận...';
+      hanziWriterInstance.animateCharacter({
+        onComplete: () => {
+          document.getElementById('hanziQuizStatus').textContent = 'Đã xong nét mẫu! Đến lượt bạn viết thử.';
+          startHanziPractice(true);
+        }
+      });
+    }
+
+    function startHanziPractice(showOutline) {
+      if (!hanziWriterInstance) return;
+      if (showOutline) {
+        hanziWriterInstance.showOutline();
+        document.getElementById('hanziQuizStatus').textContent = 'Chế độ Tập tô: Đồ theo nét mờ theo đúng thứ tự.';
+      } else {
+        hanziWriterInstance.hideOutline();
+        document.getElementById('hanziQuizStatus').textContent = 'Chế độ Viết mù: Tự viết lại từ trí nhớ!';
+      }
+
+      hanziWriterInstance.quiz({
+        onMistake: () => {
+          document.getElementById('hanziQuizStatus').innerHTML = '<span class="text-red-500">Sai nét hoặc sai thứ tự! Thử lại nét đó nhé.</span>';
+        },
+        onComplete: (summaryData) => {
+          document.getElementById('hanziQuizStatus').innerHTML = `<span class="text-emerald-600">🎉 Xuất sắc! Hoàn thành chữ "${hanziCharList[hanziCurrentIdx]}" (Sai ${summaryData.totalMistakes} lần).</span>`;
+          if (!showOutline && typeof addXp === 'function') addXp(5);
+        }
+      });
+    }
+
+    function nextHanziChar() {
+      if (hanziCurrentIdx + 1 < hanziCharList.length) {
+        selectHanziChar(hanziCurrentIdx + 1);
+      } else {
+        showToast('Bạn đã luyện hết danh sách chữ Hán hiện tại!');
+      }
+    }
+
+    async function analyzeCurrentHanzi() {
+      const ch = hanziCharList[hanziCurrentIdx];
+      const box = document.getElementById('hanziRadicalResult');
+      if (!ch || !box) return;
+
+      if (hanziRadicalCache[ch]) {
+        box.innerHTML = hanziRadicalCache[ch];
+        return;
+      }
+
+      box.innerHTML = '<div class="py-4 text-center text-amber-600 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích bộ thủ & chiết tự...</div>';
+      const prompt = `Phân tích ngắn gọn chữ Hán "${ch}" cho người học HSK bằng tiếng Việt (trình bày bằng thẻ HTML <ul><li> gọn đẹp, không markdown):
+1. Pinyin & Nghĩa tiếng Việt phổ biến.
+2. Bộ thủ chính & Cấu trúc chữ (trái-phải, trên-dưới, bao vây...).
+3. Tổng số nét & Quy tắc bút thuận đáng chú ý.
+4. Mẹo chiết tự 1-2 câu để nhớ mặt chữ cực nhanh.`;
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ prompt })
+        });
+        const raw = await res.text();
+        let out = '';
+        raw.split('\n').forEach(line => {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            try { out += JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || ''; } catch {}
+          }
+        });
+        const cleanHtml = out.replace(/```html|```/g, '').trim() || 'Không có dữ liệu phân tích.';
+        hanziRadicalCache[ch] = cleanHtml;
+        box.innerHTML = cleanHtml;
+      } catch {
+        box.textContent = 'Lỗi kết nối AI khi phân tích bộ thủ.';
+      }
+    }
+      
     // Đăng ký Service Worker cho PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
