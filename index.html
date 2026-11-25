@@ -1179,7 +1179,7 @@
     </div>
   </div>
   
-  <!-- MODAL THÊM SÁCH MỚI -->
+  <!-- MODAL THÊM SÁCH MỚI (Hỗ trợ File < 50MB hoặc Link Google Drive không giới hạn) -->
   <div id="uploadBookModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
@@ -1191,20 +1191,27 @@
       <div class="space-y-3">
         <div>
           <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tên sách:</label>
-          <input type="text" id="bookTitleInput" placeholder="VD: Harry Potter..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+          <input type="text" id="bookTitleInput" placeholder="VD: Giáo trình HSK 1..." class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
         </div>
         <div>
           <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Tác giả:</label>
-          <input type="text" id="bookAuthorInput" placeholder="VD: J.K. Rowling..." class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+          <input type="text" id="bookAuthorInput" placeholder="VD: Đại học Ngôn ngữ Bắc Kinh..." class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
         </div>
         <div>
-          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Chọn File (PDF/EPUB):</label>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Cách 1: Chọn File từ máy (dưới 50MB):</label>
           <input type="file" id="bookFileInput" accept=".pdf,.docx,.epub" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-slate-700 dark:file:text-emerald-400">
+        </div>
+        <div class="pt-1 border-t border-slate-200 dark:border-slate-700">
+          <label class="text-xs font-bold text-indigo-600 dark:text-indigo-400 block mb-1">
+            <i class="fa-brands fa-google-drive"></i> Cách 2: Hoặc dán link Google Drive (File > 50MB):
+          </label>
+          <input type="url" id="bookDriveLinkInput" placeholder="https://drive.google.com/file/d/..." class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+          <p class="text-[10px] text-slate-400 mt-1">*Nhớ bật chia sẻ "Bất kỳ ai có đường liên kết đều có thể xem" trên Drive.</p>
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeUploadBookModal()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Hủy</button>
-        <button onclick="submitUploadBook()" id="btnUploadBook" class="px-5 py-2 text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl shadow-md transition active:scale-95">Tải lên</button>
+        <button onclick="submitUploadBook()" id="btnUploadBook" class="px-5 py-2 text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl shadow-md transition active:scale-95">Lưu sách</button>
       </div>
     </div>
   </div>
@@ -2358,13 +2365,24 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     // ==========================================
     let libraryBooks = [];
 
+   function convertDriveToPreviewUrl(rawUrl) {
+      if (!rawUrl) return '';
+      const match = rawUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || rawUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+      return rawUrl.trim();
+    }
+
     function openUploadBookModal() {
       document.getElementById('bookTitleInput').value = '';
       document.getElementById('bookAuthorInput').value = '';
       document.getElementById('bookFileInput').value = '';
+      const driveInp = document.getElementById('bookDriveLinkInput');
+      if (driveInp) driveInp.value = '';
       document.getElementById('uploadBookModal').classList.remove('hidden');
     }
-
+    
     function closeUploadBookModal() {
       document.getElementById('uploadBookModal').classList.add('hidden');
     }
@@ -2420,29 +2438,40 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       const author = document.getElementById('bookAuthorInput').value.trim();
       const fileInput = document.getElementById('bookFileInput');
       const file = fileInput.files[0];
-      
+      const driveLinkRaw = (document.getElementById('bookDriveLinkInput')?.value || '').trim();
+
       if (!title) return showToast('Vui lòng nhập tên sách!', 'error');
-      if (!file) return showToast('Vui lòng chọn file sách!', 'error');
+      if (!file && !driveLinkRaw) return showToast('Vui lòng chọn file sách hoặc dán link Google Drive!', 'error');
 
       const btn = document.getElementById('btnUploadBook');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
       try {
-        // Upload file lên đúng bucket (books hoặc books_zh)
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
-        const { error: uploadError } = await supabaseClient.storage.from(cfg.bookBucket).upload(fileName, file);
-        if (uploadError) throw uploadError;
+        let finalFileUrl = '';
+        let finalFileName = '';
 
-        const { data: publicUrlData } = supabaseClient.storage.from(cfg.bookBucket).getPublicUrl(fileName);
+        if (driveLinkRaw) {
+          // Trường hợp 1: Dùng link Google Drive (không giới hạn dung lượng)
+          finalFileUrl = convertDriveToPreviewUrl(driveLinkRaw);
+          finalFileName = title + ' (Google Drive)';
+        } else {
+          // Trường hợp 2: Upload file trực tiếp lên Supabase Storage (< 50MB)
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
+          const { error: uploadError } = await supabaseClient.storage.from(cfg.bookBucket).upload(fileName, file);
+          if (uploadError) throw uploadError;
 
-        // Lưu thông tin vào đúng bảng (books_metadata hoặc books_metadata_zh)
+          const { data: publicUrlData } = supabaseClient.storage.from(cfg.bookBucket).getPublicUrl(fileName);
+          finalFileUrl = publicUrlData.publicUrl;
+          finalFileName = file.name;
+        }
+
         const bookRecord = {
           id: String(Date.now() + Math.random()),
           title: title,
           author: author,
-          file_url: publicUrlData.publicUrl,
-          file_name: file.name
+          file_url: finalFileUrl,
+          file_name: finalFileName
         };
 
         const { error: dbError } = await supabaseClient.from(cfg.bookTable).insert([bookRecord]);
@@ -2452,12 +2481,11 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         closeUploadBookModal();
         fetchLibraryBooks();
         addXp(10);
-
       } catch (err) {
         showToast('Lỗi: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Tải lên';
+        btn.innerHTML = 'Lưu sách';
       }
     }
 
@@ -2466,12 +2494,13 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       if (!confirm('Bạn có chắc muốn xóa cuốn sách này khỏi thư viện?')) return;
       try {
         const book = libraryBooks.find(b => b.id === id);
-        if (book && book.file_url) {
+        // Chỉ xóa trên Supabase Storage nếu không phải link Google Drive
+        if (book && book.file_url && !book.file_url.includes('drive.google.com')) {
           const urlParts = book.file_url.split('/');
           const storageFileName = urlParts[urlParts.length - 1];
           await supabaseClient.storage.from(cfg.bookBucket).remove([storageFileName]);
         }
-        
+
         await supabaseClient.from(cfg.bookTable).delete().eq('id', id);
         showToast('Đã xóa sách!');
         fetchLibraryBooks();
