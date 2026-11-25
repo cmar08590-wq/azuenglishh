@@ -227,9 +227,6 @@
           <button onclick="openNewsModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-slate-700/50 hover:text-orange-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-newspaper w-5 text-center text-orange-500"></i> Đọc Báo Song Ngữ
           </button>
-          <button onclick="showView('books')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-white transition-all duration-200">
-            <i class="fa-solid fa-book-bookmark w-5 text-center text-emerald-500"></i> Sách Bổ Trợ
-          </button>
         </nav>
       </div>
 
@@ -2660,14 +2657,23 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
 
     function setDictationSpeed(speed) { document.getElementById('dictationAudioPlayer').playbackRate = parseFloat(speed); }
 
-    function saveDictationNote() {
+    async function saveDictationNote() {
       if (!currentDictationFile) return showToast("Chưa chọn bài nghe!", "error");
+      const cfg = getLangStorageConfig();
       const text = document.getElementById('dictationTextArea').value;
+      
+      const { error } = await supabaseClient
+        .from(cfg.docTable)
+        .update({ note: text })
+        .eq('id', currentDictationFile.id);
+
+      if (error) {
+        return showToast('Lỗi lưu bài chép: ' + error.message, 'error');
+      }
+
       currentDictationFile.note = text;
-      supabaseClient.from('documents_metadata').update({ note: text }).eq('id', currentDictationFile.id).then(() => {
-        addXp(10);
-        showToast('Đã lưu bài chép! +10 XP');
-      });
+      addXp(10);
+      showToast('Đã lưu bài chép! +10 XP');
     }
 
     function setupAudioDictationUploadListener() {
@@ -4602,9 +4608,6 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
         showToast('Đã xóa bộ thẻ!');
       }
     }
-
-    function openCreateDeckModal() { document.getElementById('deckNameInput').value = ''; document.getElementById('createDeckModal').classList.remove('hidden'); }
-    function closeCreateDeckModal() { document.getElementById('createDeckModal').classList.add('hidden'); }
 
     function submitCreateDeck() {
       const name = document.getElementById('deckNameInput').value.trim();
