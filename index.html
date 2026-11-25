@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   if (window.pdfjsLib) {
@@ -1383,7 +1384,7 @@
     </div>
 
     <!-- POPUP NỔI KHI BÔI ĐEN CHỮ TRÊN TÀI LIỆU -->
-    <div id="selectionPopup" class="fixed z-[70] hidden bg-slate-900 text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-1.5 text-xs font-bold">
+    <div id="selectionPopup" onmousedown="event.preventDefault()" class="fixed z-[70] hidden bg-slate-900 text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-1.5 text-xs font-bold">
       <button onclick="popupSpeakSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-amber-300 flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> Đọc</button>
       <span class="text-slate-600">|</span>
       <button onclick="popupLookupSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-teal-300 flex items-center gap-1"><i class="fa-solid fa-language"></i> Dịch</button>
@@ -3441,25 +3442,47 @@ function updateGamificationUI() {
       const ctx = canvas.getContext('2d');
       await page.render({ canvasContext: ctx, viewport }).promise;
 
-      // Lớp text trong suốt đè lên canvas để bôi đen chọn chữ được
+      // Dùng đúng class 'textLayer' của pdf_viewer.min.css để chữ khớp 100% vị trí trên trang
       const textLayerDiv = document.createElement('div');
-      textLayerDiv.className = 'absolute inset-0 overflow-hidden leading-none opacity-25 selection:bg-amber-300';
+      textLayerDiv.className = 'textLayer';
       textLayerDiv.style.setProperty('--scale-factor', currentPdfScale);
 
       const textContent = await page.getTextContent();
       currentPageExtractedText = textContent.items.map(i => i.str).join(' ');
 
-      pdfjsLib.renderTextLayer({
+      await pdfjsLib.renderTextLayer({
         textContentSource: textContent,
         container: textLayerDiv,
         viewport: viewport,
         textDivs: []
-      });
+      }).promise;
 
       wrapper.appendChild(canvas);
       wrapper.appendChild(textLayerDiv);
       previewBody.appendChild(wrapper);
     }
+
+    // Chỉ lắng nghe bôi đen bên trong khung tài liệu (#previewBody) để không gây lag toàn trang
+    const previewBodyEl = document.getElementById('previewBody');
+    if (previewBodyEl) {
+      previewBodyEl.addEventListener('mouseup', (e) => {
+        setTimeout(() => {
+          const popup = document.getElementById('selectionPopup');
+          const sel = window.getSelection();
+          const text = sel ? sel.toString().replace(/\s+/g, ' ').trim() : '';
+
+          if (text && text.length >= 1 && text.length <= 200) {
+            selectedHighlightText = text;
+            popup.style.left = `${Math.min(window.innerWidth - 230, Math.max(10, e.clientX - 90))}px`;
+            popup.style.top = `${Math.max(10, e.clientY - 48)}px`;
+            popup.classList.remove('hidden');
+          } else {
+            popup.classList.add('hidden');
+          }
+        }, 10);
+      });
+    }
+    
 
     function changePdfPage(delta) { renderPdfPage(currentPdfPage + delta); }
     function goToPdfPage(val) { renderPdfPage(parseInt(val) || 1); }
@@ -3514,24 +3537,7 @@ function updateGamificationUI() {
     }
 
     // --- 3. POPUP BÔI ĐEN TRA TỪ & LƯU FLASHCARD ---
-    document.addEventListener('mouseup', (e) => {
-      const modal = document.getElementById('previewModal');
-      const popup = document.getElementById('selectionPopup');
-      if (!modal || modal.classList.contains('hidden')) return;
-      if (popup.contains(e.target)) return;
-
-      const sel = window.getSelection();
-      const text = sel ? sel.toString().trim() : '';
-      if (text && text.length >= 1 && text.length <= 200) {
-        selectedHighlightText = text;
-        popup.style.left = `${Math.min(window.innerWidth - 230, Math.max(10, e.clientX - 90))}px`;
-        popup.style.top = `${Math.max(10, e.clientY - 46)}px`;
-        popup.classList.remove('hidden');
-      } else {
-        popup.classList.add('hidden');
-      }
-    });
-
+    
     function popupSpeakSelection() {
       if (selectedHighlightText) speakText(selectedHighlightText);
       document.getElementById('selectionPopup').classList.add('hidden');
