@@ -24,6 +24,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  
+</script>
   <style>
     .modal-backdrop { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
     .flashcard { perspective: 1000px; }
@@ -1248,21 +1255,142 @@
     </div>
   </div>
 
-  <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-2 md:p-6">
-    <div class="bg-white dark:bg-slate-800 rounded-t-2xl px-5 py-4 flex justify-between items-center shadow-lg border-b border-slate-200 dark:border-slate-700">
-  <div class="flex items-center gap-3 overflow-hidden">
-    <span id="previewIcon" class="text-xl"></span>
-    <h3 id="previewTitle" class="font-bold text-slate-800 dark:text-white text-base md:text-lg truncate">Xem tài liệu</h3>
+  <!-- MODAL XEM & HỌC TRỰC TIẾP TRÊN TÀI LIỆU (NÂNG CẤP TOÀN DIỆN) -->
+  <div id="previewModal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col justify-between p-2 md:p-4">
+    <!-- Thanh Header -->
+    <div class="bg-white dark:bg-slate-800 rounded-t-2xl px-4 py-3 flex flex-wrap justify-between items-center gap-2 shadow-lg border-b border-slate-200 dark:border-slate-700">
+      <div class="flex items-center gap-2.5 overflow-hidden max-w-md">
+        <span id="previewIcon" class="text-xl shrink-0"></span>
+        <h3 id="previewTitle" class="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate">Xem tài liệu</h3>
       </div>
-      <div class="flex items-center gap-3">
-        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
-          <i class="fa-solid fa-download"></i> Tải về
+
+      <!-- Thanh điều khiển PDF (Chỉ hiện khi mở PDF trực tiếp) -->
+      <div id="pdfToolbar" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+        <button onclick="changePdfPage(-1)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Trang trước"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="px-1 text-slate-700 dark:text-slate-200">Trang <input type="number" id="pdfPageInput" min="1" value="1" onchange="goToPdfPage(this.value)" class="w-11 text-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-1 py-0.5"> / <span id="pdfTotalPages">1</span></span>
+        <button onclick="changePdfPage(1)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Trang sau"><i class="fa-solid fa-chevron-right"></i></button>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <button onclick="changePdfZoom(-0.2)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Thu nhỏ"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <button onclick="changePdfZoom(0.2)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Phóng to"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <button onclick="addPageBookmark()" class="text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition flex items-center gap-1" title="Đánh dấu trang này">
+          <i class="fa-solid fa-bookmark"></i> <span class="hidden sm:inline">Đánh dấu</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Nút Chia đôi màn hình (Split-View) -->
+        <button onclick="toggleSplitView()" id="btnSplitView" class="bg-purple-50 dark:bg-slate-700 hover:bg-purple-600 text-purple-600 dark:text-purple-300 hover:text-white border border-purple-200 dark:border-slate-600 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-table-columns"></i> <span class="hidden sm:inline">Chia đôi</span>
+        </button>
+        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 dark:bg-slate-700 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Tải về</span>
         </a>
-        <button onclick="closePreview()" class="text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-red-50 p-2 rounded-xl transition text-xl">
+        <button onclick="closePreview()" class="text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-slate-700 hover:bg-red-50 p-1.5 rounded-xl transition text-lg">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
     </div>
+    
+    <!-- Khu vực nội dung chính -->
+    <div class="bg-slate-100 dark:bg-slate-900 flex-1 overflow-hidden rounded-b-2xl flex flex-col md:flex-row p-2.5 gap-2.5 relative">
+      
+      <!-- Khung 1: Tài liệu chính -->
+      <div id="previewBody" class="flex-1 overflow-auto flex items-start justify-center p-2 bg-white dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700 relative"></div>
+
+      <!-- Khung 2: Màn hình chia đôi Split-View (Ẩn mặc định) -->
+      <div id="splitViewPane" class="hidden flex-1 overflow-hidden flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-inner border-2 border-purple-300 dark:border-purple-700">
+        <div class="p-2 bg-purple-50 dark:bg-slate-900 border-b border-purple-200 dark:border-slate-700 flex items-center justify-between gap-2">
+          <select id="splitFileSelect" onchange="loadSplitContent(this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <option value="">-- Chọn tài liệu thứ 2 để đối chiếu --</option>
+            <option value="__DICT__">📖 Mở Từ Điển AI song song</option>
+          </select>
+          <button onclick="toggleSplitView()" class="text-slate-400 hover:text-red-500 px-2 py-1 text-xs font-bold">Đóng</button>
+        </div>
+        <div id="splitViewBody" class="flex-1 overflow-auto p-3 flex items-center justify-center text-xs text-slate-400">
+          Chọn một tài liệu hoặc từ điển ở thanh trên để hiển thị song song.
+        </div>
+      </div>
+      
+      <!-- Thanh công cụ học tập bên phải (3 Tabs) -->
+      <div id="previewSidebar" class="w-full md:w-80 bg-white dark:bg-slate-800 rounded-xl p-3 border border-slate-200 dark:border-slate-700 flex flex-col justify-between hidden shadow-sm shrink-0">
+        
+        <!-- Điều khiển Audio (Nếu là file âm thanh) -->
+        <div id="audioControlsContainer" class="hidden border-b dark:border-slate-700 pb-2.5 mb-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-sliders text-indigo-600 mr-1"></i> Tốc độ nghe:</span>
+            <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-2.5 py-1 font-bold text-slate-700 dark:text-slate-200">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tabs chuyển đổi -->
+        <div class="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-[11px] font-bold mb-3">
+          <button onclick="switchStudyTab('notes')" id="tabStudy-notes" class="py-1.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm">Ghi chú</button>
+          <button onclick="switchStudyTab('ai')" id="tabStudy-ai" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-700">AI Ôn tập</button>
+          <button onclick="switchStudyTab('lookup')" id="tabStudy-lookup" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-700">Tra nhanh</button>
+        </div>
+
+        <!-- TAB 1: GHI CHÚ & ĐÁNH DẤU TRANG -->
+        <div id="studyPane-notes" class="flex-1 flex flex-col overflow-hidden gap-2.5">
+          <!-- Danh sách trang đánh dấu -->
+          <div id="bookmarksSection" class="max-h-32 overflow-y-auto space-y-1.5 border-b dark:border-slate-700 pb-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-extrabold text-amber-600 uppercase"><i class="fa-solid fa-bookmark"></i> Trang đánh dấu</span>
+            </div>
+            <div id="pageBookmarksList" class="space-y-1 text-xs text-slate-500">Chưa có trang đánh dấu.</div>
+          </div>
+
+          <h4 class="font-bold text-slate-700 dark:text-slate-200 text-xs flex items-center gap-1.5"><i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học</h4>
+          <textarea id="fileNoteArea" placeholder="Ghi lại cấu trúc hay, từ mới..." class="w-full flex-1 p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-slate-50 dark:bg-slate-900"></textarea>
+          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl text-xs font-bold transition shadow-md active:scale-95">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú & Đánh dấu
+          </button>
+        </div>
+
+        <!-- TAB 2: AI TÓM TẮT & TẠO QUIZ TỪ TÀI LIỆU -->
+        <div id="studyPane-ai" class="hidden flex-1 flex flex-col overflow-hidden gap-2">
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="runDocAiAction('summary')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-list-check"></i> Tóm tắt trang
+            </button>
+            <button onclick="runDocAiAction('quiz')" class="bg-rose-600 hover:bg-rose-700 text-white py-2 px-2 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-circle-question"></i> Tạo Quiz
+            </button>
+          </div>
+          <div id="docAiOutput" class="flex-1 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2">
+            Bấm <b>Tóm tắt trang</b> hoặc <b>Tạo Quiz</b> để AI phân tích nội dung trang hiện tại của tài liệu.
+          </div>
+        </div>
+
+        <!-- TAB 3: TRA TỪ NHANH & LƯU FLASHCARD -->
+        <div id="studyPane-lookup" class="hidden flex-1 flex flex-col overflow-hidden gap-2">
+          <div class="flex gap-1.5">
+            <input type="text" id="quickLookupInput" placeholder="Bôi đen chữ hoặc nhập từ..." class="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+            <button onclick="executeQuickLookup()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 rounded-xl text-xs font-bold"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </div>
+          <div id="quickLookupResult" class="flex-1 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-700 dark:text-slate-200">
+            Bôi đen bất kỳ từ/câu nào trên trang tài liệu để tra nghĩa, nghe đọc và lưu thẳng vào Flashcards.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- POPUP NỔI KHI BÔI ĐEN CHỮ TRÊN TÀI LIỆU -->
+    <div id="selectionPopup" class="fixed z-[70] hidden bg-slate-900 text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-1.5 text-xs font-bold">
+      <button onclick="popupSpeakSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-amber-300 flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> Đọc</button>
+      <span class="text-slate-600">|</span>
+      <button onclick="popupLookupSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-teal-300 flex items-center gap-1"><i class="fa-solid fa-language"></i> Dịch</button>
+      <span class="text-slate-600">|</span>
+      <button onclick="popupSaveFlashcard()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-pink-400 flex items-center gap-1"><i class="fa-solid fa-plus"></i> Flashcard</button>
+    </div>
+  </div>
     
     <div class="bg-slate-100 dark:bg-slate-900 flex-1 overflow-hidden rounded-b-2xl flex flex-col md:flex-row p-3 gap-3 relative">
   <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-2 bg-white dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700"></div>
@@ -3248,36 +3376,370 @@ function updateGamificationUI() {
     }
 
 
+    // ==========================================
+    // HỆ THỐNG HỌC TRỰC TIẾP TRÊN FILE (PDF.JS + POPUP + BOOKMARKS + AI + SPLIT-VIEW)
+    // ==========================================
+    let currentPreviewRecord = null;
+    let pdfDocInstance = null;
+    let currentPdfPage = 1;
+    let currentPdfScale = 1.25;
+    let currentPageExtractedText = '';
+    let currentBookmarks = []; // [{ page: 5, label: 'Ngữ pháp' }]
+    let selectedHighlightText = '';
+
+    function switchStudyTab(tab) {
+      ['notes', 'ai', 'lookup'].forEach(t => {
+        const btn = document.getElementById(`tabStudy-${t}`);
+        const pane = document.getElementById(`studyPane-${t}`);
+        if (t === tab) {
+          btn.className = 'py-1.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm';
+          pane.classList.remove('hidden');
+        } else {
+          btn.className = 'py-1.5 rounded-lg text-slate-500 hover:text-slate-700';
+          pane.classList.add('hidden');
+        }
+      });
+    }
+
+    // --- 1. TRÌNH ĐỌC PDF.JS CHO PHÉP BÔI ĐEN CHỮ ---
+    async function renderPdfWithPdfJs(url) {
+      const previewBody = document.getElementById('previewBody');
+      const toolbar = document.getElementById('pdfToolbar');
+      previewBody.innerHTML = `<div class="p-10 text-center text-indigo-500 font-bold"><i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i><p>Đang tải trang PDF...</p></div>`;
+
+      try {
+        pdfDocInstance = await pdfjsLib.getDocument(url).promise;
+        document.getElementById('pdfTotalPages').textContent = pdfDocInstance.numPages;
+        toolbar.classList.remove('hidden');
+        currentPdfPage = 1;
+        await renderPdfPage(1);
+      } catch (err) {
+        // Dự phòng nếu link Google Drive hoặc CORS chặn PDF.js -> dùng iframe
+        toolbar.classList.add('hidden');
+        previewBody.innerHTML = `<iframe src="${url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+      }
+    }
+
+    async function renderPdfPage(pageNum) {
+      if (!pdfDocInstance) return;
+      currentPdfPage = Math.max(1, Math.min(pageNum, pdfDocInstance.numPages));
+      document.getElementById('pdfPageInput').value = currentPdfPage;
+
+      const page = await pdfDocInstance.getPage(currentPdfPage);
+      const viewport = page.getViewport({ scale: currentPdfScale });
+      const previewBody = document.getElementById('previewBody');
+
+      previewBody.innerHTML = '';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'relative shadow-lg bg-white my-2 select-text';
+      wrapper.style.width = `${viewport.width}px`;
+      wrapper.style.height = `${viewport.height}px`;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // Lớp text trong suốt đè lên canvas để bôi đen chọn chữ được
+      const textLayerDiv = document.createElement('div');
+      textLayerDiv.className = 'absolute inset-0 overflow-hidden leading-none opacity-25 selection:bg-amber-300';
+      textLayerDiv.style.setProperty('--scale-factor', currentPdfScale);
+
+      const textContent = await page.getTextContent();
+      currentPageExtractedText = textContent.items.map(i => i.str).join(' ');
+
+      pdfjsLib.renderTextLayer({
+        textContentSource: textContent,
+        container: textLayerDiv,
+        viewport: viewport,
+        textDivs: []
+      });
+
+      wrapper.appendChild(canvas);
+      wrapper.appendChild(textLayerDiv);
+      previewBody.appendChild(wrapper);
+    }
+
+    function changePdfPage(delta) { renderPdfPage(currentPdfPage + delta); }
+    function goToPdfPage(val) { renderPdfPage(parseInt(val) || 1); }
+    function changePdfZoom(delta) {
+      currentPdfScale = Math.max(0.6, Math.min(2.5, currentPdfScale + delta));
+      renderPdfPage(currentPdfPage);
+    }
+
+    // --- 2. ĐÁNH DẤU TRANG (BOOKMARKS) ---
+    function parseBookmarksFromNote(rawNote) {
+      const marker = '\n---BOOKMARKS---\n';
+      if (!rawNote || !rawNote.includes(marker)) {
+        return { cleanNote: rawNote || '', bookmarks: [] };
+      }
+      const [cleanNote, jsonPart] = rawNote.split(marker);
+      try {
+        return { cleanNote, bookmarks: JSON.parse(jsonPart) || [] };
+      } catch {
+        return { cleanNote, bookmarks: [] };
+      }
+    }
+
+    function addPageBookmark() {
+      const label = prompt(`Đặt tên cho Trang ${currentPdfPage}:`, `Trang ${currentPdfPage}`);
+      if (!label) return;
+      currentBookmarks.push({ page: currentPdfPage, label: label.trim() });
+      renderBookmarksList();
+      saveFileNote();
+    }
+
+    function removePageBookmark(idx) {
+      currentBookmarks.splice(idx, 1);
+      renderBookmarksList();
+      saveFileNote();
+    }
+
+    function renderBookmarksList() {
+      const list = document.getElementById('pageBookmarksList');
+      if (!list) return;
+      if (currentBookmarks.length === 0) {
+        list.innerHTML = '<span class="text-slate-400 italic">Chưa có trang đánh dấu.</span>';
+        return;
+      }
+      list.innerHTML = currentBookmarks.map((b, i) => `
+        <div class="flex items-center justify-between bg-amber-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-amber-200 dark:border-slate-700">
+          <button onclick="goToPdfPage(${b.page})" class="text-left font-bold text-amber-700 dark:text-amber-300 hover:underline truncate flex-1">
+            🔖 Tr.${b.page}: ${escapeHtml(b.label)}
+          </button>
+          <button onclick="removePageBookmark(${i})" class="text-slate-400 hover:text-red-500 ml-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `).join('');
+    }
+
+    // --- 3. POPUP BÔI ĐEN TRA TỪ & LƯU FLASHCARD ---
+    document.addEventListener('mouseup', (e) => {
+      const modal = document.getElementById('previewModal');
+      const popup = document.getElementById('selectionPopup');
+      if (!modal || modal.classList.contains('hidden')) return;
+      if (popup.contains(e.target)) return;
+
+      const sel = window.getSelection();
+      const text = sel ? sel.toString().trim() : '';
+      if (text && text.length >= 1 && text.length <= 200) {
+        selectedHighlightText = text;
+        popup.style.left = `${Math.min(window.innerWidth - 230, Math.max(10, e.clientX - 90))}px`;
+        popup.style.top = `${Math.max(10, e.clientY - 46)}px`;
+        popup.classList.remove('hidden');
+      } else {
+        popup.classList.add('hidden');
+      }
+    });
+
+    function popupSpeakSelection() {
+      if (selectedHighlightText) speakText(selectedHighlightText);
+      document.getElementById('selectionPopup').classList.add('hidden');
+    }
+
+    function popupLookupSelection() {
+      document.getElementById('selectionPopup').classList.add('hidden');
+      switchStudyTab('lookup');
+      document.getElementById('quickLookupInput').value = selectedHighlightText;
+      executeQuickLookup();
+    }
+
+    async function popupSaveFlashcard() {
+      document.getElementById('selectionPopup').classList.add('hidden');
+      const word = selectedHighlightText;
+      if (!word) return;
+
+      const isZh = /[\u4e00-\u9fa5]/.test(word) || currentLanguage === 'zh';
+      const lang = isZh ? 'zh' : 'en';
+      let deck = flashcardDecks.find(d => d.lang === lang);
+      if (!deck) {
+        deck = { id: 'deck_' + Date.now(), name: isZh ? 'Từ vựng Tiếng Trung' : 'Từ vựng Tiếng Anh', lang, icon: isZh ? '🇨🇳' : '🇬🇧', cards: [] };
+        flashcardDecks.push(deck);
+      }
+
+      const meaning = prompt(`Nhập nghĩa tiếng Việt cho "${word}":`);
+      if (!meaning || !meaning.trim()) return;
+
+      const newCard = { id: 'c_' + Date.now(), word, meaning: meaning.trim() };
+      if (isZh) {
+        const py = prompt(`Nhập Pinyin cho "${word}" (có thể bỏ trống):`, '');
+        if (py) newCard.pinyin = py.trim();
+      }
+      deck.cards.push(newCard);
+      saveUserDataLocal();
+      addXp(5);
+      showToast(`Đã lưu "${word}" vào Flashcards (${deck.name})!`);
+    }
+
+    async function executeQuickLookup() {
+      const q = document.getElementById('quickLookupInput').value.trim();
+      const box = document.getElementById('quickLookupResult');
+      if (!q) return;
+      box.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-teal-500"></i> Đang tra nghĩa...';
+
+      const prompt = `Giải thích ngắn gọn nghĩa tiếng Việt, từ loại, phiên âm (IPA hoặc Pinyin) và 1 ví dụ ngắn cho từ/cụm từ: "${q}". Trình bày bằng HTML gọn gàng.`;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ prompt })
+        });
+        const raw = await res.text();
+        let out = '';
+        raw.split('\n').forEach(line => {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            try { out += JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || ''; } catch {}
+          }
+        });
+        box.innerHTML = `
+          <div class="flex justify-between items-center mb-2 pb-1.5 border-b dark:border-slate-700">
+            <strong class="text-sm text-teal-600">${escapeHtml(q)}</strong>
+            <div class="flex gap-1">
+              <button onclick="speakText('${q.replace(/'/g, "\\'")}')" class="px-2 py-1 bg-amber-100 text-amber-700 rounded-lg font-bold"><i class="fa-solid fa-volume-high"></i></button>
+              <button onclick="selectedHighlightText='${q.replace(/'/g, "\\'")}'; popupSaveFlashcard()" class="px-2 py-1 bg-pink-100 text-pink-600 rounded-lg font-bold">+ Thẻ</button>
+            </div>
+          </div>
+          <div>${out.replace(/```html|```/g, '').trim() || 'Không tìm thấy kết quả.'}</div>`;
+      } catch (e) {
+        box.textContent = 'Lỗi kết nối AI.';
+      }
+    }
+
+    // --- 4. AI TÓM TẮT & TẠO QUIZ TỪ TRANG ĐANG MỞ ---
+    async function runDocAiAction(mode) {
+      const box = document.getElementById('docAiOutput');
+      const sourceText = (currentPageExtractedText || document.getElementById('previewBody').innerText || '').trim().slice(0, 3500);
+      if (sourceText.length < 30) {
+        return showToast('Trang này không có đủ chữ để AI phân tích!', 'error');
+      }
+
+      box.innerHTML = '<div class="py-6 text-center text-indigo-500 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl mb-1"></i><br>AI đang đọc trang tài liệu...</div>';
+      const prompt = mode === 'summary'
+        ? `Tóm tắt các ý chính, từ vựng và cấu trúc ngữ pháp quan trọng nhất trong đoạn tài liệu học tập sau bằng tiếng Việt (dùng gạch đầu dòng HTML <ul><li> gọn đẹp):\n\n"${sourceText}"`
+        : `Dựa vào đoạn tài liệu sau, tạo 3 câu hỏi trắc nghiệm ôn tập ngắn kèm đáp án đúng ở cuối (trình bày bằng HTML gọn rõ):\n\n"${sourceText}"`;
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ prompt })
+        });
+        const raw = await res.text();
+        let out = '';
+        raw.split('\n').forEach(line => {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            try { out += JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || ''; } catch {}
+          }
+        });
+        box.innerHTML = out.replace(/```html|```/g, '').trim() || 'Không có phản hồi.';
+        addXp(5);
+      } catch {
+        box.textContent = 'Lỗi kết nối AI.';
+      }
+    }
+
+    // --- 5. CHẾ ĐỘ CHIA ĐÔI MÀN HÌNH (SPLIT-VIEW) ---
+    function toggleSplitView() {
+      const pane = document.getElementById('splitViewPane');
+      const select = document.getElementById('splitFileSelect');
+      const isOpening = pane.classList.contains('hidden');
+
+      if (isOpening) {
+        let opts = `<option value="">-- Chọn tài liệu thứ 2 để đối chiếu --</option><option value="__DICT__">📖 Mở Từ Điển AI song song</option>`;
+        cloudFiles.forEach(f => {
+          opts += `<option value="${f.url}">📄 ${escapeHtml(f.name)}</option>`;
+        });
+        libraryBooks.forEach(b => {
+          opts += `<option value="${b.file_url}">📚 ${escapeHtml(b.title)}</option>`;
+        });
+        select.innerHTML = opts;
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+        document.getElementById('splitViewBody').innerHTML = '';
+      }
+    }
+
+    function loadSplitContent(val) {
+      const body = document.getElementById('splitViewBody');
+      if (!val) return;
+      if (val === '__DICT__') {
+        body.innerHTML = `<iframe src="dictionary.html" class="w-full h-full border-0"></iframe>`;
+      } else {
+        body.innerHTML = `<iframe src="${val}" class="w-full h-full border-0"></iframe>`;
+      }
+    }
+
+    // --- MỞ / LƯU / ĐÓNG PREVIEW ---
     function previewFile(id) {
       const record = cloudFiles.find(f => String(f.id) === String(id));
       if (!record) return;
       currentPreviewRecord = record;
+      pdfDocInstance = null;
+      currentPageExtractedText = '';
+
+      const parsed = parseBookmarksFromNote(record.note);
+      currentBookmarks = parsed.bookmarks;
+
       document.getElementById('previewTitle').textContent = record.name;
       document.getElementById('previewIcon').innerHTML = getFileIcon(record.type, record.name);
       document.getElementById('previewDownloadBtn').href = record.url;
-      document.getElementById('fileNoteArea').value = record.note || '';
+      document.getElementById('fileNoteArea').value = parsed.cleanNote;
       document.getElementById('previewSidebar').classList.remove('hidden');
       document.getElementById('audioControlsContainer').classList.add('hidden');
+      document.getElementById('pdfToolbar').classList.add('hidden');
+      document.getElementById('splitViewPane').classList.add('hidden');
+      renderBookmarksList();
+      switchStudyTab('notes');
+
       const ext = (record.name || '').split('.').pop().toLowerCase();
       const previewBody = document.getElementById('previewBody');
 
-      if ((record.type && record.type.includes('pdf')) || ext === 'pdf') previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
-      else if ((record.type && record.type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) previewBody.innerHTML = `<img src="${record.url}" class="max-h-full max-w-full object-contain rounded-xl" />`;
-      else if (ext === 'docx') {
-        previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center font-bold"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Đang tải...</p></div>`;
-        fetch(record.url).then(res => res.arrayBuffer()).then(ab => mammoth.convertToHtml({ arrayBuffer: ab }).then(r => previewBody.innerHTML = `<div class="w-full h-full bg-white p-8 rounded-xl overflow-auto text-slate-800 leading-relaxed text-base">${r.value}</div>`));
+      if ((record.type && record.type.includes('pdf')) || ext === 'pdf') {
+        renderPdfWithPdfJs(record.url);
+      } else if ((record.type && record.type.includes('image')) || ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
+        previewBody.innerHTML = `<img src="${record.url}" class="max-h-full max-w-full object-contain rounded-xl m-auto" />`;
+      } else if (ext === 'docx') {
+        previewBody.innerHTML = `<div class="p-8 text-slate-400 text-center font-bold m-auto"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Đang tải...</p></div>`;
+        fetch(record.url).then(res => res.arrayBuffer()).then(ab => mammoth.convertToHtml({ arrayBuffer: ab }).then(r => {
+          previewBody.innerHTML = `<div class="w-full h-full bg-white p-8 rounded-xl overflow-auto text-slate-800 leading-relaxed text-base select-text">${r.value}</div>`;
+          currentPageExtractedText = previewBody.innerText;
+        }));
       } else if ((record.type && record.type.includes('audio')) || ['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) {
         document.getElementById('audioControlsContainer').classList.remove('hidden');
-        previewBody.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl text-center max-w-sm w-full mx-auto border border-slate-100"><div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-5"><i class="fa-solid fa-music animate-pulse"></i></div><p class="font-bold text-slate-800 mb-5 text-lg truncate px-2">${record.name}</p><audio id="mainAudioPlayer" controls src="${record.url}" class="w-full"></audio></div>`;
-      } else if ((record.type && record.type.includes('video')) || ['mp4', 'webm'].includes(ext)) previewBody.innerHTML = `<video controls src="${record.url}" class="max-h-full max-w-full rounded-xl shadow-lg"></video>`;
-      else previewBody.innerHTML = `<div class="text-center p-8 bg-white rounded-2xl shadow-sm"><p class="font-bold text-slate-700 mb-4">Không hỗ trợ xem trước</p><a href="${record.url}" target="_blank" class="inline-block bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm">Mở file gốc</a></div>`;
-      
+        previewBody.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl text-center max-w-sm w-full m-auto border border-slate-100"><div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-5"><i class="fa-solid fa-music animate-pulse"></i></div><p class="font-bold text-slate-800 mb-5 text-lg truncate px-2">${record.name}</p><audio id="mainAudioPlayer" controls src="${record.url}" class="w-full"></audio></div>`;
+      } else if ((record.type && record.type.includes('video')) || ['mp4', 'webm'].includes(ext)) {
+        previewBody.innerHTML = `<video controls src="${record.url}" class="max-h-full max-w-full rounded-xl shadow-lg m-auto"></video>`;
+      } else {
+        previewBody.innerHTML = `<div class="text-center p-8 bg-white rounded-2xl shadow-sm m-auto"><p class="font-bold text-slate-700 mb-4">Không hỗ trợ xem trước</p><a href="${record.url}" target="_blank" class="inline-block bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm">Mở file gốc</a></div>`;
+      }
+
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
+    async function saveFileNote() {
+      if (!currentPreviewRecord) return;
+      const cfg = getLangStorageConfig();
+      const rawNote = document.getElementById('fileNoteArea').value;
+      const serialized = currentBookmarks.length > 0
+        ? `${rawNote}\n---BOOKMARKS---\n${JSON.stringify(currentBookmarks)}`
+        : rawNote;
+
+      currentPreviewRecord.note = serialized;
+      try {
+        await supabaseClient.from(cfg.docTable).update({ note: serialized }).eq('id', currentPreviewRecord.id);
+        showToast('Đã lưu ghi chú & đánh dấu trang!');
+      } catch (e) {}
+    }
 
     function changeAudioSpeed(speed) { const audio = document.getElementById('mainAudioPlayer'); if (audio) audio.playbackRate = parseFloat(speed); }
-    function closePreview() { document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewBody').innerHTML = ''; }
+    function closePreview() {
+      document.getElementById('previewModal').classList.add('hidden');
+      document.getElementById('selectionPopup').classList.add('hidden');
+      document.getElementById('previewBody').innerHTML = '';
+      document.getElementById('splitViewBody').innerHTML = '';
+      pdfDocInstance = null;
+    }
     
         // ==========================================
     // LOGIC CỦA QUIZ FLASHCARD
