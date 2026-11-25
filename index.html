@@ -2312,14 +2312,10 @@
       currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
       localStorage.setItem('azu_lang', currentLanguage);
       updateLanguageUI();
-      pickRandomWotd();
-
-      // Tự động tải lại Kho File, Thư mục & Sách Bổ Trợ từ bảng Supabase tương ứng
       currentFolderId = 'all';
       await fetchFolders();
       await fetchCloudFiles();
       await fetchLibraryBooks();
-
       showToast(currentLanguage === 'en' ? 'Đã chuyển sang Tiếng Anh 🇬🇧' : 'Đã chuyển sang Tiếng Trung 🇨🇳');
       updateZhDictationVisibility();
       pickRandomWotd();
@@ -5083,14 +5079,6 @@ async function pickRandomWotd() {
   }
 }
 
-      const pool = isZh ? sampleWotdZh : sampleWotdEn;
-      const item = pool[Math.floor(Math.random() * pool.length)];
-      document.getElementById('wotdWord').textContent = item.word;
-      document.getElementById('wotdPos').textContent = item.pos;
-      document.getElementById('wotdMeaning').textContent = item.meaning;
-      document.getElementById('wotdExampleEn').textContent = `"${item.ex}"`;
-      document.getElementById('wotdExampleVi').textContent = item.exVi;
-    }
 
     function setWotdTheme(theme) {
       const card = document.getElementById('wotdCardContainer');
