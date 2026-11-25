@@ -728,7 +728,7 @@
         </div>
       </div>
 <!-- VIEW: HỌC QUA VIDEO YOUTUBE (3 CHẾ ĐỘ: PHỤ ĐỀ - CHỌN TỪ - VIẾT TỪ) -->
-        <div id="view-video" class="hidden space-y-5 animate-fade-in">
+        <div id="viewVideo" class="hidden space-y-5 animate-fade-in">
           <!-- Thanh nhập link YouTube & Kênh gợi ý -->
           <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -2604,12 +2604,11 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
     
     function showView(viewName) { 
-      // Tự động đóng mobile menu nếu đang mở
       const sidebar = document.getElementById('sidebar');
-      if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
+      if (sidebar && !sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
         toggleMobileSidebar();
       }
-      updateZhDictationVisibility();
+      if (typeof updateZhDictationVisibility === 'function') updateZhDictationVisibility();
 
       if (viewName === 'files') {
         fetchFolders();
@@ -2618,25 +2617,24 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         fetchLibraryBooks();
       }
       
-      document.getElementById('viewHub').classList.add('hidden');
-      document.getElementById('viewFiles').classList.add('hidden');
-      document.getElementById('viewDictation').classList.add('hidden');
-      document.getElementById('viewBooks').classList.add('hidden');
-      document.getElementById('viewVideo').classList.add('hidden');
+      ['viewHub', 'viewFiles', 'viewDictation', 'viewBooks', 'viewVideo'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+      });
 
       if (viewName === 'files') {
-        document.getElementById('viewFiles').classList.remove('hidden');
+        document.getElementById('viewFiles')?.classList.remove('hidden');
       } else if (viewName === 'dictation') {
-        document.getElementById('viewDictation').classList.remove('hidden');
+        document.getElementById('viewDictation')?.classList.remove('hidden');
         renderDictationLessonsList();
       } else if (viewName === 'books') {
-        document.getElementById('viewBooks').classList.remove('hidden');
+        document.getElementById('viewBooks')?.classList.remove('hidden');
         renderBooksView();
       } else if (viewName === 'video') {
-        document.getElementById('viewVideo').classList.remove('hidden');
+        const videoEl = document.getElementById('viewVideo') || document.getElementById('view-video');
+        if (videoEl) videoEl.classList.remove('hidden');
         if (typeof initYoutubeStudyHub === 'function') initYoutubeStudyHub();
       } else {
-        document.getElementById('viewHub').classList.remove('hidden');
+        document.getElementById('viewHub')?.classList.remove('hidden');
       }
     }
 
