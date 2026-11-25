@@ -29,6 +29,7 @@
 <script>
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   }
   
 </script>
@@ -1276,6 +1277,9 @@
         <span class="text-slate-300 dark:text-slate-600">|</span>
         <button onclick="addPageBookmark()" class="text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition flex items-center gap-1" title="Đánh dấu trang này">
           <i class="fa-solid fa-bookmark"></i> <span class="hidden sm:inline">Đánh dấu</span>
+        </button>
+        <button onclick="runPageOcr()" id="btnPageOcr" class="text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition flex items-center gap-1" title="Nhận diện chữ trên trang PDF ảnh">
+          <i class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Quét chữ</span>
         </button>
       </div>
 
@@ -3508,6 +3512,64 @@ function updateGamificationUI() {
     function changePdfZoom(delta) {
       currentPdfScale = Math.max(0.6, Math.min(2.5, currentPdfScale + delta));
       renderPdfPage(currentPdfPage);
+    }
+
+  // --- NHẬN DIỆN CHỮ TRỰC TIẾP TRÊN TRANG PDF ẢNH (TESSERACT OCR) ---
+    async function runPageOcr() {
+      if (!pdfDocInstance) return showToast('Chỉ dùng cho file PDF!', 'error');
+      const previewBody = document.getElementById('previewBody');
+      const canvas = previewBody.querySelector('canvas');
+      const textLayerDiv = previewBody.querySelector('.textLayer');
+      const btn = document.getElementById('btnPageOcr');
+
+      if (!canvas || !textLayerDiv) return showToast('Không tìm thấy trang PDF!', 'error');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang quét...';
+      showToast('Đang nhận diện chữ trên trang này (2-4 giây)...');
+
+      try {
+        // Tự chọn ngôn ngữ quét theo chế độ EN hoặc ZH
+        const ocrLang = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh') ? 'chi_sim+eng' : 'eng';
+        const result = await Tesseract.recognize(canvas, ocrLang);
+
+        const words = result.data.words || [];
+        if (words.length === 0) {
+          showToast('Không nhận diện được chữ nào trên trang này!', 'error');
+          return;
+        }
+
+        // Xóa lớp text cũ và phủ từng từ nhận diện được lên đúng tọa độ trên ảnh
+        textLayerDiv.innerHTML = '';
+        let extracted = [];
+
+        words.forEach(w => {
+          const cleanWord = (w.text || '').trim();
+          if (!cleanWord) return;
+          extracted.push(cleanWord);
+
+          const span = document.createElement('span');
+          span.textContent = cleanWord + ' ';
+          span.style.position = 'absolute';
+          span.style.left = `${w.bbox.x0}px`;
+          span.style.top = `${w.bbox.y0}px`;
+          span.style.width = `${w.bbox.x1 - w.bbox.x0}px`;
+          span.style.height = `${w.bbox.y1 - w.bbox.y0}px`;
+          span.style.fontSize = `${Math.max(10, (w.bbox.y1 - w.bbox.y0) * 0.85)}px`;
+          span.style.color = 'transparent';
+          span.style.cursor = 'text';
+          span.style.userSelect = 'text';
+          textLayerDiv.appendChild(span);
+        });
+
+        currentPageExtractedText = extracted.join(' ');
+        showToast(`Đã quét xong ${words.length} từ! Bạn có thể bôi đen hoặc dùng AI tóm tắt ngay.`);
+      } catch (err) {
+        showToast('Lỗi quét chữ: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Quét chữ</span>';
+      }
     }
 
     // --- 2. ĐÁNH DẤU TRANG (BOOKMARKS) ---
