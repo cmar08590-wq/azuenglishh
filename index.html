@@ -574,8 +574,7 @@
             </div>
           </div>
         </div>
-      </div>
-      <!-- Thẻ Học Qua Video YouTube (3 Chế Độ) -->
+        <!-- Thẻ Học Qua Video YouTube (3 Chế Độ) -->
           <div onclick="showView('video')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer group flex flex-col justify-between">
             <div class="space-y-4">
               <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors">
@@ -590,6 +589,8 @@
               <span>Mở rạp học tập</span> <i class="fa-solid fa-arrow-right ml-auto"></i>
             </div>
           </div>
+      </div>
+      
 
       <!-- VIEW 2: KHO FILE & THƯ MỤC (Giữ nguyên logic HTML) -->
       <div id="viewFiles" class="space-y-6 hidden max-w-7xl mx-auto">
@@ -2610,9 +2611,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       }
       updateZhDictationVisibility();
       if (viewName === 'video') {
-     initYoutubeStudyHub();
-   }
-
+  document.getElementById('viewVideo').classList.remove('hidden');
+  initYoutubeStudyHub();
+}
       if (viewName === 'files') {
         fetchFolders();
         fetchCloudFiles();
