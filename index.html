@@ -2610,10 +2610,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         toggleMobileSidebar();
       }
       updateZhDictationVisibility();
-      if (viewName === 'video') {
-  document.getElementById('viewVideo').classList.remove('hidden');
-  initYoutubeStudyHub();
-}
+
       if (viewName === 'files') {
         fetchFolders();
         fetchCloudFiles();
@@ -2625,6 +2622,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       document.getElementById('viewFiles').classList.add('hidden');
       document.getElementById('viewDictation').classList.add('hidden');
       document.getElementById('viewBooks').classList.add('hidden');
+      document.getElementById('viewVideo').classList.add('hidden');
 
       if (viewName === 'files') {
         document.getElementById('viewFiles').classList.remove('hidden');
@@ -2634,6 +2632,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       } else if (viewName === 'books') {
         document.getElementById('viewBooks').classList.remove('hidden');
         renderBooksView();
+      } else if (viewName === 'video') {
+        document.getElementById('viewVideo').classList.remove('hidden');
+        if (typeof initYoutubeStudyHub === 'function') initYoutubeStudyHub();
       } else {
         document.getElementById('viewHub').classList.remove('hidden');
       }
