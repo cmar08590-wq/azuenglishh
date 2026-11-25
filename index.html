@@ -2639,21 +2639,46 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
     }
 
     function previewBook(id) {
-      const book = libraryBooks.find(b => b.id === id);
+      const book = libraryBooks.find(b => String(b.id) === String(id));
       if (!book) return;
-      // Mở trình xem file PDF/Word (Tận dụng lại previewFile hiện có)
-      // Giả lập cấu trúc record để dùng lại hàm previewFile
+
+      const isDrive = book.file_url && book.file_url.includes('drive.google.com');
       const record = {
-        id: book.id, name: book.title, url: book.file_url, type: 'application/pdf', note: ''
+        id: book.id,
+        name: book.title,
+        url: book.file_url,
+        type: 'application/pdf',
+        note: book.note || '',
+        isBook: true
       };
+
       currentPreviewRecord = record;
+      pdfDocInstance = null;
+      currentPageExtractedText = '';
+
+      const parsed = parseBookmarksFromNote(record.note);
+      currentBookmarks = parsed.bookmarks;
+
       document.getElementById('previewTitle').textContent = record.name;
       document.getElementById('previewIcon').innerHTML = '<i class="fa-solid fa-book text-emerald-500"></i>';
       document.getElementById('previewDownloadBtn').href = record.url;
-      document.getElementById('fileNoteArea').value = record.note || '';
+      document.getElementById('fileNoteArea').value = parsed.cleanNote;
       document.getElementById('previewSidebar').classList.remove('hidden');
       document.getElementById('audioControlsContainer').classList.add('hidden');
-      document.getElementById('previewBody').innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+      document.getElementById('pdfToolbar').classList.add('hidden');
+      document.getElementById('splitViewPane').classList.add('hidden');
+      renderBookmarksList();
+      switchStudyTab('notes');
+
+      const previewBody = document.getElementById('previewBody');
+      if (isDrive) {
+        // File Google Drive -> mở qua iframe của Drive
+        previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+      } else {
+        // Sách upload trực tiếp -> dùng trình đọc PDF.js đầy đủ bôi đen, tra từ, đánh dấu trang & AI
+        renderPdfWithPdfJs(record.url);
+      }
+
       document.getElementById('previewModal').classList.remove('hidden');
     }
     
@@ -3272,12 +3297,6 @@ function updateGamificationUI() {
       }
     }
 
-    async function saveFileNote() {
-      if (!currentPreviewRecord) return;
-      const cfg = getLangStorageConfig();
-      currentPreviewRecord.note = document.getElementById('fileNoteArea').value;
-      try { await supabaseClient.from(cfg.docTable).update({ note: currentPreviewRecord.note }).eq('id', currentPreviewRecord.id); showToast('Đã lưu ghi chú!'); } catch(e) {}
-    }
 
     // --- THƯ VIỆN SÁCH TÁCH BIỆT ---
 
@@ -3732,8 +3751,10 @@ function updateGamificationUI() {
         : rawNote;
 
       currentPreviewRecord.note = serialized;
+      const targetTable = currentPreviewRecord.isBook ? cfg.bookTable : cfg.docTable;
+
       try {
-        await supabaseClient.from(cfg.docTable).update({ note: serialized }).eq('id', currentPreviewRecord.id);
+        await supabaseClient.from(targetTable).update({ note: serialized }).eq('id', currentPreviewRecord.id);
         showToast('Đã lưu ghi chú & đánh dấu trang!');
       } catch (e) {}
     }
