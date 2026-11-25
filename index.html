@@ -3750,13 +3750,73 @@ function updateGamificationUI() {
         ? `${rawNote}\n---BOOKMARKS---\n${JSON.stringify(currentBookmarks)}`
         : rawNote;
 
-      currentPreviewRecord.note = serialized;
       const targetTable = currentPreviewRecord.isBook ? cfg.bookTable : cfg.docTable;
 
       try {
-        await supabaseClient.from(targetTable).update({ note: serialized }).eq('id', currentPreviewRecord.id);
+        const { error } = await supabaseClient
+          .from(targetTable)
+          .update({ note: serialized })
+          .eq('id', currentPreviewRecord.id);
+
+        if (error) throw error;
+
+        // Cập nhật trực tiếp vào bộ nhớ hiện tại để mở lại không bị mất
+        currentPreviewRecord.note = serialized;
+        if (currentPreviewRecord.isBook) {
+          const b = libraryBooks.find(item => String(item.id) === String(currentPreviewRecord.id));
+          if (b) b.note = serialized;
+        } else {
+          const f = cloudFiles.find(item => String(item.id) === String(currentPreviewRecord.id));
+          if (f) f.note = serialized;
+        }
+
         showToast('Đã lưu ghi chú & đánh dấu trang!');
-      } catch (e) {}
+      } catch (err) {
+        showToast('Lỗi lưu ghi chú: ' + err.message, 'error');
+      }
+    }
+
+    function previewBook(id) {
+      const book = libraryBooks.find(b => String(b.id) === String(id));
+      if (!book) return;
+
+      const isDrive = book.file_url && book.file_url.includes('drive.google.com');
+      const record = {
+        id: book.id,
+        name: book.title,
+        url: book.file_url,
+        type: 'application/pdf',
+        note: book.note || '',
+        isBook: true
+      };
+
+      currentPreviewRecord = record;
+      pdfDocInstance = null;
+      currentPageExtractedText = '';
+
+      const parsed = parseBookmarksFromNote(record.note);
+      currentBookmarks = parsed.bookmarks;
+
+      document.getElementById('previewTitle').textContent = record.name;
+      document.getElementById('previewIcon').innerHTML = '<i class="fa-solid fa-book text-emerald-500"></i>';
+      document.getElementById('previewDownloadBtn').href = record.url;
+      document.getElementById('fileNoteArea').value = parsed.cleanNote;
+      document.getElementById('previewSidebar').classList.remove('hidden');
+      document.getElementById('audioControlsContainer').classList.add('hidden');
+      document.getElementById('pdfToolbar').classList.add('hidden');
+      document.getElementById('splitViewPane').classList.add('hidden');
+      renderBookmarksList();
+      switchStudyTab('notes');
+
+      const previewBody = document.getElementById('previewBody');
+      if (isDrive) {
+        previewBody.innerHTML = `<iframe src="${record.url}" class="w-full h-full rounded-xl border-0"></iframe>`;
+        showToast('Sách từ Google Drive: dùng tab Tra nhanh bên phải để tra từ.', 'info');
+      } else {
+        renderPdfWithPdfJs(record.url);
+      }
+
+      document.getElementById('previewModal').classList.remove('hidden');
     }
 
     function changeAudioSpeed(speed) { const audio = document.getElementById('mainAudioPlayer'); if (audio) audio.playbackRate = parseFloat(speed); }
