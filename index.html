@@ -600,6 +600,46 @@
                 <button onclick="setDictationSpeed(1.0)" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-amber-50 dark:hover:bg-slate-700 transition shadow-sm">1.0x</button>
               </div>
             </div>
+            <!-- CÔNG CỤ NGHE CHÉP CHÍNH TẢ TIẾNG TRUNG (CHỈ HIỆN KHI Ở CHẾ ĐỘ ZH) -->
+          <div id="zhDictationToolkit" class="hidden mb-3 p-3 rounded-2xl bg-rose-50/80 dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-extrabold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-headphones"></i> Trợ lý Nghe Chép Tiếng Trung (HSK / Hội thoại)
+              </span>
+              <div class="flex items-center gap-1.5">
+                <select id="zhDictationLevel" class="text-xs font-bold px-2 py-1 rounded-lg border border-rose-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                  <option value="HSK 2">HSK 2 (Cơ bản)</option>
+                  <option value="HSK 3" selected>HSK 3 (Trung cấp)</option>
+                  <option value="Giao tiếp đời sống">Giao tiếp đời sống</option>
+                </select>
+                <button onclick="generateZhDictationExercise()" id="btnGenZhDictation" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe AI
+                </button>
+              </div>
+            </div>
+
+            <!-- Thanh phát giọng đọc AI cho bài tập tạo nhanh -->
+            <div id="zhAiAudioBar" class="hidden flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-rose-200 dark:border-slate-700">
+              <div class="flex items-center gap-2">
+                <button onclick="playZhDictationPassage(0.85)" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-play"></i> Nghe chuẩn
+                </button>
+                <button onclick="playZhDictationPassage(0.6)" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+                  Nghe chậm (0.6x)
+                </button>
+                <button onclick="toggleZhDictationHint()" class="bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+                  <i class="fa-solid fa-eye"></i> Gợi ý Pinyin
+                </button>
+              </div>
+              <button onclick="checkZhDictationAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+                <i class="fa-solid fa-check-double"></i> Chấm điểm chữ Hán
+              </button>
+            </div>
+
+            <!-- Khung hiển thị Pinyin gợi ý & Kết quả chấm từng Hán tự -->
+            <div id="zhDictationHintBox" class="hidden text-xs p-2.5 rounded-xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-amber-900 dark:text-amber-300 font-medium"></div>
+            <div id="zhDictationGradeResult" class="hidden text-xs p-3 rounded-xl bg-white dark:bg-slate-800 border border-emerald-200 dark:border-slate-700 space-y-1.5"></div>
+          </div>
             <div class="space-y-3">
               <label class="text-sm font-bold text-slate-700 dark:text-slate-200 block">Gõ lại những gì bạn nghe được:</label>
 <textarea id="dictationTextArea" rows="6" placeholder="Bắt đầu gõ..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
@@ -2117,6 +2157,7 @@
       await fetchLibraryBooks();
 
       showToast(currentLanguage === 'en' ? 'Đã chuyển sang Tiếng Anh 🇬🇧' : 'Đã chuyển sang Tiếng Trung 🇨🇳');
+      updateZhDictationVisibility();
     }
 
     function updateLanguageUI() {
@@ -2403,6 +2444,7 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
         toggleMobileSidebar();
       }
+      updateZhDictationVisibility();
 
       if (viewName === 'files') {
         fetchFolders();
@@ -2542,6 +2584,107 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
       showToast('Đã lưu bài chép! +10 XP');
     }
 
+    // ==========================================
+    // NGHE CHÉP CHÍNH TẢ TIẾNG TRUNG (AI + CHẤM HÁN TỰ)
+    // ==========================================
+    let currentZhDictationData = null; // { hanzi: "...", pinyin: "...", meaning: "..." }
+
+    function updateZhDictationVisibility() {
+      const toolkit = document.getElementById('zhDictationToolkit');
+      if (!toolkit) return;
+      if (currentLanguage === 'zh') {
+        toolkit.classList.remove('hidden');
+      } else {
+        toolkit.classList.add('hidden');
+      }
+    }
+
+    async function generateZhDictationExercise() {
+      const level = document.getElementById('zhDictationLevel').value;
+      const btn = document.getElementById('btnGenZhDictation');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo...';
+
+      const prompt = `Tạo 1 đoạn hội thoại hoặc đoạn văn ngắn tiếng Trung (khoảng 35-55 chữ Hán) trình độ ${level} để luyện nghe chép chính tả.
+      Trả về DUY NHẤT định dạng JSON hợp lệ (không bọc markdown):
+      {"hanzi": "đoạn văn chữ Hán giản thể có dấu câu chuẩn", "pinyin": "phiên âm pinyin đầy đủ có thanh điệu", "meaning": "dịch nghĩa tiếng Việt tự nhiên"}`;
+
+      try {
+        const res = await callGeminiAI(prompt);
+        const cleanJson = res.replace(/```json|```/g, '').trim();
+        currentZhDictationData = JSON.parse(cleanJson);
+
+        document.getElementById('zhAiAudioBar').classList.remove('hidden');
+        document.getElementById('zhDictationHintBox').classList.add('hidden');
+        document.getElementById('zhDictationGradeResult').classList.add('hidden');
+        document.getElementById('dictationTextArea').value = '';
+        document.getElementById('dictationTextArea').placeholder = 'Nghe giọng đọc AI và gõ lại chữ Hán vào đây...';
+
+        showToast('Đã tạo bài nghe ' + level + '! Bấm "Nghe chuẩn" để bắt đầu.');
+        playZhDictationPassage(0.85);
+      } catch (e) {
+        showToast('Không tạo được bài nghe AI: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe AI';
+      }
+    }
+
+    function playZhDictationPassage(rate = 0.85) {
+      if (!currentZhDictationData || !currentZhDictationData.hanzi) {
+        return showToast('Hãy bấm "Tạo bài nghe AI" trước!', 'error');
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(currentZhDictationData.hanzi);
+      utter.lang = 'zh-CN';
+      utter.rate = rate;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function toggleZhDictationHint() {
+      if (!currentZhDictationData) return;
+      const box = document.getElementById('zhDictationHintBox');
+      box.classList.toggle('hidden');
+      box.innerHTML = `<b>Gợi ý Pinyin:</b> ${currentZhDictationData.pinyin}`;
+    }
+
+    function checkZhDictationAnswer() {
+      if (!currentZhDictationData) return showToast('Chưa có bài nghe mẫu để chấm!', 'error');
+      const userRaw = document.getElementById('dictationTextArea').value.trim();
+      if (!userRaw) return showToast('Bạn chưa nhập chữ Hán nào!', 'error');
+
+      // Loại bỏ dấu câu và khoảng trắng để so sánh chính xác từng chữ Hán
+      const stripPunct = (s) => s.replace(/[\s，。！？、；：“”‘’（）《》,.!?;:"'()\-]/g, '');
+      const targetChars = Array.from(stripPunct(currentZhDictationData.hanzi));
+      const userChars = Array.from(stripPunct(userRaw));
+
+      let correctCount = 0;
+      const diffHtml = targetChars.map((ch, idx) => {
+        if (userChars[idx] === ch) {
+          correctCount++;
+          return `<span class="text-emerald-600 dark:text-emerald-400 font-bold text-base">${ch}</span>`;
+        } else {
+          const typed = userChars[idx] ? `<del class="text-rose-400 text-xs">${userChars[idx]}</del>` : '';
+          return `<span class="bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-1 rounded font-bold text-base">${typed}${ch}</span>`;
+        }
+      }).join('');
+
+      const accuracy = Math.round((correctCount / targetChars.length) * 100);
+      const resultBox = document.getElementById('zhDictationGradeResult');
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-extrabold text-slate-800 dark:text-white">Độ chính xác: <span class="text-emerald-600 text-sm">${accuracy}%</span> (${correctCount}/${targetChars.length} chữ Hán)</span>
+          <span class="text-[11px] font-bold text-amber-600">+${accuracy >= 80 ? 15 : 5} XP</span>
+        </div>
+        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 leading-loose tracking-wide">${diffHtml}</div>
+        <div class="text-slate-500 dark:text-slate-400"><b>Pinyin:</b> ${currentZhDictationData.pinyin}</div>
+        <div class="text-slate-600 dark:text-slate-300"><b>Nghĩa tiếng Việt:</b> ${currentZhDictationData.meaning}</div>
+      `;
+
+      addXp(accuracy >= 80 ? 15 : 5);
+    }
+    
     function setupAudioDictationUploadListener() {
       const audioInput = document.getElementById('audioUploadInput');
       if (!audioInput) return;
