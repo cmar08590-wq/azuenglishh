@@ -218,6 +218,9 @@
                     <button onclick="openReadingModal()" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-slate-700/50 hover:text-rose-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-book-reader w-5 text-center text-rose-500"></i> Luyện Đọc Hiểu
           </button>
+          <button onclick="showView('video')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-slate-700/50 hover:text-rose-600 dark:hover:text-white transition-all duration-200">
+            <i class="fa-brands fa-youtube w-5 text-center text-rose-500"></i> Học Qua Video
+          </button>
                     <button onclick="showView('books')" class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-white transition-all duration-200">
             <i class="fa-solid fa-book-bookmark w-5 text-center text-emerald-500"></i> Sách Bổ Trợ
           </button>
@@ -572,6 +575,21 @@
           </div>
         </div>
       </div>
+      <!-- Thẻ Học Qua Video YouTube (3 Chế Độ) -->
+          <div onclick="showView('video')" class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer group flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg">Học Qua Video</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Xem phụ đề song ngữ, chạm tra từ tại chỗ và luyện 3 chế độ điền khuyết từ video YouTube.</p>
+              </div>
+            </div>
+            <div class="mt-6 flex items-center text-xs font-bold text-rose-600">
+              <span>Mở rạp học tập</span> <i class="fa-solid fa-arrow-right ml-auto"></i>
+            </div>
+          </div>
 
       <!-- VIEW 2: KHO FILE & THƯ MỤC (Giữ nguyên logic HTML) -->
       <div id="viewFiles" class="space-y-6 hidden max-w-7xl mx-auto">
@@ -669,7 +687,7 @@
                   <option value="Giao tiếp đời sống">Giao tiếp đời sống</option>
                 </select>
                 <button onclick="generateZhDictationExercise()" id="btnGenZhDictation" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe AI
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe 
                 </button>
               </div>
             </div>
@@ -708,7 +726,95 @@
           </div>
         </div>
       </div>
+<!-- VIEW: HỌC QUA VIDEO YOUTUBE (3 CHẾ ĐỘ: PHỤ ĐỀ - CHỌN TỪ - VIẾT TỪ) -->
+        <div id="view-video" class="hidden space-y-5 animate-fade-in">
+          <!-- Thanh nhập link YouTube & Kênh gợi ý -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                  <i class="fa-brands fa-youtube text-rose-600 text-2xl"></i> Rạp Học Video Tương Tác
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Dán link YouTube hoặc chọn bài mẫu bên dưới để luyện nghe 3 cấp độ.</p>
+              </div>
+              <div class="flex items-center gap-2 flex-1 max-w-xl">
+                <input type="text" id="ytUrlInput" placeholder="Dán link YouTube (VD: https://youtu.be/...)..." class="flex-1 p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+                <button onclick="loadCustomYoutubeVideo()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shrink-0 shadow-sm">
+                  Tải Video
+                </button>
+              </div>
+            </div>
 
+            <!-- Danh sách kênh & video mẫu phân theo ngôn ngữ -->
+            <div id="ytPresetChannels" class="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-700"></div>
+          </div>
+
+          <!-- Khu vực trình phát + Bảng chọn 3 chế độ + Phụ đề tương tác -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Cột trái (7 phần): Trình phát YouTube & Thanh điều khiển câu -->
+            <div class="lg:col-span-7 space-y-3">
+              <div class="bg-black rounded-3xl overflow-hidden shadow-lg aspect-video border border-slate-800">
+                <iframe id="ytStudyPlayer" class="w-full h-full" src="https://www.youtube.com/embed/UF8uR6Z6KLc?enablejsapi=1" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              </div>
+
+              <!-- Thanh điều khiển nhanh dưới video -->
+              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+                <div class="flex items-center gap-1.5">
+                  <button onclick="stepYtLine(-1)" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 transition">
+                    <i class="fa-solid fa-backward-step"></i> Câu trước
+                  </button>
+                  <button onclick="repeatCurrentYtLine()" class="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 transition">
+                    <i class="fa-solid fa-rotate-right"></i> Lặp câu này
+                  </button>
+                  <button onclick="stepYtLine(1)" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 transition">
+                    Câu sau <i class="fa-solid fa-forward-step"></i>
+                  </button>
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-700 dark:text-slate-200">
+                  <input type="checkbox" id="ytBilingualToggle" checked onchange="renderYtSubtitles()" class="accent-rose-600 w-4 h-4">
+                  <span>Hiện dịch song ngữ</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Cột phải (5 phần): 3 Chế độ học & Danh sách phụ đề tương tác -->
+            <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-sm max-h-[540px]">
+              <!-- 3 Chế độ học (Giống Ảnh 3) -->
+              <div class="space-y-2 pb-3 border-b border-slate-200 dark:border-slate-700">
+                <div class="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold">
+                  <button onclick="setYtStudyMode('sub')" id="ytMode-sub" class="py-2 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm transition">
+                    <i class="fa-regular fa-closed-captioning mr-1"></i> Phụ đề
+                  </button>
+                  <button onclick="setYtStudyMode('choice')" id="ytMode-choice" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 transition">
+                    <i class="fa-solid fa-list-check mr-1"></i> Chọn từ
+                  </button>
+                  <button onclick="setYtStudyMode('write')" id="ytMode-write" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 transition">
+                    <i class="fa-solid fa-pen mr-1"></i> Viết từ
+                  </button>
+                </div>
+                <p class="text-[11px] text-slate-400 flex items-center justify-between">
+                  <span><i class="fa-solid fa-hand-pointer text-amber-500 mr-1"></i> Chạm vào bất kỳ từ nào để tra nghĩa & lưu Flashcard</span>
+                  <button onclick="generateAiTranscriptForVideo()" id="btnGenYtTranscript" class="text-rose-600 hover:underline font-bold">Tạo bài tập AI</button>
+                </p>
+              </div>
+
+              <!-- Danh sách dòng phụ đề / bài tập điền khuyết -->
+              <div id="ytSubtitleList" class="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1"></div>
+
+              <!-- Thanh tra từ nhanh ngay dưới khung phụ đề -->
+              <div id="ytWordInspector" class="hidden pt-2.5 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-xl text-xs">
+                <div class="overflow-hidden">
+                  <span id="ytInspectedWord" class="font-extrabold text-rose-600 text-sm"></span>
+                  <span id="ytInspectedMeaning" class="text-slate-600 dark:text-slate-300 ml-1.5">Đang tra nghĩa...</span>
+                </div>
+                <button onclick="saveInspectedYtWord()" class="bg-pink-600 hover:bg-pink-700 text-white px-2.5 py-1 rounded-lg font-bold shrink-0">
+                  + Flashcard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
             <!-- VIEW 4: SÁCH BỔ TRỢ (THƯ VIỆN SÁCH) -->
       <div id="viewBooks" class="space-y-6 hidden max-w-7xl mx-auto">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -2205,6 +2311,7 @@
       currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
       localStorage.setItem('azu_lang', currentLanguage);
       updateLanguageUI();
+      pickRandomWotd();
 
       // Tự động tải lại Kho File, Thư mục & Sách Bổ Trợ từ bảng Supabase tương ứng
       currentFolderId = 'all';
@@ -2502,6 +2609,9 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         toggleMobileSidebar();
       }
       updateZhDictationVisibility();
+      if (viewName === 'video') {
+     initYoutubeStudyHub();
+   }
 
       if (viewName === 'files') {
         fetchFolders();
@@ -4983,6 +5093,233 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
           });
       });
     }
+
+      // ==========================================
+    // RẠP HỌC VIDEO YOUTUBE TƯƠNG TÁC (3 CHẾ ĐỘ)
+    // ==========================================
+    let ytStudyMode = 'sub'; // 'sub' | 'choice' | 'write'
+    let currentYtLineIndex = 0;
+    let currentInspectedYtTerm = { word: '', meaning: '' };
+
+    const ytPresetLibrary = {
+      en: [
+        { label: "Vietnam Today · National Unity", id: "dQw4w9WgXcQ", topic: "News & Culture", lines: [
+          { start: 1, text: "The national flag will be flown across Vietnam from the 18th to the 24th.", vi: "Quốc kỳ sẽ được tung bay trên khắp Việt Nam từ ngày 18 đến ngày 24.", blank: "flown", options: ["flown", "blown", "grown"] },
+          { start: 8, text: "November is a way to mark the great National Unity Festival and Vietnamese Culture Day.", vi: "Tháng 11 như một cách để đánh dấu Ngày hội Đại đoàn kết toàn dân tộc và Ngày Văn hóa Việt Nam.", blank: "mark", options: ["mark", "make", "mask"] },
+          { start: 15, text: "Local authorities are stepping up decorations and public information campaigns along the streets.", vi: "Chính quyền địa phương đang đẩy mạnh các chiến dịch trang trí và thông tin đại chúng dọc các tuyến phố.", blank: "authorities", options: ["authorities", "audiences", "authors"] }
+        ]},
+        { label: "Steve Jobs · Stanford Speech", id: "UF8uR6Z6KLc", topic: "Inspiration", lines: [
+          { start: 10, text: "You can't connect the dots looking forward; you can only connect them looking backwards.", vi: "Bạn không thể nối các điểm nhìn về phía trước; bạn chỉ có thể nối chúng khi nhìn lại.", blank: "connect", options: ["connect", "collect", "correct"] },
+          { start: 18, text: "So you have to trust that the dots will somehow connect in your future.", vi: "Vì vậy bạn phải tin rằng bằng cách nào đó các điểm sẽ kết nối trong tương lai của bạn.", blank: "somehow", options: ["somehow", "somewhat", "somewhere"] },
+          { start: 25, text: "Stay hungry, stay foolish.", vi: "Hãy luôn khát khao, hãy luôn dại khờ.", blank: "foolish", options: ["foolish", "famous", "fearless"] }
+        ]}
+      ],
+      zh: [
+        { label: "HSK 3 · 日常对话 (Hội thoại đời sống)", id: "7X8II6J-6mU", topic: "HSK 3", lines: [
+          { start: 2, text: "今天天气真不错，我们一起去公园散散步吧。", vi: "Thời tiết hôm nay thật đẹp, chúng ta cùng đi công viên tản bộ nhé.", blank: "散散步", options: ["散散步", "买东西", "看电影"] },
+          { start: 9, text: "虽然学习汉语有点儿难，但是我觉得非常有意思。", vi: "Tuy học tiếng Hán hơi khó một chút, nhưng tôi cảm thấy rất thú vị.", blank: "有意思", options: ["有意思", "没关系", "不客气"] },
+          { start: 16, text: "只要每天坚持练习，你的口语水平一定会提高。", vi: "Chỉ cần mỗi ngày kiên trì luyện tập, trình độ khẩu ngữ của bạn nhất định sẽ nâng cao.", blank: "坚持", options: ["坚持", "结束", "决定"] }
+        ]}
+      ]
+    };
+
+    let activeYtLines = ytPresetLibrary.en[0].lines;
+
+    function initYoutubeStudyHub() {
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      const presets = isZh ? ytPresetLibrary.zh : ytPresetLibrary.en;
+      const container = document.getElementById('ytPresetChannels');
+      if (!container) return;
+
+      container.innerHTML = presets.map((item, idx) => `
+        <button onclick="selectYtPreset(${idx})" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-play-circle text-rose-500"></i> ${item.label}
+        </button>
+      `).join('');
+
+      selectYtPreset(0);
+    }
+
+    function selectYtPreset(index) {
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      const presets = isZh ? ytPresetLibrary.zh : ytPresetLibrary.en;
+      const chosen = presets[index] || presets[0];
+      activeYtLines = chosen.lines;
+      currentYtLineIndex = 0;
+      document.getElementById('ytStudyPlayer').src = `https://www.youtube.com/embed/${chosen.id}?enablejsapi=1`;
+      renderYtSubtitles();
+    }
+
+    function extractYoutubeId(url) {
+      const reg = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(reg);
+      return match ? match[1] : null;
+    }
+
+    async function loadCustomYoutubeVideo() {
+      const url = document.getElementById('ytUrlInput').value.trim();
+      const vid = extractYoutubeId(url);
+      if (!vid) return showToast('Link YouTube chưa đúng định dạng!', 'error');
+      document.getElementById('ytStudyPlayer').src = `https://www.youtube.com/embed/${vid}?enablejsapi=1`;
+      showToast('Đã tải video! Đang dùng AI tạo bộ phụ đề & bài tập điền khuyết...');
+      await generateAiTranscriptForVideo();
+    }
+
+    async function generateAiTranscriptForVideo() {
+      const btn = document.getElementById('btnGenYtTranscript');
+      btn.textContent = 'Đang tạo...';
+      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+      const prompt = isZh
+        ? `Tạo 4 câu hội thoại ngắn tiếng Trung (HSK 3) kèm dịch tiếng Việt và 1 từ khóa điền khuyết mỗi câu. Trả về JSON thuần mảng: [{"start":5,"text":"câu chữ Hán","vi":"nghĩa Việt","blank":"từ cần điền","options":["từ đúng","từ nhiễu 1","từ nhiễu 2"]}]`
+        : `Tạo 4 câu bản tin hoặc bài diễn thuyết tiếng Anh (trình độ B2-C1) kèm dịch tiếng Việt và 1 từ khóa điền khuyết mỗi câu. Trả về JSON thuần mảng: [{"start":5,"text":"English sentence","vi":"nghĩa tiếng Việt","blank":"targetWord","options":["targetWord","distractor1","distractor2"]}]`;
+
+      try {
+        const res = await callGeminiAI(prompt);
+        const parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          activeYtLines = parsed;
+          currentYtLineIndex = 0;
+          renderYtSubtitles();
+          showToast('Đã tạo bài luyện 3 chế độ mới!');
+        }
+      } catch (e) {
+        showToast('Lỗi tạo bài tập AI: ' + e.message, 'error');
+      } finally {
+        btn.textContent = 'Tạo bài tập AI';
+      }
+    }
+
+    function setYtStudyMode(mode) {
+      ytStudyMode = mode;
+      ['sub', 'choice', 'write'].forEach(m => {
+        const btn = document.getElementById(`ytMode-${m}`);
+        if (m === mode) {
+          btn.className = 'py-2 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm transition';
+        } else {
+          btn.className = 'py-2 rounded-lg text-slate-500 hover:text-slate-800 transition';
+        }
+      });
+      renderYtSubtitles();
+    }
+
+    function renderYtSubtitles() {
+      const container = document.getElementById('ytSubtitleList');
+      const showBilingual = document.getElementById('ytBilingualToggle').checked;
+      if (!container) return;
+
+      container.innerHTML = activeYtLines.map((line, idx) => {
+        const isActive = idx === currentYtLineIndex;
+        const borderClass = isActive ? 'border-blue-500 bg-blue-50/50 dark:bg-slate-900' : 'border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/50';
+
+        let mainContent = '';
+        if (ytStudyMode === 'sub') {
+          // Chế độ 1: Chạm từng từ để tra nghĩa
+          const isZh = /[\u4e00-\u9fa5]/.test(line.text);
+          const tokens = isZh ? Array.from(line.text) : line.text.split(/(\s+)/);
+          mainContent = tokens.map(tok => {
+            if (!tok.trim() || /^[，。！？、,.!?;:"']+$/.test(tok)) return tok;
+            return `<span onclick="event.stopPropagation(); inspectYtWord('${tok.replace(/'/g, "\\'")}')" class="hover:bg-amber-200 dark:hover:bg-amber-700/60 hover:text-slate-900 dark:hover:text-white rounded px-0.5 cursor-pointer transition">${tok}</span>`;
+          }).join('');
+        } else if (ytStudyMode === 'choice') {
+          // Chế độ 2: Chọn từ điền khuyết
+          const hiddenSentence = line.text.replace(line.blank, `<span id="ytBlank-${idx}" class="px-2 py-0.5 mx-1 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-extrabold border-b-2 border-amber-500">_____</span>`);
+          const btns = (line.options || [line.blank]).map(opt => `
+            <button onclick="event.stopPropagation(); checkYtChoice(${idx}, '${opt.replace(/'/g, "\\'")}', '${line.blank.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-500 transition">
+              ${opt}
+            </button>
+          `).join('');
+          mainContent = `<div>${hiddenSentence}</div><div class="flex flex-wrap gap-1.5 mt-2">${btns}</div>`;
+        } else {
+          // Chế độ 3: Viết từ điền khuyết
+          const inputBox = `<input type="text" id="ytWriteInput-${idx}" onclick="event.stopPropagation()" onkeyup="checkYtWrite(${idx}, this.value, '${line.blank.replace(/'/g, "\\'")}')" placeholder="Gõ từ..." class="w-28 px-2 py-0.5 mx-1 text-xs font-bold rounded border border-blue-400 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none">`;
+          mainContent = line.text.replace(line.blank, inputBox);
+        }
+
+        return `
+          <div onclick="playYtLine(${idx})" class="p-3 rounded-2xl border ${borderClass} cursor-pointer transition space-y-1">
+            <div class="flex items-start gap-2">
+              <button class="mt-0.5 w-6 h-6 rounded-full bg-blue-100 dark:bg-slate-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 text-[10px]">
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <div class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-100 leading-relaxed flex-1">${mainContent}</div>
+            </div>
+            ${showBilingual ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 pl-8">${line.vi}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function playYtLine(idx) {
+      currentYtLineIndex = idx;
+      renderYtSubtitles();
+      const line = activeYtLines[idx];
+      if (line && typeof speakText === 'function') {
+        speakText(line.text);
+      }
+    }
+
+    function stepYtLine(delta) {
+      const next = Math.max(0, Math.min(activeYtLines.length - 1, currentYtLineIndex + delta));
+      playYtLine(next);
+    }
+
+    function repeatCurrentYtLine() {
+      playYtLine(currentYtLineIndex);
+    }
+
+    function checkYtChoice(idx, chosen, answer) {
+      const slot = document.getElementById(`ytBlank-${idx}`);
+      if (chosen === answer) {
+        slot.textContent = answer;
+        slot.className = 'px-2 py-0.5 mx-1 rounded bg-emerald-100 text-emerald-700 font-extrabold';
+        addXp(5);
+        showToast('Chính xác! +5 XP');
+      } else {
+        slot.textContent = chosen;
+        slot.className = 'px-2 py-0.5 mx-1 rounded bg-rose-100 text-rose-700 font-extrabold line-through';
+        showToast('Chưa đúng, thử lại nhé!', 'error');
+      }
+    }
+
+    function checkYtWrite(idx, val, answer) {
+      const input = document.getElementById(`ytWriteInput-${idx}`);
+      if (val.trim().toLowerCase() === answer.trim().toLowerCase()) {
+        input.classList.remove('border-blue-400');
+        input.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+        input.disabled = true;
+        addXp(10);
+        showToast('Chuẩn xác! +10 XP');
+      }
+    }
+
+    async function inspectYtWord(rawWord) {
+      const cleanWord = rawWord.replace(/^[.,!?;:"'()]+|[.,!?;:"'()]+$/g, '');
+      if (!cleanWord) return;
+      const box = document.getElementById('ytWordInspector');
+      box.classList.remove('hidden');
+      document.getElementById('ytInspectedWord').textContent = cleanWord;
+      document.getElementById('ytInspectedMeaning').textContent = 'Đang dịch...';
+      if (typeof speakText === 'function') speakText(cleanWord);
+
+      try {
+        const res = await callGeminiAI(`Dịch ngắn gọn từ "${cleanWord}" sang tiếng Việt (kèm phiên âm/pinyin trong ngoặc, tối đa 15 từ):`);
+        const meaning = res.trim();
+        document.getElementById('ytInspectedMeaning').textContent = meaning;
+        currentInspectedYtTerm = { word: cleanWord, meaning: meaning };
+      } catch (e) {
+        document.getElementById('ytInspectedMeaning').textContent = 'Không tra được nghĩa.';
+      }
+    }
+
+    async function saveInspectedYtWord() {
+      if (!currentInspectedYtTerm.word) return;
+      if (typeof quickSaveToFlashcard === 'function') {
+        await quickSaveToFlashcard(currentInspectedYtTerm.word, currentInspectedYtTerm.meaning);
+      } else {
+        showToast(`Đã lưu "${currentInspectedYtTerm.word}" vào bộ nhớ tạm!`);
+      }
+    }
+      
   </script>
 
 </body>
