@@ -1266,109 +1266,6 @@
         <h3 id="previewTitle" class="font-bold text-slate-800 dark:text-white text-sm md:text-base truncate">Xem tài liệu</h3>
       </div>
 
-      <!-- MODAL LUYỆN VIẾT CHỮ HÁN (HANZI WRITER + CHIẾT TỰ + FLASHCARDS) -->
-  <div id="hanziStudioModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-      
-      <!-- Header -->
-      <div class="px-5 py-3.5 bg-gradient-to-r from-rose-600 to-amber-600 text-white flex justify-between items-center">
-        <div class="flex items-center gap-2.5">
-          <span class="text-2xl">✍️</span>
-          <div>
-            <h3 class="font-bold text-base md:text-lg leading-tight">Phòng Luyện Viết Chữ Hán</h3>
-            <p class="text-[11px] text-rose-100">Chuẩn bút thuận · Chiết tự bộ thủ · Đồng bộ Flashcards</p>
-          </div>
-        </div>
-        <button onclick="closeHanziStudio()" class="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition text-white">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Thanh chọn nguồn từ vựng (Nhập tay hoặc chọn từ Flashcards) -->
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
-          <input type="text" id="hanziCustomInput" placeholder="Nhập từ/câu chữ Hán (VD: 你好, 学习)..." class="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-white">
-          <button onclick="loadHanziFromInput()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0">
-            Tập viết
-          </button>
-        </div>
-        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
-          <select id="hanziDeckSelect" onchange="loadHanziFromDeck(this.value)" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
-            <option value="">-- Hoặc chọn bộ Flashcards Tiếng Trung --</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Danh sách các chữ Hán trong phiên luyện tập -->
-      <div id="hanziCharPills" class="px-4 py-2.5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5 overflow-x-auto min-h-[48px]">
-        <span class="text-xs text-slate-400 italic">Chọn chữ bên dưới hoặc nhập từ ở trên để bắt đầu...</span>
-      </div>
-
-      <!-- Khu vực chính: Trái (Bảng viết) - Phải (Chiết tự & Bộ thủ) -->
-      <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100 dark:bg-slate-900/60">
-        
-        <!-- Cột trái: Ô vuông luyện viết chuẩn bút thuận -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between shadow-sm">
-          <div class="w-full flex justify-between items-center mb-2">
-            <span id="hanziCurrentTitle" class="text-sm font-extrabold text-slate-700 dark:text-slate-200">Chữ đang luyện: <span class="text-rose-600 text-lg" id="hanziActiveChar">学</span></span>
-            <button onclick="speakText(document.getElementById('hanziActiveChar').textContent)" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-              <i class="fa-solid fa-volume-high"></i> Nghe
-            </button>
-          </div>
-
-          <!-- Khung ô chữ Mễ (米字格) -->
-          <div class="relative my-2 border-2 border-rose-400 rounded-xl bg-amber-50/40 dark:bg-slate-900 shadow-inner overflow-hidden" style="width: 240px; height: 240px;">
-            <!-- Đường kẻ ô chữ Mễ nền -->
-            <svg class="absolute inset-0 pointer-events-none opacity-30" width="240" height="240">
-              <line x1="0" y1="120" x2="240" y2="120" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
-              <line x1="120" y1="0" x2="120" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
-              <line x1="0" y1="0" x2="240" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
-              <line x1="240" y1="0" x2="0" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
-            </svg>
-            <div id="hanziWriterTarget" class="relative z-10 w-full h-full cursor-crosshair"></div>
-          </div>
-
-          <p id="hanziQuizStatus" class="text-xs font-bold text-slate-500 dark:text-slate-400 h-5 text-center">Bấm "Xem nét mẫu" hoặc dùng chuột viết trực tiếp lên ô!</p>
-
-          <!-- Nút điều khiển viết -->
-          <div class="grid grid-cols-3 gap-2 w-full mt-3">
-            <button onclick="animateHanziStroke()" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-              <i class="fa-solid fa-play"></i> Xem nét mẫu
-            </button>
-            <button onclick="startHanziPractice(true)" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-              <i class="fa-solid fa-pen"></i> Tập tô nét
-            </button>
-            <button onclick="startHanziPractice(false)" class="bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
-              <i class="fa-solid fa-eye-slash"></i> Viết mù (Test)
-            </button>
-          </div>
-        </div>
-
-        <!-- Cột phải: Phân tích Bộ thủ & Chiết tự ghi nhớ -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col justify-between shadow-sm">
-          <div>
-            <div class="flex items-center justify-between border-b dark:border-slate-700 pb-2 mb-3">
-              <h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">
-                <i class="fa-solid fa-puzzle-piece text-amber-500"></i> Phân tích Bộ thủ & Chiết tự
-              </h4>
-              <button onclick="analyzeCurrentHanzi()" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg transition">
-                Phân tích chữ này
-              </button>
-            </div>
-            <div id="hanziRadicalResult" class="text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2 max-h-60 overflow-y-auto pr-1">
-              Chọn một chữ Hán bất kỳ, hệ thống sẽ phân tách <b>Bộ thủ chính</b>, <b>Cấu trúc chữ</b>, <b>Số nét</b> và <b>Mẹo chiết tự</b> giúp bạn nhớ mặt chữ cực nhanh.
-            </div>
-          </div>
-
-          <div class="pt-3 border-t dark:border-slate-700 flex justify-between items-center text-[11px] text-slate-400">
-            <span>Hoàn thành viết mù mỗi chữ nhận <b>+5 XP</b></span>
-            <button onclick="nextHanziChar()" class="text-rose-600 font-bold hover:underline">Chữ tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
       
       <!-- Thanh điều khiển PDF (Chỉ hiện khi mở PDF trực tiếp) -->
       <div id="pdfToolbar" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
@@ -1501,35 +1398,234 @@
     </div>
   </div>
     
-    <div class="bg-slate-100 dark:bg-slate-900 flex-1 overflow-hidden rounded-b-2xl flex flex-col md:flex-row p-3 gap-3 relative">
-  <div id="previewBody" class="flex-1 overflow-auto flex items-center justify-center p-2 bg-white dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700"></div>
-  
-  <div id="previewSidebar" class="w-full md:w-80 bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col justify-between hidden shadow-sm">
-        <div id="audioControlsContainer" class="hidden border-b pb-3 mb-3">
-          <h4 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-sliders text-indigo-600"></i> Điều khiển</h4>
-          <div class="flex items-center justify-between text-sm">
-            <span class="font-medium">Tốc độ:</span>
-            <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    
+
+      <!-- Thanh điều khiển PDF (Chỉ hiện khi mở PDF trực tiếp) -->
+      <div id="pdfToolbar" class="hidden flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+        <button onclick="changePdfPage(-1)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Trang trước"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="px-1 text-slate-700 dark:text-slate-200">Trang <input type="number" id="pdfPageInput" min="1" value="1" onchange="goToPdfPage(this.value)" class="w-11 text-center bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-1 py-0.5"> / <span id="pdfTotalPages">1</span></span>
+        <button onclick="changePdfPage(1)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Trang sau"><i class="fa-solid fa-chevron-right"></i></button>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <button onclick="changePdfZoom(-0.2)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Thu nhỏ"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <button onclick="changePdfZoom(0.2)" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition" title="Phóng to"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+        <span class="text-slate-300 dark:text-slate-600">|</span>
+        <button onclick="addPageBookmark()" class="text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition flex items-center gap-1" title="Đánh dấu trang này">
+          <i class="fa-solid fa-bookmark"></i> <span class="hidden sm:inline">Đánh dấu</span>
+        </button>
+        <button onclick="runPageOcr()" id="btnPageOcr" class="text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition flex items-center gap-1" title="Nhận diện chữ trên trang PDF ảnh">
+          <i class="fa-solid fa-expand"></i> <span class="hidden sm:inline">Quét chữ</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Nút Chia đôi màn hình (Split-View) -->
+        <button onclick="toggleSplitView()" id="btnSplitView" class="bg-purple-50 dark:bg-slate-700 hover:bg-purple-600 text-purple-600 dark:text-purple-300 hover:text-white border border-purple-200 dark:border-slate-600 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-table-columns"></i> <span class="hidden sm:inline">Chia đôi</span>
+        </button>
+        <a id="previewDownloadBtn" target="_blank" class="bg-indigo-50 dark:bg-slate-700 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Tải về</span>
+        </a>
+        <button onclick="closePreview()" class="text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-slate-700 hover:bg-red-50 p-1.5 rounded-xl transition text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Khu vực nội dung chính -->
+    <div class="bg-slate-100 dark:bg-slate-900 flex-1 overflow-hidden rounded-b-2xl flex flex-col md:flex-row p-2.5 gap-2.5 relative">
+      <!-- Khung 1: Tài liệu chính -->
+      <div id="previewBody" class="flex-1 overflow-auto flex items-start justify-center p-2 bg-white dark:bg-slate-800 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700 relative"></div>
+
+      <!-- Khung 2: Màn hình chia đôi Split-View (Ẩn mặc định) -->
+      <div id="splitViewPane" class="hidden flex-1 overflow-hidden flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-inner border-2 border-purple-300 dark:border-purple-700">
+        <div class="p-2 bg-purple-50 dark:bg-slate-900 border-b border-purple-200 dark:border-slate-700 flex items-center justify-between gap-2">
+          <select id="splitFileSelect" onchange="loadSplitContent(this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <option value="">-- Chọn tài liệu thứ 2 để đối chiếu --</option>
+            <option value="__DICT__">📖 Mở Từ Điển AI song song</option>
+          </select>
+          <button onclick="toggleSplitView()" class="text-slate-400 hover:text-red-500 px-2 py-1 text-xs font-bold">Đóng</button>
+        </div>
+        <div id="splitViewBody" class="flex-1 overflow-auto p-3 flex items-center justify-center text-xs text-slate-400">
+          Chọn một tài liệu hoặc từ điển ở thanh trên để hiển thị song song.
+        </div>
+      </div>
+
+      <!-- Thanh công cụ học tập bên phải (3 Tabs) -->
+      <div id="previewSidebar" class="w-full md:w-80 bg-white dark:bg-slate-800 rounded-xl p-3 border border-slate-200 dark:border-slate-700 flex flex-col justify-between hidden shadow-sm shrink-0">
+        <!-- Điều khiển Audio (Nếu là file âm thanh) -->
+        <div id="audioControlsContainer" class="hidden border-b dark:border-slate-700 pb-2.5 mb-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-sliders text-indigo-600 mr-1"></i> Tốc độ nghe:</span>
+            <select id="audioSpeedSelect" onchange="changeAudioSpeed(this.value)" class="border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-2.5 py-1 font-bold text-slate-700 dark:text-slate-200">
               <option value="0.5">0.5x</option>
               <option value="0.75">0.75x</option>
               <option value="1.0" selected>1.0x</option>
               <option value="1.25">1.25x</option>
               <option value="1.5">1.5x</option>
-              <option value="2.0">2.0x</option>
             </select>
           </div>
         </div>
-        <div class="flex-1 flex flex-col min-h-[150px]">
-          <h4 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học</h4>
-          <textarea id="fileNoteArea" placeholder="Viết ghi chú..." class="w-full flex-1 p-3 border border-slate-300 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none mb-3 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
-          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-bold transition shadow-md active:scale-95">
-            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
+
+        <!-- Tabs chuyển đổi -->
+        <div class="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-[11px] font-bold mb-3">
+          <button onclick="switchStudyTab('notes')" id="tabStudy-notes" class="py-1.5 rounded-lg bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm">Ghi chú</button>
+          <button onclick="switchStudyTab('ai')" id="tabStudy-ai" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-700">AI Ôn tập</button>
+          <button onclick="switchStudyTab('lookup')" id="tabStudy-lookup" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-700">Tra nhanh</button>
+        </div>
+
+        <!-- TAB 1: GHI CHÚ & ĐÁNH DẤU TRANG -->
+        <div id="studyPane-notes" class="flex-1 flex flex-col overflow-hidden gap-2.5">
+          <div id="bookmarksSection" class="max-h-32 overflow-y-auto space-y-1.5 border-b dark:border-slate-700 pb-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-extrabold text-amber-600 uppercase"><i class="fa-solid fa-bookmark"></i> Trang đánh dấu</span>
+            </div>
+            <div id="pageBookmarksList" class="space-y-1 text-xs text-slate-500">Chưa có trang đánh dấu.</div>
+          </div>
+
+          <h4 class="font-bold text-slate-700 dark:text-slate-200 text-xs flex items-center gap-1.5"><i class="fa-solid fa-note-sticky text-amber-500"></i> Ghi chú bài học</h4>
+          <textarea id="fileNoteArea" placeholder="Ghi lại cấu trúc hay, từ mới..." class="w-full flex-1 p-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-slate-50 dark:bg-slate-900"></textarea>
+          <button onclick="saveFileNote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl text-xs font-bold transition shadow-md active:scale-95">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú & Đánh dấu
           </button>
+        </div>
+
+        <!-- TAB 2: AI TÓM TẮT & TẠO QUIZ TỪ TÀI LIỆU -->
+        <div id="studyPane-ai" class="hidden flex-1 flex flex-col overflow-hidden gap-2">
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="runDocAiAction('summary')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-2 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-list-check"></i> Tóm tắt trang
+            </button>
+            <button onclick="runDocAiAction('quiz')" class="bg-rose-600 hover:bg-rose-700 text-white py-2 px-2 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-circle-question"></i> Tạo Quiz
+            </button>
+          </div>
+          <div id="docAiOutput" class="flex-1 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2">
+            Bấm <b>Tóm tắt trang</b> hoặc <b>Tạo Quiz</b> để AI phân tích nội dung trang hiện tại của tài liệu.
+          </div>
+        </div>
+
+        <!-- TAB 3: TRA TỪ NHANH & LƯU FLASHCARD -->
+        <div id="studyPane-lookup" class="hidden flex-1 flex flex-col overflow-hidden gap-2">
+          <div class="flex gap-1.5">
+            <input type="text" id="quickLookupInput" placeholder="Bôi đen chữ hoặc nhập từ..." class="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white">
+            <button onclick="executeQuickLookup()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 rounded-xl text-xs font-bold"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </div>
+          <div id="quickLookupResult" class="flex-1 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-700 dark:text-slate-200">
+            Bôi đen bất kỳ từ/câu nào trên trang tài liệu để tra nghĩa, nghe đọc và lưu thẳng vào Flashcards.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POPUP NỔI KHI BÔI ĐEN CHỮ TRÊN TÀI LIỆU -->
+    <div id="selectionPopup" onmousedown="event.preventDefault()" class="fixed z-[70] hidden bg-slate-900 text-white px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-1.5 text-xs font-bold">
+      <button onclick="popupSpeakSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-amber-300 flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> Đọc</button>
+      <span class="text-slate-600">|</span>
+      <button onclick="popupLookupSelection()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-teal-300 flex items-center gap-1"><i class="fa-solid fa-language"></i> Dịch</button>
+      <span class="text-slate-600">|</span>
+      <button onclick="popupSaveFlashcard()" class="hover:bg-slate-700 px-2 py-1 rounded-lg text-pink-400 flex items-center gap-1"><i class="fa-solid fa-plus"></i> Flashcard</button>
+    </div>
+  </div>
+
+  <!-- MODAL LUYỆN VIẾT CHỮ HÁN (HANZI WRITER + CHIẾT TỰ + FLASHCARDS) -->
+  <div id="hanziStudioModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-2 md:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+      <!-- Header -->
+      <div class="px-5 py-3.5 bg-gradient-to-r from-rose-600 to-amber-600 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">✍️</span>
+          <div>
+            <h3 class="font-bold text-base md:text-lg leading-tight">Phòng Luyện Viết Chữ Hán</h3>
+            <p class="text-[11px] text-rose-100">Chuẩn bút thuận · Chiết tự bộ thủ · Đồng bộ Flashcards</p>
+          </div>
+        </div>
+        <button onclick="closeHanziStudio()" class="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Thanh chọn nguồn từ vựng (Nhập tay hoặc chọn từ Flashcards) -->
+      <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
+          <input type="text" id="hanziCustomInput" placeholder="Nhập từ/câu chữ Hán (VD: 你好, 学习)..." class="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-white">
+          <button onclick="loadHanziFromInput()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0">
+            Tập viết
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
+          <select id="hanziDeckSelect" onchange="loadHanziFromDeck(this.value)" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <option value="">-- Hoặc chọn bộ Flashcards Tiếng Trung --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Danh sách các chữ Hán trong phiên luyện tập -->
+      <div id="hanziCharPills" class="px-4 py-2.5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5 overflow-x-auto min-h-[48px]">
+        <span class="text-xs text-slate-400 italic">Chọn chữ bên dưới hoặc nhập từ ở trên để bắt đầu...</span>
+      </div>
+
+      <!-- Khu vực chính: Trái (Bảng viết) - Phải (Chiết tự & Bộ thủ) -->
+      <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100 dark:bg-slate-900/60">
+        <!-- Cột trái: Ô vuông luyện viết chuẩn bút thuận -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between shadow-sm">
+          <div class="w-full flex justify-between items-center mb-2">
+            <span id="hanziCurrentTitle" class="text-sm font-extrabold text-slate-700 dark:text-slate-200">Chữ đang luyện: <span class="text-rose-600 text-lg" id="hanziActiveChar">学</span></span>
+            <button onclick="speakText(document.getElementById('hanziActiveChar').textContent)" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+              <i class="fa-solid fa-volume-high"></i> Nghe
+            </button>
+          </div>
+
+          <!-- Khung ô chữ Mễ (米字格) -->
+          <div class="relative my-2 border-2 border-rose-400 rounded-xl bg-amber-50/40 dark:bg-slate-900 shadow-inner overflow-hidden" style="width: 240px; height: 240px;">
+            <svg class="absolute inset-0 pointer-events-none opacity-30" width="240" height="240">
+              <line x1="0" y1="120" x2="240" y2="120" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="120" y1="0" x2="120" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="0" y1="0" x2="240" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+              <line x1="240" y1="0" x2="0" y2="240" stroke="#e11d48" stroke-dasharray="4,4" stroke-width="1"/>
+            </svg>
+            <div id="hanziWriterTarget" class="relative z-10 w-full h-full cursor-crosshair"></div>
+          </div>
+
+          <p id="hanziQuizStatus" class="text-xs font-bold text-slate-500 dark:text-slate-400 h-5 text-center">Bấm "Xem nét mẫu" hoặc dùng chuột viết trực tiếp lên ô!</p>
+
+          <!-- Nút điều khiển viết -->
+          <div class="grid grid-cols-3 gap-2 w-full mt-3">
+            <button onclick="animateHanziStroke()" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-play"></i> Xem nét mẫu
+            </button>
+            <button onclick="startHanziPractice(true)" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-pen"></i> Tập tô nét
+            </button>
+            <button onclick="startHanziPractice(false)" class="bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
+              <i class="fa-solid fa-eye-slash"></i> Viết mù (Test)
+            </button>
+          </div>
+        </div>
+
+        <!-- Cột phải: Phân tích Bộ thủ & Chiết tự ghi nhớ -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex items-center justify-between border-b dark:border-slate-700 pb-2 mb-3">
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-puzzle-piece text-amber-500"></i> Phân tích Bộ thủ & Chiết tự
+              </h4>
+              <button onclick="analyzeCurrentHanzi()" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg transition">
+                Phân tích chữ này
+              </button>
+            </div>
+            <div id="hanziRadicalResult" class="text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2 max-h-60 overflow-y-auto pr-1">
+              Chọn một chữ Hán bất kỳ, hệ thống sẽ phân tách <b>Bộ thủ chính</b>, <b>Cấu trúc chữ</b>, <b>Số nét</b> và <b>Mẹo chiết tự</b> giúp bạn nhớ mặt chữ cực nhanh.
+            </div>
+          </div>
+
+          <div class="pt-3 border-t dark:border-slate-700 flex justify-between items-center text-[11px] text-slate-400">
+            <span>Hoàn thành viết mù mỗi chữ nhận <b>+5 XP</b></span>
+            <button onclick="nextHanziChar()" class="text-rose-600 font-bold hover:underline">Chữ tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
   
   <script>
     const SUPABASE_URL = "https://zgkdrxwyylecszxywiqm.supabase.co";
