@@ -27,12 +27,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-  if (window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  }
-  
-</script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
   <style>
     .modal-backdrop { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
     .flashcard { perspective: 1000px; }
@@ -3526,10 +3525,20 @@ function updateGamificationUI() {
 
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang quét...';
-      showToast('Đang nhận diện chữ trên trang này (2-4 giây)...');
 
       try {
-        // Tự chọn ngôn ngữ quét theo chế độ EN hoặc ZH
+        // Tự động nạp thư viện Tesseract nếu chưa tải xong
+        if (typeof Tesseract === 'undefined') {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            s.onload = resolve;
+            s.onerror = () => reject(new Error('Không tải được thư viện OCR'));
+            document.head.appendChild(s);
+          });
+        }
+
+        showToast('Đang nhận diện chữ trên trang này (3-6 giây)...');
         const ocrLang = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh') ? 'chi_sim+eng' : 'eng';
         const result = await Tesseract.recognize(canvas, ocrLang);
 
@@ -3539,7 +3548,6 @@ function updateGamificationUI() {
           return;
         }
 
-        // Xóa lớp text cũ và phủ từng từ nhận diện được lên đúng tọa độ trên ảnh
         textLayerDiv.innerHTML = '';
         let extracted = [];
 
