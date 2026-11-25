@@ -796,7 +796,7 @@
                 </div>
                 <p class="text-[11px] text-slate-400 flex items-center justify-between">
                   <span><i class="fa-solid fa-hand-pointer text-amber-500 mr-1"></i> Chạm vào bất kỳ từ nào để tra nghĩa & lưu Flashcard</span>
-                  <button onclick="generateAiTranscriptForVideo()" id="btnGenYtTranscript" class="text-rose-600 hover:underline font-bold">Tạo bài tập AI</button>
+                  <button onclick="generateAiTranscriptForVideo()" id="btnGenYtTranscript" class="text-rose-600 hover:underline font-bold">Tạo bài tập</button>
                 </p>
               </div>
 
@@ -908,7 +908,7 @@
 
       <div id="writingResultContainer" class="hidden space-y-4 pt-4 border-t">
         <h4 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-square-check text-emerald-500"></i> Kết quả từ AI
+          <i class="fa-solid fa-square-check text-emerald-500"></i> Kết quả
         </h4>
         <div id="writingResponseBody" class="p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm leading-relaxed text-slate-700 dark:text-slate-200 space-y-3 overflow-x-auto shadow-inner"></div>
       </div>
@@ -1087,7 +1087,7 @@
 
       <!-- Khu vực 1: Nhập văn bản -->
       <div id="readingInputArea" class="space-y-4">
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Dán một đoạn văn tiếng Anh (khoảng 100-300 chữ) để AI tạo 3 câu hỏi trắc nghiệm cho bạn:</p>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Dán một đoạn văn tiếng Anh (khoảng 100-300 chữ) để tạo 3 câu hỏi trắc nghiệm cho bạn:</p>
         <textarea id="readingInputText" rows="6" placeholder="Paste your reading text here..." class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 font-medium resize-none shadow-inner bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-800 transition"></textarea>
         <button onclick="generateReadingQuiz()" id="btnGenerateReading" class="w-full bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
           <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Câu Hỏi Tự Động
@@ -1097,7 +1097,7 @@
       <!-- Khu vực 2: Đang tải (Ẩn) -->
       <div id="readingLoadingArea" class="hidden text-center py-12 space-y-4">
         <i class="fa-solid fa-spinner fa-spin text-4xl text-rose-500"></i>
-        <p class="text-slate-600 dark:text-slate-300 font-bold">AI đang đọc bài và soạn câu hỏi...</p>
+        <p class="text-slate-600 dark:text-slate-300 font-bold"> Đang đọc bài và soạn câu hỏi...</p>
         <p class="text-xs text-slate-400">Quá trình này mất khoảng 3-5 giây.</p>
       </div>
 
@@ -1176,7 +1176,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full h-[90vh] shadow-2xl flex flex-col overflow-hidden relative">
       <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
         <h3 class="font-extrabold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-          <i class="fa-solid fa-book-open text-teal-500"></i> Từ Điển AI
+          <i class="fa-solid fa-book-open text-teal-500"></i> Từ Điển
         </h3>
         <button onclick="closeDictionaryModal()" class="text-slate-400 hover:text-red-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 p-2 rounded-xl transition active:scale-95">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -1507,7 +1507,7 @@
         <div class="p-2 bg-purple-50 dark:bg-slate-900 border-b border-purple-200 dark:border-slate-700 flex items-center justify-between gap-2">
           <select id="splitFileSelect" onchange="loadSplitContent(this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
             <option value="">-- Chọn tài liệu thứ 2 để đối chiếu --</option>
-            <option value="__DICT__">📖 Mở Từ Điển AI song song</option>
+            <option value="__DICT__">📖 Mở Từ Điển song song</option>
           </select>
           <button onclick="toggleSplitView()" class="text-slate-400 hover:text-red-500 px-2 py-1 text-xs font-bold">Đóng</button>
         </div>
@@ -1566,7 +1566,7 @@
             </button>
           </div>
           <div id="docAiOutput" class="flex-1 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-700 dark:text-slate-200 space-y-2">
-            Bấm <b>Tóm tắt trang</b> hoặc <b>Tạo Quiz</b> để AI phân tích nội dung trang hiện tại của tài liệu.
+            Bấm <b>Tóm tắt trang</b> hoặc <b>Tạo Quiz</b> để phân tích nội dung trang hiện tại của tài liệu.
           </div>
         </div>
 
@@ -2396,7 +2396,7 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
       resultContainer.classList.remove('hidden');
-      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-4 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Gia sư AI đang chấm bài...</div>';
+      responseBody.innerHTML = '<div class="text-purple-600 font-bold py-4 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br> Đang chấm bài...</div>';
 
       let levelInstruction = level === 'beginner' ? "Người mới (A1-A2): Chỉ sửa lỗi chính tả, ngữ pháp cơ bản. Không dùng từ quá khó." 
                          : level === 'intermediate' ? "Trung cấp (B1-B2): Sửa ngữ pháp, gợi ý từ vựng tự nhiên hơn, cách nối câu." 
@@ -2785,21 +2785,21 @@ Hãy trả về kết quả bằng tiếng Việt dưới dạng HTML (không d�
         document.getElementById('zhDictationHintBox').classList.add('hidden');
         document.getElementById('zhDictationGradeResult').classList.add('hidden');
         document.getElementById('dictationTextArea').value = '';
-        document.getElementById('dictationTextArea').placeholder = 'Nghe giọng đọc AI và gõ lại chữ Hán vào đây...';
+        document.getElementById('dictationTextArea').placeholder = 'Nghe giọng đọc và gõ lại chữ Hán vào đây...';
 
         showToast('Đã tạo bài nghe ' + level + '! Bấm "Nghe chuẩn" để bắt đầu.');
         playZhDictationPassage(0.85);
       } catch (e) {
-        showToast('Không tạo được bài nghe AI: ' + e.message, 'error');
+        showToast('Không tạo được bài nghe: ' + e.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe AI';
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài nghe';
       }
     }
 
     function playZhDictationPassage(rate = 0.85) {
       if (!currentZhDictationData || !currentZhDictationData.hanzi) {
-        return showToast('Hãy bấm "Tạo bài nghe AI" trước!', 'error');
+        return showToast('Hãy bấm "Tạo bài nghe" trước!', 'error');
       }
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(currentZhDictationData.hanzi);
@@ -5038,22 +5038,50 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
       { word: "宁静", pos: "tính từ · níngjìng", meaning: "yên tĩnh, thanh bình", ex: "清晨的湖面非常宁静。", exVi: "Mặt hồ lúc sáng sớm vô cùng thanh bình." }
     ];
 
-    function pickRandomWotd() {
-      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
-      // Ưu tiên lấy từ kho Flashcards người dùng đã lưu nếu có
-      const userCards = (typeof allFlashcards !== 'undefined' && Array.isArray(allFlashcards))
-        ? allFlashcards.filter(c => isZh ? /[\u4e00-\u9fa5]/.test(c.front || '') : !/[\u4e00-\u9fa5]/.test(c.front || ''))
-        : [];
+    let aiWotdCache = { en: [], zh: [] };
 
-      if (userCards.length > 0 && Math.random() > 0.35) {
-        const card = userCards[Math.floor(Math.random() * userCards.length)];
-        document.getElementById('wotdWord').textContent = card.front || '';
-        document.getElementById('wotdPos').textContent = card.phonetic || (isZh ? 'Flashcard Hán tự' : 'Flashcard cá nhân');
-        document.getElementById('wotdMeaning').textContent = card.back || '';
-        document.getElementById('wotdExampleEn').textContent = card.example ? `"${card.example}"` : 'Ôn tập từ vựng từ bộ thẻ cá nhân của bạn.';
-        document.getElementById('wotdExampleVi').textContent = '';
-        return;
+async function pickRandomWotd() {
+  const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
+  const langKey = isZh ? 'zh' : 'en';
+  const wordEl = document.getElementById('wotdWord');
+  const posEl = document.getElementById('wotdPos');
+  const meanEl = document.getElementById('wotdMeaning');
+  const exEl = document.getElementById('wotdExampleEn');
+  const exViEl = document.getElementById('wotdExampleVi');
+
+  // Nếu kho đệm đang trống, hiển thị tạm từ mẫu và gọi AI nạp 8 từ mới
+  if (aiWotdCache[langKey].length === 0) {
+    const fallback = isZh ? sampleWotdZh : sampleWotdEn;
+    const temp = fallback[Math.floor(Math.random() * fallback.length)];
+    wordEl.textContent = temp.word;
+    posEl.textContent = temp.pos + ' · Đang tải kho từ AI...';
+    meanEl.textContent = temp.meaning;
+    exEl.textContent = `"${temp.ex}"`;
+    exViEl.textContent = temp.exVi;
+
+    try {
+      const prompt = isZh
+        ? `Tạo 8 từ vựng tiếng Trung trình độ HSK 1-9 đa dạng chủ đề (không trùng: 坚持, 从容, 收获, 宁静). Trả về JSON thuần mảng: [{"word":"chữ Hán","pos":"từ loại · pinyin","meaning":"nghĩa tiếng Việt","ex":"câu ví dụ chữ Hán","exVi":"dịch nghĩa tiếng Việt"}]`
+        : `Generate 8 advanced English vocabulary words (C1 / Business BEC Vantage level, avoid: serene, meticulous, resilient, lucrative). Return raw JSON array only: [{"word":"word","pos":"pos · /IPA/","meaning":"Vietnamese meaning","ex":"English example sentence","exVi":"Vietnamese translation"}]`;
+      const raw = await callGeminiAI(prompt);
+      const list = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      if (Array.isArray(list) && list.length > 0) {
+        aiWotdCache[langKey] = list;
       }
+    } catch (e) {
+      console.warn('WOTD AI fallback:', e);
+    }
+  }
+
+  if (aiWotdCache[langKey].length > 0) {
+    const item = aiWotdCache[langKey].pop();
+    wordEl.textContent = item.word;
+    posEl.textContent = item.pos;
+    meanEl.textContent = item.meaning;
+    exEl.textContent = `"${item.ex}"`;
+    exViEl.textContent = item.exVi;
+  }
+}
 
       const pool = isZh ? sampleWotdZh : sampleWotdEn;
       const item = pool[Math.floor(Math.random() * pool.length)];
@@ -5318,6 +5346,51 @@ Note: The "correct" field must be the index (0, 1, 2, or 3) of the correct optio
       } else {
         showToast(`Đã lưu "${currentInspectedYtTerm.word}" vào bộ nhớ tạm!`);
       }
+    }
+
+        async function callGeminiAI(prompt) {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'apikey': SUPABASE_KEY
+        },
+        body: JSON.stringify({ prompt: prompt })
+      });
+
+      if (!response.ok) {
+        throw new Error('Không kết nối được tới AI Server (' + response.status + ')');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6);
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              const content = parsed.choices?.[0]?.delta?.content || parsed.text || '';
+              fullText += content;
+            } catch (e) {
+              fullText += dataStr;
+            }
+          }
+        }
+      }
+      return fullText.trim();
     }
       
   </script>
