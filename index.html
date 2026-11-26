@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
   <meta name="theme-color" content="#4f46e5">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script>
   tailwind.config = {
     darkMode: 'class',
@@ -755,7 +756,7 @@
             <!-- Cột trái (7 phần): Trình phát YouTube & Thanh điều khiển câu -->
             <div class="lg:col-span-7 space-y-3">
               <div class="bg-black rounded-3xl overflow-hidden shadow-lg aspect-video border border-slate-800">
-                <iframe id="ytStudyPlayer" class="w-full h-full" src="https://www.youtube.com/embed/UF8uR6Z6KLc?enablejsapi=1" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <div id="ytPlayerMount" class="w-full h-full"></div>
               </div>
 
               <!-- Thanh điều khiển nhanh dưới video -->
@@ -771,7 +772,10 @@
                     Câu sau <i class="fa-solid fa-forward-step"></i>
                   </button>
                 </div>
-
+<label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-700 dark:text-slate-200">
+  <input type="checkbox" id="ytAutoSyncToggle" checked class="accent-blue-600 w-4 h-4">
+  <span>Tự chạy phụ đề</span>
+</label>
                 <label class="flex items-center gap-2 cursor-pointer select-none text-slate-700 dark:text-slate-200">
                   <input type="checkbox" id="ytBilingualToggle" checked onchange="renderYtSubtitles()" class="accent-rose-600 w-4 h-4">
                   <span>Hiện dịch song ngữ</span>
@@ -783,17 +787,23 @@
             <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-4 flex flex-col justify-between shadow-sm max-h-[540px]">
               <!-- 3 Chế độ học (Giống Ảnh 3) -->
               <div class="space-y-2 pb-3 border-b border-slate-200 dark:border-slate-700">
-                <div class="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold">
-                  <button onclick="setYtStudyMode('sub')" id="ytMode-sub" class="py-2 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm transition">
-                    <i class="fa-regular fa-closed-captioning mr-1"></i> Phụ đề
-                  </button>
-                  <button onclick="setYtStudyMode('choice')" id="ytMode-choice" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 transition">
-                    <i class="fa-solid fa-list-check mr-1"></i> Chọn từ
-                  </button>
-                  <button onclick="setYtStudyMode('write')" id="ytMode-write" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 transition">
-                    <i class="fa-solid fa-pen mr-1"></i> Viết từ
-                  </button>
-                </div>
+                <div class="flex items-center gap-1.5">
+  <div class="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold flex-1">
+    <button type="button" onclick="setYtStudyMode('sub')" id="ytMode-sub" class="py-2 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm transition">
+      <i class="fa-regular fa-closed-captioning mr-1"></i> Phụ đề
+    </button>
+    <button type="button" onclick="setYtStudyMode('choice')" id="ytMode-choice" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">
+      <i class="fa-solid fa-list-check mr-1"></i> Chọn từ
+    </button>
+    <button type="button" onclick="setYtStudyMode('write')" id="ytMode-write" class="py-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white transition">
+      <i class="fa-solid fa-pen mr-1"></i> Viết từ
+    </button>
+  </div>
+  <button type="button" onclick="toggleYtSubVisibility()" id="btnToggleYtSub" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition shrink-0 flex items-center gap-1" title="Ẩn/Hiện danh sách phụ đề để luyện nghe chay">
+    <i id="iconToggleYtSub" class="fa-solid fa-eye-slash"></i>
+    <span id="textToggleYtSub" class="hidden sm:inline">Ẩn</span>
+  </button>
+</div>
                 <p class="text-[11px] text-slate-400 flex items-center justify-between">
                   <span><i class="fa-solid fa-hand-pointer text-amber-500 mr-1"></i> Chạm vào bất kỳ từ nào để tra nghĩa & lưu Flashcard</span>
                   <button onclick="generateAiTranscriptForVideo()" id="btnGenYtTranscript" class="text-rose-600 hover:underline font-bold">Tạo bài tập</button>
@@ -801,6 +811,18 @@
               </div>
 
               <!-- Danh sách dòng phụ đề / bài tập điền khuyết -->
+              <div id="ytSubHiddenPlaceholder" class="hidden flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400 space-y-3">
+  <div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-2xl text-slate-400">
+    <i class="fa-solid fa-ear-listen"></i>
+  </div>
+  <div>
+    <p class="text-sm font-bold text-slate-600 dark:text-slate-300">Đang ẩn phụ đề để luyện nghe chay</p>
+    <p class="text-xs mt-1">Tập trung nghe video, sau đó bấm nút bên dưới để kiểm tra lại.</p>
+  </div>
+  <button type="button" onclick="toggleYtSubVisibility()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm">
+    <i class="fa-solid fa-eye mr-1"></i> Hiện lại phụ đề
+  </button>
+</div>
               <div id="ytSubtitleList" class="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1"></div>
 
               <!-- Thanh tra từ nhanh ngay dưới khung phụ đề -->
@@ -5111,11 +5133,14 @@ async function pickRandomWotd() {
     }
 
       // ==========================================
-    // RẠP HỌC VIDEO YOUTUBE TƯƠNG TÁC (3 CHẾ ĐỘ)
+    // RẠP HỌC VIDEO YOUTUBE TƯƠNG TÁC (ĐÃ ĐỒNG BỘ + SỬA 3 CHẾ ĐỘ)
     // ==========================================
+    let ytPlayerInstance = null;
+    let ytSyncTimer = null;
     let ytStudyMode = 'sub'; // 'sub' | 'choice' | 'write'
     let currentYtLineIndex = 0;
     let currentInspectedYtTerm = { word: '', meaning: '' };
+    let activeVideoId = 'UF8uR6Z6KLc';
 
     const ytPresetLibrary = {
       en: [
@@ -5141,6 +5166,77 @@ async function pickRandomWotd() {
 
     let activeYtLines = ytPresetLibrary.en[0].lines;
 
+    function onYouTubeIframeAPIReady() {
+      createOrLoadYtPlayer(activeVideoId);
+    }
+
+    function createOrLoadYtPlayer(videoId) {
+      activeVideoId = videoId;
+      if (ytPlayerInstance && typeof ytPlayerInstance.loadVideoById === 'function') {
+        ytPlayerInstance.loadVideoById(videoId);
+        return;
+      }
+      if (window.YT && window.YT.Player) {
+        ytPlayerInstance = new YT.Player('ytPlayerMount', {
+          width: '100%',
+          height: '100%',
+          videoId: videoId,
+          playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+          events: {
+            onReady: startYtRealtimeSync,
+            onStateChange: (e) => {
+              if (e.data === YT.PlayerState.PLAYING) startYtRealtimeSync();
+            }
+          }
+        });
+      } else {
+        const mount = document.getElementById('ytPlayerMount');
+        if (mount) {
+          mount.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" frameborder="0" allowfullscreen></iframe>`;
+        }
+      }
+    }
+
+    function startYtRealtimeSync() {
+      if (ytSyncTimer) clearInterval(ytSyncTimer);
+      ytSyncTimer = setInterval(() => {
+        const autoSync = document.getElementById('ytAutoSyncToggle');
+        if (autoSync && !autoSync.checked) return;
+        if (!ytPlayerInstance || typeof ytPlayerInstance.getCurrentTime !== 'function') return;
+        if (ytPlayerInstance.getPlayerState && ytPlayerInstance.getPlayerState() !== YT.PlayerState.PLAYING) return;
+
+        const currentSec = ytPlayerInstance.getCurrentTime();
+        let matchedIdx = -1;
+        for (let i = 0; i < activeYtLines.length; i++) {
+          const start = activeYtLines[i].start || 0;
+          const nextStart = activeYtLines[i + 1] ? activeYtLines[i + 1].start : (activeYtLines[i].end || start + 8);
+          if (currentSec >= start && currentSec < nextStart) {
+            matchedIdx = i;
+            break;
+          }
+        }
+        if (matchedIdx !== -1 && matchedIdx !== currentYtLineIndex) {
+          currentYtLineIndex = matchedIdx;
+          highlightActiveYtLine(matchedIdx);
+        }
+      }, 350);
+    }
+
+    function highlightActiveYtLine(idx) {
+      const container = document.getElementById('ytSubtitleList');
+      if (!container) return;
+      container.querySelectorAll('[data-yt-row]').forEach((row, i) => {
+        if (i === idx) {
+          row.classList.add('border-blue-500', 'bg-blue-50/70', 'dark:bg-slate-900', 'ring-1', 'ring-blue-400');
+          row.classList.remove('border-slate-200', 'dark:border-slate-700');
+          row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          row.classList.remove('border-blue-500', 'bg-blue-50/70', 'dark:bg-slate-900', 'ring-1', 'ring-blue-400');
+          row.classList.add('border-slate-200', 'dark:border-slate-700');
+        }
+      });
+    }
+
     function initYoutubeStudyHub() {
       const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
       const presets = isZh ? ytPresetLibrary.zh : ytPresetLibrary.en;
@@ -5148,7 +5244,7 @@ async function pickRandomWotd() {
       if (!container) return;
 
       container.innerHTML = presets.map((item, idx) => `
-        <button onclick="selectYtPreset(${idx})" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5">
+        <button type="button" onclick="selectYtPreset(${idx})" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5">
           <i class="fa-solid fa-play-circle text-rose-500"></i> ${item.label}
         </button>
       `).join('');
@@ -5160,9 +5256,9 @@ async function pickRandomWotd() {
       const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
       const presets = isZh ? ytPresetLibrary.zh : ytPresetLibrary.en;
       const chosen = presets[index] || presets[0];
-      activeYtLines = chosen.lines;
+      activeYtLines = chosen.lines.map(l => ({ ...l, solved: false }));
       currentYtLineIndex = 0;
-      document.getElementById('ytStudyPlayer').src = `https://www.youtube.com/embed/${chosen.id}?enablejsapi=1`;
+      createOrLoadYtPlayer(chosen.id);
       renderYtSubtitles();
     }
 
@@ -5176,39 +5272,123 @@ async function pickRandomWotd() {
       const url = document.getElementById('ytUrlInput').value.trim();
       const vid = extractYoutubeId(url);
       if (!vid) return showToast('Link YouTube chưa đúng định dạng!', 'error');
-      document.getElementById('ytStudyPlayer').src = `https://www.youtube.com/embed/${vid}?enablejsapi=1`;
-      showToast('Đã tải video! Đang dùng AI tạo bộ phụ đề & bài tập điền khuyết...');
-      await generateAiTranscriptForVideo();
-    }
 
-    async function generateAiTranscriptForVideo() {
+      createOrLoadYtPlayer(vid);
       const btn = document.getElementById('btnGenYtTranscript');
-      btn.textContent = 'Đang tạo...';
-      const isZh = (typeof currentLanguage !== 'undefined' && currentLanguage === 'zh');
-      const prompt = isZh
-        ? `Tạo 4 câu hội thoại ngắn tiếng Trung (HSK 3) kèm dịch tiếng Việt và 1 từ khóa điền khuyết mỗi câu. Trả về JSON thuần mảng: [{"start":5,"text":"câu chữ Hán","vi":"nghĩa Việt","blank":"từ cần điền","options":["từ đúng","từ nhiễu 1","từ nhiễu 2"]}]`
-        : `Tạo 4 câu bản tin hoặc bài diễn thuyết tiếng Anh (trình độ B2-C1) kèm dịch tiếng Việt và 1 từ khóa điền khuyết mỗi câu. Trả về JSON thuần mảng: [{"start":5,"text":"English sentence","vi":"nghĩa tiếng Việt","blank":"targetWord","options":["targetWord","distractor1","distractor2"]}]`;
+      if (btn) btn.textContent = 'Đang lấy CC...';
+      showToast('Đang tải phụ đề gốc từ YouTube...');
 
       try {
-        const res = await callGeminiAI(prompt);
-        const parsed = JSON.parse(res.replace(/```json|```/g, '').trim());
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          activeYtLines = parsed;
-          currentYtLineIndex = 0;
-          renderYtSubtitles();
-          showToast('Đã tạo bài luyện 3 chế độ mới!');
+        // Bước 1: Lấy phụ đề gốc y chang trên video từ Supabase Edge Function
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_KEY
+          },
+          body: JSON.stringify({
+            action: 'yt-transcript',
+            videoId: vid,
+            lang: currentLanguage
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.lines || data.lines.length === 0) {
+          throw new Error(data.error || 'Video không có phụ đề CC.');
         }
-      } catch (e) {
-        showToast('Lỗi tạo bài tập AI: ' + e.message, 'error');
+
+        // Hiển thị ngay phụ đề thật lên màn hình trước khi AI dịch
+        activeYtLines = data.lines.slice(0, 40).map(item => ({
+          start: item.start,
+          text: item.text,
+          vi: 'Đang dịch nghĩa...',
+          blank: '',
+          options: [],
+          solved: false
+        }));
+        currentYtLineIndex = 0;
+        renderYtSubtitles();
+
+        // Bước 2: Dùng AI dịch nghĩa tiếng Việt & chọn từ đục lỗ trên CHÍNH các câu thật này
+        await enrichRealTranscriptWithAI();
+      } catch (err) {
+        showToast(err.message, 'error');
       } finally {
-        btn.textContent = 'Tạo bài tập AI';
+        if (btn) btn.textContent = 'Tạo bài tập AI';
       }
     }
 
+    async function enrichRealTranscriptWithAI() {
+      if (!activeYtLines || activeYtLines.length === 0) return;
+      const btn = document.getElementById('btnGenYtTranscript');
+      if (btn) btn.textContent = 'Đang tạo bài tập...';
+
+      // Xử lý tối đa 25 câu đầu để phản hồi nhanh và chuẩn JSON
+      const targetLines = activeYtLines.slice(0, 25);
+      const payloadText = targetLines.map((l, i) => `${i}|${l.text}`).join('\n');
+
+      const prompt = `Dưới đây là các câu phụ đề THẬT trích từ video (định dạng "số_thứ_tự|câu_gốc").
+Nhiệm vụ: Giữ nguyên 100% câu gốc, KHÔNG được sửa hay bịa thêm câu. Với mỗi dòng, hãy:
+1. Dịch sát nghĩa sang tiếng Việt ("vi").
+2. Chọn 1 từ vựng đắt giá có mặt nguyên vẹn trong chính câu gốc đó ("blank").
+3. Tạo 3 phương án trắc nghiệm ("options") gồm 1 từ đúng là "blank" và 2 từ nhiễu cùng từ loại.
+
+Danh sách câu thật:
+${payloadText}
+
+Trả về DUY NHẤT mảng JSON thuần (không markdown):
+[{"idx":0,"vi":"nghĩa tiếng Việt","blank":"từ_khóa","options":["từ_khóa","nhiễu_1","nhiễu_2"]}]`;
+
+      try {
+        const raw = await callGeminiAI(prompt);
+        const jsonStr = raw.replace(/```json|```/g, '').trim();
+        const enriched = JSON.parse(jsonStr.slice(jsonStr.indexOf('['), jsonStr.lastIndexOf(']') + 1));
+
+        enriched.forEach(item => {
+          if (activeYtLines[item.idx]) {
+            activeYtLines[item.idx].vi = item.vi || '';
+            activeYtLines[item.idx].blank = item.blank || '';
+            activeYtLines[item.idx].options = Array.isArray(item.options) ? item.options : [item.blank];
+          }
+        });
+
+        renderYtSubtitles();
+        showToast('Đã đồng bộ phụ đề gốc & tạo bài tập 3 chế độ!');
+      } catch (e) {
+        showToast('Đã tải phụ đề gốc (lỗi dịch: ' + e.message + ')', 'error');
+      } finally {
+        if (btn) btn.textContent = 'Tạo bài tập';
+      }
+    }
+
+    // Gán lại nút "Tạo bài tập AI" để chạy làm giàu dữ liệu trên phụ đề hiện tại
+    async function generateAiTranscriptForVideo() {
+      await enrichRealTranscriptWithAI();
+    }
+
+      function toggleYtSubVisibility(forceShow = false) {
+  const list = document.getElementById('ytSubtitleList');
+  const placeholder = document.getElementById('ytSubHiddenPlaceholder');
+  const icon = document.getElementById('iconToggleYtSub');
+  const text = document.getElementById('textToggleYtSub');
+  if (!list) return;
+
+  const willHide = forceShow ? false : !list.classList.contains('hidden');
+  list.classList.toggle('hidden', willHide);
+  if (placeholder) placeholder.classList.toggle('hidden', !willHide);
+
+  if (icon) icon.className = willHide ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+  if (text) text.textContent = willHide ? 'Hiện' : 'Ẩn';
+}
+
     function setYtStudyMode(mode) {
+      toggleYtSubVisibility(true);
       ytStudyMode = mode;
       ['sub', 'choice', 'write'].forEach(m => {
         const btn = document.getElementById(`ytMode-${m}`);
+        if (!btn) return;
         if (m === mode) {
           btn.className = 'py-2 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm transition';
         } else {
@@ -5218,43 +5398,59 @@ async function pickRandomWotd() {
       renderYtSubtitles();
     }
 
+    function replaceBlankSafely(sentence, blank, replacementHtml) {
+      if (!blank) return sentence;
+      const idx = sentence.toLowerCase().indexOf(blank.toLowerCase());
+      if (idx === -1) return `${sentence} ${replacementHtml}`;
+      return `${sentence.slice(0, idx)}${replacementHtml}${sentence.slice(idx + blank.length)}`;
+    }
+
     function renderYtSubtitles() {
       const container = document.getElementById('ytSubtitleList');
-      const showBilingual = document.getElementById('ytBilingualToggle').checked;
+      const showBilingual = document.getElementById('ytBilingualToggle')?.checked;
       if (!container) return;
 
       container.innerHTML = activeYtLines.map((line, idx) => {
         const isActive = idx === currentYtLineIndex;
-        const borderClass = isActive ? 'border-blue-500 bg-blue-50/50 dark:bg-slate-900' : 'border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/50';
+        const borderClass = isActive ? 'border-blue-500 bg-blue-50/50 dark:bg-slate-900 ring-1 ring-blue-400' : 'border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/50';
 
         let mainContent = '';
         if (ytStudyMode === 'sub') {
-          // Chế độ 1: Chạm từng từ để tra nghĩa
           const isZh = /[\u4e00-\u9fa5]/.test(line.text);
           const tokens = isZh ? Array.from(line.text) : line.text.split(/(\s+)/);
           mainContent = tokens.map(tok => {
             if (!tok.trim() || /^[，。！？、,.!?;:"']+$/.test(tok)) return tok;
-            return `<span onclick="event.stopPropagation(); inspectYtWord('${tok.replace(/'/g, "\\'")}')" class="hover:bg-amber-200 dark:hover:bg-amber-700/60 hover:text-slate-900 dark:hover:text-white rounded px-0.5 cursor-pointer transition">${tok}</span>`;
+            return `<span onclick="inspectYtWord('${tok.replace(/'/g, "\\'")}')" class="hover:bg-amber-200 dark:hover:bg-amber-700/60 hover:text-slate-900 dark:hover:text-white rounded px-0.5 cursor-pointer transition">${tok}</span>`;
           }).join('');
         } else if (ytStudyMode === 'choice') {
-          // Chế độ 2: Chọn từ điền khuyết
-          const hiddenSentence = line.text.replace(line.blank, `<span id="ytBlank-${idx}" class="px-2 py-0.5 mx-1 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-extrabold border-b-2 border-amber-500">_____</span>`);
+          const blankHtml = line.solved
+            ? `<span class="px-2 py-0.5 mx-1 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-extrabold">${line.blank}</span>`
+            : `<span id="ytBlank-${idx}" class="px-2 py-0.5 mx-1 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-extrabold border-b-2 border-amber-500">_____</span>`;
+          const hiddenSentence = replaceBlankSafely(line.text, line.blank, blankHtml);
           const btns = (line.options || [line.blank]).map(opt => `
-            <button onclick="event.stopPropagation(); checkYtChoice(${idx}, '${opt.replace(/'/g, "\\'")}', '${line.blank.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-500 transition">
+            <button type="button" onclick="checkYtChoice(${idx}, '${opt.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-500 transition">
               ${opt}
             </button>
           `).join('');
           mainContent = `<div>${hiddenSentence}</div><div class="flex flex-wrap gap-1.5 mt-2">${btns}</div>`;
         } else {
-          // Chế độ 3: Viết từ điền khuyết
-          const inputBox = `<input type="text" id="ytWriteInput-${idx}" onclick="event.stopPropagation()" onkeyup="checkYtWrite(${idx}, this.value, '${line.blank.replace(/'/g, "\\'")}')" placeholder="Gõ từ..." class="w-28 px-2 py-0.5 mx-1 text-xs font-bold rounded border border-blue-400 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none">`;
-          mainContent = line.text.replace(line.blank, inputBox);
+          if (line.solved) {
+            const solvedBadge = `<span class="px-2 py-0.5 mx-1 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-extrabold">${line.blank} ✓</span>`;
+            mainContent = replaceBlankSafely(line.text, line.blank, solvedBadge);
+          } else {
+            const inputBox = `
+              <span class="inline-flex items-center gap-1 mx-1">
+                <input type="text" id="ytWriteInput-${idx}" onkeydown="if(event.key==='Enter'){event.preventDefault();submitYtWrite(${idx});}" placeholder="Gõ từ..." class="w-28 px-2 py-0.5 text-xs font-bold rounded border border-blue-400 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none">
+                <button type="button" onclick="submitYtWrite(${idx})" class="px-2 py-0.5 rounded bg-blue-600 text-white text-[11px] font-bold">Kiểm tra</button>
+              </span>`;
+            mainContent = replaceBlankSafely(line.text, line.blank, inputBox);
+          }
         }
 
         return `
-          <div onclick="playYtLine(${idx})" class="p-3 rounded-2xl border ${borderClass} cursor-pointer transition space-y-1">
+          <div data-yt-row="${idx}" class="p-3 rounded-2xl border ${borderClass} transition space-y-1">
             <div class="flex items-start gap-2">
-              <button class="mt-0.5 w-6 h-6 rounded-full bg-blue-100 dark:bg-slate-700 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 text-[10px]">
+              <button type="button" onclick="playYtLine(${idx})" class="mt-0.5 w-6 h-6 rounded-full bg-blue-100 dark:bg-slate-700 hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white flex items-center justify-center shrink-0 text-[10px] transition">
                 <i class="fa-solid fa-play"></i>
               </button>
               <div class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-100 leading-relaxed flex-1">${mainContent}</div>
@@ -5267,10 +5463,51 @@ async function pickRandomWotd() {
 
     function playYtLine(idx) {
       currentYtLineIndex = idx;
-      renderYtSubtitles();
+      highlightActiveYtLine(idx);
       const line = activeYtLines[idx];
-      if (line && typeof speakText === 'function') {
+      if (!line) return;
+
+      if (ytPlayerInstance && typeof ytPlayerInstance.seekTo === 'function' && typeof line.start === 'number') {
+        ytPlayerInstance.seekTo(line.start, true);
+        if (ytPlayerInstance.playVideo) ytPlayerInstance.playVideo();
+      } else {
         speakText(line.text);
+      }
+    }
+
+    function checkYtChoice(idx, chosen) {
+      const line = activeYtLines[idx];
+      if (!line) return;
+      const slot = document.getElementById(`ytBlank-${idx}`);
+      if (chosen.trim().toLowerCase() === line.blank.trim().toLowerCase()) {
+        line.solved = true;
+        addXp(5);
+        showToast('Chính xác! +5 XP');
+        renderYtSubtitles();
+      } else {
+        if (slot) {
+          slot.textContent = chosen;
+          slot.className = 'px-2 py-0.5 mx-1 rounded bg-rose-100 text-rose-700 font-extrabold line-through';
+        }
+        showToast('Chưa đúng, thử lại nhé!', 'error');
+      }
+    }
+
+    function submitYtWrite(idx) {
+      const line = activeYtLines[idx];
+      const input = document.getElementById(`ytWriteInput-${idx}`);
+      if (!line || !input) return;
+      const userVal = input.value.trim();
+      if (!userVal) return showToast('Vui lòng gõ từ vào ô trống!', 'error');
+
+      if (userVal.toLowerCase() === line.blank.trim().toLowerCase()) {
+        line.solved = true;
+        addXp(10);
+        showToast('Chuẩn xác! +10 XP');
+        renderYtSubtitles();
+      } else {
+        input.classList.add('border-rose-500', 'bg-rose-50', 'dark:bg-rose-950');
+        showToast(`Chưa chính xác (Gợi ý: bắt đầu bằng "${line.blank[0]}...")`, 'error');
       }
     }
 
@@ -5281,31 +5518,6 @@ async function pickRandomWotd() {
 
     function repeatCurrentYtLine() {
       playYtLine(currentYtLineIndex);
-    }
-
-    function checkYtChoice(idx, chosen, answer) {
-      const slot = document.getElementById(`ytBlank-${idx}`);
-      if (chosen === answer) {
-        slot.textContent = answer;
-        slot.className = 'px-2 py-0.5 mx-1 rounded bg-emerald-100 text-emerald-700 font-extrabold';
-        addXp(5);
-        showToast('Chính xác! +5 XP');
-      } else {
-        slot.textContent = chosen;
-        slot.className = 'px-2 py-0.5 mx-1 rounded bg-rose-100 text-rose-700 font-extrabold line-through';
-        showToast('Chưa đúng, thử lại nhé!', 'error');
-      }
-    }
-
-    function checkYtWrite(idx, val, answer) {
-      const input = document.getElementById(`ytWriteInput-${idx}`);
-      if (val.trim().toLowerCase() === answer.trim().toLowerCase()) {
-        input.classList.remove('border-blue-400');
-        input.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
-        input.disabled = true;
-        addXp(10);
-        showToast('Chuẩn xác! +10 XP');
-      }
     }
 
     async function inspectYtWord(rawWord) {
