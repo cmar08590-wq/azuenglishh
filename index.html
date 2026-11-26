@@ -747,6 +747,25 @@
               </div>
             </div>
 
+            <!-- Nút mở khung dán Transcript thủ công khi YouTube chặn lấy tự động -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+  <button type="button" onclick="document.getElementById('ytManualPasteBox').classList.toggle('hidden')" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5">
+    <i class="fa-solid fa-paste"></i> Dán bản chép lời (Transcript) từ YouTube nếu bị chặn tải tự động
+  </button>
+</div>
+
+<div id="ytManualPasteBox" class="hidden p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
+  <p class="text-[11px] text-slate-500 dark:text-slate-400">
+    Mở video trên YouTube &rarr; bấm vào phần <b>Mô tả</b> &rarr; chọn <b>Hiện bản chép lời (Show transcript)</b> &rarr; Copy toàn bộ (kèm mốc thời gian <code>0:05</code>...) và dán vào đây:
+  </p>
+  <textarea id="ytRawTranscriptInput" rows="4" placeholder="Ví dụ:&#10;0:02 Macy's has postponed its Thanksgiving parade...&#10;0:08 Officials cited severe weather conditions..." class="w-full p-2.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"></textarea>
+  <div class="flex justify-end gap-2">
+    <button type="button" onclick="document.getElementById('ytManualPasteBox').classList.add('hidden')" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition">Đóng</button>
+    <button type="button" onclick="parsePastedYtTranscript()" class="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm">
+      <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Nạp phụ đề & Tạo bài tập
+    </button>
+  </div>
+</div>
             <!-- Danh sách kênh & video mẫu phân theo ngôn ngữ -->
             <div id="ytPresetChannels" class="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-700"></div>
           </div>
@@ -5315,9 +5334,82 @@ async function pickRandomWotd() {
         await enrichRealTranscriptWithAI();
       } catch (err) {
         showToast(err.message, 'error');
+        const pasteBox = document.getElementById('ytManualPasteBox');
+     if (pasteBox) pasteBox.classList.remove('hidden'); // Tự mở ô dán nếu server bị chặn
+        }
+      
       } finally {
-        if (btn) btn.textContent = 'Tạo bài tập AI';
+        if (btn) btn.textContent = 'Tạo bài tập';
       }
+    }
+
+      async function parsePastedYtTranscript() {
+      const raw = document.getElementById('ytRawTranscriptInput')?.value.trim();
+      if (!raw) return showToast('Vui lòng dán nội dung bản chép lời vào ô trống!', 'error');
+
+      // Tự động load video nếu người dùng đã dán link ở ô trên
+      const url = document.getElementById('ytUrlInput')?.value.trim();
+      const vid = extractYoutubeId(url || '');
+      if (vid) createOrLoadYtPlayer(vid);
+
+      // Tách từng dòng kèm mốc thời gian dạng 0:05 hoặc 1:02:15 (kể cả khi copy dính hoặc xuống dòng)
+      const rawLines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const parsedLines = [];
+      let pendingSec = null;
+
+      for (const item of rawLines) {
+        // Trường hợp mốc thời gian và câu nằm chung 1 dòng: "0:05 Hello everyone"
+        const sameLineMatch = item.match(/^(\d{1,2}:)?(\d{1,2}):(\d{2})\s+(.+)$/);
+        if (sameLineMatch) {
+          const hrs = sameLineMatch[1] ? parseInt(sameLineMatch[1], 10) : 0;
+          const mins = parseInt(sameLineMatch[2], 10);
+          const secs = parseInt(sameLineMatch[3], 10);
+          parsedLines.push({
+            start: hrs * 3600 + mins * 60 + secs,
+            text: sameLineMatch[4].trim(),
+            vi: 'Đang dịch nghĩa...',
+            blank: '',
+            options: [],
+            solved: false
+          });
+          pendingSec = null;
+          continue;
+        }
+
+        // Trường hợp YouTube copy tách riêng dòng mốc thời gian ("0:05") và dòng chữ bên dưới
+        const timeOnlyMatch = item.match(/^(\d{1,2}:)?(\d{1,2}):(\d{2})$/);
+        if (timeOnlyMatch) {
+          const hrs = timeOnlyMatch[1] ? parseInt(timeOnlyMatch[1], 10) : 0;
+          const mins = parseInt(timeOnlyMatch[2], 10);
+          const secs = parseInt(timeOnlyMatch[3], 10);
+          pendingSec = hrs * 3600 + mins * 60 + secs;
+          continue;
+        }
+
+        // Dòng chữ nối tiếp sau mốc thời gian (hoặc văn bản thuần không có mốc thời gian)
+        parsedLines.push({
+          start: pendingSec !== null ? pendingSec : parsedLines.length * 6,
+          text: item,
+          vi: 'Đang dịch nghĩa...',
+          blank: '',
+          options: [],
+          solved: false
+        });
+        pendingSec = null;
+      }
+
+      if (parsedLines.length === 0) {
+        return showToast('Không nhận diện được câu phụ đề nào!', 'error');
+      }
+
+      activeYtLines = parsedLines.slice(0, 40);
+      currentYtLineIndex = 0;
+      renderYtSubtitles();
+      document.getElementById('ytManualPasteBox')?.classList.add('hidden');
+      showToast(`Đã nạp ${activeYtLines.length} câu phụ đề gốc! Đang dịch & tạo bài tập...`);
+
+      // Gọi AI dịch nghĩa tiếng Việt & tạo bài tập Chọn từ / Viết từ trên chính các câu thật này
+      await enrichRealTranscriptWithAI();
     }
 
     async function enrichRealTranscriptWithAI() {
