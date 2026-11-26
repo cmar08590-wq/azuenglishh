@@ -5298,7 +5298,6 @@ async function pickRandomWotd() {
       showToast('Đang tải phụ đề gốc từ YouTube...');
 
       try {
-        // Bước 1: Lấy phụ đề gốc y chang trên video từ Supabase Edge Function
         const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-dictionary`, {
           method: 'POST',
           headers: {
@@ -5318,7 +5317,6 @@ async function pickRandomWotd() {
           throw new Error(data.error || 'Video không có phụ đề CC.');
         }
 
-        // Hiển thị ngay phụ đề thật lên màn hình trước khi AI dịch
         activeYtLines = data.lines.slice(0, 40).map(item => ({
           start: item.start,
           text: item.text,
@@ -5330,35 +5328,29 @@ async function pickRandomWotd() {
         currentYtLineIndex = 0;
         renderYtSubtitles();
 
-        // Bước 2: Dùng AI dịch nghĩa tiếng Việt & chọn từ đục lỗ trên CHÍNH các câu thật này
         await enrichRealTranscriptWithAI();
       } catch (err) {
         showToast(err.message, 'error');
         const pasteBox = document.getElementById('ytManualPasteBox');
-     if (pasteBox) pasteBox.classList.remove('hidden'); // Tự mở ô dán nếu server bị chặn
-        }
-      
+        if (pasteBox) pasteBox.classList.remove('hidden');
       } finally {
-        if (btn) btn.textContent = 'Tạo bài tập';
+        if (btn) btn.textContent = 'Tạo bài tập AI';
       }
     }
 
-      async function parsePastedYtTranscript() {
+    async function parsePastedYtTranscript() {
       const raw = document.getElementById('ytRawTranscriptInput')?.value.trim();
       if (!raw) return showToast('Vui lòng dán nội dung bản chép lời vào ô trống!', 'error');
 
-      // Tự động load video nếu người dùng đã dán link ở ô trên
       const url = document.getElementById('ytUrlInput')?.value.trim();
       const vid = extractYoutubeId(url || '');
       if (vid) createOrLoadYtPlayer(vid);
 
-      // Tách từng dòng kèm mốc thời gian dạng 0:05 hoặc 1:02:15 (kể cả khi copy dính hoặc xuống dòng)
       const rawLines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const parsedLines = [];
       let pendingSec = null;
 
       for (const item of rawLines) {
-        // Trường hợp mốc thời gian và câu nằm chung 1 dòng: "0:05 Hello everyone"
         const sameLineMatch = item.match(/^(\d{1,2}:)?(\d{1,2}):(\d{2})\s+(.+)$/);
         if (sameLineMatch) {
           const hrs = sameLineMatch[1] ? parseInt(sameLineMatch[1], 10) : 0;
@@ -5376,7 +5368,6 @@ async function pickRandomWotd() {
           continue;
         }
 
-        // Trường hợp YouTube copy tách riêng dòng mốc thời gian ("0:05") và dòng chữ bên dưới
         const timeOnlyMatch = item.match(/^(\d{1,2}:)?(\d{1,2}):(\d{2})$/);
         if (timeOnlyMatch) {
           const hrs = timeOnlyMatch[1] ? parseInt(timeOnlyMatch[1], 10) : 0;
@@ -5386,7 +5377,6 @@ async function pickRandomWotd() {
           continue;
         }
 
-        // Dòng chữ nối tiếp sau mốc thời gian (hoặc văn bản thuần không có mốc thời gian)
         parsedLines.push({
           start: pendingSec !== null ? pendingSec : parsedLines.length * 6,
           text: item,
@@ -5408,7 +5398,6 @@ async function pickRandomWotd() {
       document.getElementById('ytManualPasteBox')?.classList.add('hidden');
       showToast(`Đã nạp ${activeYtLines.length} câu phụ đề gốc! Đang dịch & tạo bài tập...`);
 
-      // Gọi AI dịch nghĩa tiếng Việt & tạo bài tập Chọn từ / Viết từ trên chính các câu thật này
       await enrichRealTranscriptWithAI();
     }
 
